@@ -29,7 +29,7 @@
 
         #catalog-container {
             width: 100%; max-width: 400px; flex-grow: 1; overflow-y: auto; position: relative;
-            background-color: #111;
+            background: url('background.gif') no-repeat center center; background-size: cover;
             display: flex; flex-direction: column; align-items: center; padding-top: 25px; box-sizing: border-box;
         }
         .menu-title { font-size: 20px; color: #ffff00; text-shadow: 3px 3px #000; margin-bottom: 25px; text-align: center; letter-spacing: 2px; z-index: 5; }
@@ -54,12 +54,12 @@
         .btn { background: #222; border: 3px solid #444; color: white; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 14px; }
         .btn:active { background: #444; }
         
-        /* КНОПКИ NES (Денди) */
+        /* КНОПКИ NES */
         #nes-buttons { display: inline-flex; gap: 15px; }
         .round-btn { width: 60px; height: 60px; background: #cc1111; border-radius: 50%; border: 4px solid #fff; color: white; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 16px; font-family: sans-serif; box-shadow: 0 4px 0 #880000; }
         .round-btn:active { background: #aa0000; transform: translateY(4px); box-shadow: none; }
         
-        /* КНОПКИ СЕГИ / SNES (Универсальная 6-кнопочная панель) */
+        /* КНОПКИ SEGA / SNES */
         #sega-buttons { display: none; grid-template-columns: repeat(3, 50px); gap: 8px; }
         .sega-btn { width: 48px; height: 48px; background: #2e2e2e; border: 3px solid #666; color: #fff; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 14px; font-weight: bold; font-family: sans-serif; box-shadow: 0 3px 0 #000; }
         .sega-btn:active { background: #555; transform: translateY(3px); box-shadow: none; }
@@ -119,10 +119,22 @@
     </div>
 
     <script>
-        window.Telegram.WebApp.ready();
-        window.Telegram.WebApp.expand();
+        // Перехватчик критических ошибок (если упадет — покажет alert)
+        window.onerror = function(message, source, lineno, colno, error) {
+            alert("Критическая ошибка JS: " + message + " на строке " + lineno);
+            return false;
+        };
 
-        var gamesToLoad = window.MY_GAMES || [];
+        if (window.Telegram && window.Telegram.WebApp) {
+            window.Telegram.WebApp.ready();
+            window.Telegram.WebApp.expand();
+        }
+
+        // Страховочный список, если games.js пустой или не загрузился
+        var gamesToLoad = window.MY_GAMES || [
+            { file: "mario.nes", title: "SUPER MARIO BROS", system: "nes" }
+        ];
+        
         var listContainer = document.getElementById('retro-game-list');
         
         if (listContainer) {
@@ -141,13 +153,10 @@
 
         var canvas = document.getElementById('nes-canvas');
         var ctx = canvas.getContext('2d');
-        var audioCtx = null;
-        var audioEnabled = false;
         var gameLoopInterval = null;
         var currentRomName = ""; 
         var currentSystem = "nes";
 
-        // NES Эмулятор
         var nes = new jsnes.NES({
             onFrame: function(buffer) {
                 var imageData = ctx.getImageData(0, 0, 256, 240);
@@ -181,7 +190,7 @@
                 document.getElementById('sega-buttons').style.display = 'none';
             }
             
-            if (window.Telegram?.WebApp?.HapticFeedback) {
+            if (window.Telegram && window.Telegram.WebApp && window.Telegram.WebApp.HapticFeedback) {
                 window.Telegram.WebApp.HapticFeedback.impactOccurred('medium');
             }
 
@@ -194,10 +203,8 @@
                         nes.loadROM(this.responseText);
                         if(gameLoopInterval) clearInterval(gameLoopInterval);
                         gameLoopInterval = setInterval(nes.frame, 1000 / 60);
-                    } else if (currentSystem === "sega") {
-                        initWasmSega(this.responseText);
-                    } else if (currentSystem === "snes") {
-                        initWasmSnes(this.responseText);
+                    } else {
+                        alert("WASM " + currentSystem.toUpperCase() + " подготавливается! Файл " + romUrl + " успешно считан.");
                     }
                 } else {
                     alert("ОШИБКА ЗАГРУЗКИ РОМА!");
@@ -205,18 +212,6 @@
                 }
             };
             req.send();
-        }
-
-        // 🔥 ИНИЦИАЛИЗАЦИЯ И СВЯЗЫВАНИЕ КНОПОК ДЛЯ WASM ДВИЖКОВ
-        function initWasmSega(romData) {
-            console.log("Загрузка Sega ядра WASM...");
-            // Здесь будет инициализация PicoDrive/GenesisPlus GX контекста
-            // На выходе перенаправляем кадры на наш canvas
-        }
-
-        function initWasmSnes(romData) {
-            console.log("Загрузка SNES ядра WASM...");
-            // Здесь будет инициализация Snes9x контекста
         }
 
         function exitToCatalog() {
@@ -229,13 +224,11 @@
         
         document.getElementById('back-to-catalog').addEventListener('click', exitToCatalog);
 
-        // УНИВЕРСАЛЬНЫЙ ТРАНСЛЯТОР КНОПОК УПРАВЛЕНИЯ
         function sendKeyEvent(key, isPressed) {
             if (currentSystem === "nes") {
                 if (isPressed) nes.buttonDown(1, key); else nes.buttonUp(1, key);
             } else {
-                // Логика передачи кодов для WASM модулей (Sega / SNES)
-                console.log(`Система: ${currentSystem}, Кнопка: ${key}, Нажата: ${isPressed}`);
+                console.log("Кнопка: " + key + ", Состояние: " + isPressed);
             }
         }
 
@@ -249,32 +242,31 @@
             }
         }
 
-        // Привязка D-PAD и кнопок NES
         bindKey('up', jsnes.Controller.BUTTON_UP); bindKey('down', jsnes.Controller.BUTTON_DOWN);
         bindKey('left', jsnes.Controller.BUTTON_LEFT); bindKey('right', jsnes.Controller.BUTTON_RIGHT);
         bindKey('btn-a', jsnes.Controller.BUTTON_A); bindKey('btn-b', jsnes.Controller.BUTTON_B);
         bindKey('btn-start', jsnes.Controller.BUTTON_START); bindKey('btn-select', jsnes.Controller.BUTTON_SELECT);
 
-        // Привязка кнопок Sega/SNES
         var segaButtons = ['btn-sega-a', 'btn-sega-b', 'btn-sega-c', 'btn-x', 'btn-y', 'btn-z'];
-        segaButtons.forEach(id => {
+        segaButtons.forEach(function(id) {
             var el = document.getElementById(id);
             if(el) {
-                el.addEventListener('touchstart', (e) => { e.preventDefault(); sendKeyEvent(id.replace('btn-',''), true); });
-                el.addEventListener('touchend', (e) => { e.preventDefault(); sendKeyEvent(id.replace('btn-',''), false); });
+                el.addEventListener('touchstart', function(e) { e.preventDefault(); sendKeyEvent(id.replace('btn-',''), true); });
+                el.addEventListener('touchend', function(e) { e.preventDefault(); sendKeyEvent(id.replace('btn-',''), false); });
+                el.addEventListener('mousedown', function(e) { sendKeyEvent(id.replace('btn-',''), true); });
+                el.addEventListener('mouseup', function(e) { sendKeyEvent(id.replace('btn-',''), false); });
             }
         });
 
-        // 💾 РАБОТА С СОХРАНЕНИЯМИ (SAVE / LOAD) через Web LocalStorage
+        // СОХРАНЕНИЯ
         document.getElementById('btn-save').addEventListener('click', function() {
             if (!currentRomName) return;
             try {
-                let saveData = null;
+                var saveData = null;
                 if (currentSystem === "nes") {
                     saveData = JSON.stringify(nes.toJSON());
                 } else {
-                    // Для WASM ядра: saveData = Module.FS.readFile('/save.srm');
-                    saveData = "wasm_dummy_save_data"; 
+                    saveData = "wasm_dummy"; 
                 }
                 localStorage.setItem("save_" + currentRomName, saveData);
                 alert("ИГРА СОХРАНЕНА!");
@@ -285,16 +277,14 @@
 
         document.getElementById('btn-load').addEventListener('click', function() {
             if (!currentRomName) return;
-            let data = localStorage.getItem("save_" + currentRomName);
+            var data = localStorage.getItem("save_" + currentRomName);
             if (!data) {
-                alert("НЕТ СОХРАНЕНИЙ ДЛЯ ЭТОЙ ИГРЫ");
+                alert("НЕТ СОХРАНЕНИЙ");
                 return;
             }
             try {
                 if (currentSystem === "nes") {
                     nes.fromJSON(JSON.parse(data));
-                } else {
-                    // Для WASM: Module.FS.writeFile('/save.srm', data);
                 }
                 alert("ЗАГРУЗКА УСПЕШНА!");
             } catch(e) {
