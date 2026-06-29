@@ -41,11 +41,12 @@
 
         /* ЭКРАН ИГРЫ */
         #game-screen { display: none; width: 100%; flex-direction: column; align-items: center; flex-grow: 1; background: #000; }
-        #game-container { width: 100%; max-width: 400px; background: #000; display: flex; justify-content: center; position: relative; }
-        canvas { width: 100%; display: block; image-rendering: pixelated; }
+        #game-container { width: 100%; max-width: 400px; height: 240px; background: #000; position: relative; display: flex; justify-content: center; align-items: center; }
+        canvas { width: 100%; height: 100%; display: block; image-rendering: pixelated; }
         
         /* КОНТЕЙНЕР ДЛЯ EMULATOR JS */
-        #emulator_frame { display: none; width: 100%; height: 240px; background: #000; }
+        #emulator_container { display: none; width: 100%; height: 100%; position: absolute; top: 0; left: 0; }
+        #emulator_container iframe { width: 100%; height: 100%; border: none; }
 
         /* РОДНОЙ ГЕЙМПАД ДЛЯ NES */
         #gamepad {
@@ -85,7 +86,7 @@
     <div id="game-screen">
         <div id="game-container">
             <canvas id="nes-canvas" width="256" height="240"></canvas>
-            <div id="emulator_frame"></div>
+            <div id="emulator_container"></div>
         </div>
         <div id="gamepad">
             <div class="main-controls">
@@ -192,12 +193,20 @@
         }
 
         function launchSega(romUrl) {
-            window.EJS_player = "#emulator_frame";
+            // Очищаем старый контейнер перед перезапуском
+            var container = document.getElementById('emulator_container');
+            container.innerHTML = "";
+
+            window.EJS_player = "#emulator_container";
             window.EJS_core = "segaMD";
-            window.EJS_pathtodata = "https://cdn.emulatorjs.org/stable/data/"; // Официальные WASM файлы ядер
+            window.EJS_pathtodata = "https://cdn.emulatorjs.org/stable/data/"; 
             window.EJS_gameUrl = window.location.origin + window.location.pathname.replace("index.html", "") + romUrl;
             window.EJS_startOnLoaded = true;
             window.EJS_Volume = audioEnabled ? 1 : 0;
+
+            // Настройка адаптивного тач-интерфейса под мобилки внутри EmulatorJS
+            window.EJS_AdUrl = ""; 
+            window.EJS_mouse = false;
 
             var loader = document.createElement("script");
             loader.src = "https://cdn.emulatorjs.org/stable/data/loader.js";
@@ -215,13 +224,13 @@
 
             if (currentSystem === "sega") {
                 document.getElementById('nes-canvas').style.display = 'none';
-                document.getElementById('gamepad').style.display = 'none';
-                document.getElementById('emulator_frame').style.display = 'block';
+                document.getElementById('gamepad').style.display = 'none'; 
+                document.getElementById('emulator_container').style.display = 'block';
                 launchSega(romUrl);
             } else {
                 document.getElementById('nes-canvas').style.display = 'block';
                 document.getElementById('gamepad').style.display = 'flex';
-                document.getElementById('emulator_frame').style.display = 'none';
+                document.getElementById('emulator_container').style.display = 'none';
                 
                 var req = new XMLHttpRequest();
                 req.open("GET", romUrl, true);
@@ -247,7 +256,7 @@
         function exitToCatalog() {
             if(gameLoopInterval) clearInterval(gameLoopInterval);
             if(currentSystem === "sega") {
-                document.getElementById('emulator_frame').innerHTML = "";
+                document.getElementById('emulator_container').innerHTML = "";
             }
             document.getElementById('game-screen').style.display = 'none';
             document.getElementById('back-to-catalog').style.display = 'none';
