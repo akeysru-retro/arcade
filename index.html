@@ -4,9 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Akeys Retro Arcade</title>
-    <!-- Подключаем Телеграм WebApp скрипт -->
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
-    <!-- Подключаем бесплатный движок Денди -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jsnes/1.2.1/jsnes.min.js"></script>
     <style>
         body {
@@ -34,14 +32,13 @@
             display: block;
             image-rendering: pixelated;
         }
-        /* Стили мобильного геймпада под экраны телефонов */
         #controls {
             display: grid;
-            grid-template-columns: 1fr 1fr;
+            grid-template-columns: 1.2fr 1fr;
             width: 100%;
             max-width: 400px;
             flex-grow: 1;
-            padding: 20px;
+            padding: 15px;
             box-sizing: border-box;
             background: #1a1a1a;
         }
@@ -49,8 +46,8 @@
             display: grid;
             grid-template-columns: repeat(3, 1fr);
             grid-template-rows: repeat(3, 1fr);
-            width: 150px;
-            height: 150px;
+            width: 140px;
+            height: 140px;
             align-self: center;
         }
         .btn {
@@ -65,15 +62,21 @@
             font-size: 18px;
         }
         .btn:active { background: #555; }
-        .action-buttons {
+        
+        .action-container {
             display: flex;
-            gap: 20px;
+            flex-direction: column;
             justify-content: center;
             align-items: center;
+            gap: 15px;
+        }
+        .action-buttons {
+            display: flex;
+            gap: 15px;
         }
         .round-btn {
-            width: 65px;
-            height: 65px;
+            width: 60px;
+            height: 60px;
             background: #ff3b30;
             border-radius: 50%;
             border: 3px solid #fff;
@@ -86,64 +89,73 @@
             box-shadow: 0 4px 6px rgba(0,0,0,0.3);
         }
         .round-btn:active { background: #b3261e; }
+        
+        /* Стили для системных кнопок Старт и Селект */
+        .system-buttons {
+            display: flex;
+            gap: 10px;
+        }
+        .sys-btn {
+            background: #555;
+            border: 1px solid #777;
+            color: white;
+            padding: 5px 15px;
+            border-radius: 5px;
+            font-size: 11px;
+            font-weight: bold;
+            text-transform: uppercase;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        }
+        .sys-btn:active { background: #777; }
     </style>
 </head>
 <body>
 
-    <h3 style="margin: 10px 0;">🕹️ AKEYS RETRO 🕹️</h3>
+    <h3 style="margin: 8px 0; font-size: 16px;">🕹️ AKEYS RETRO 🕹️</h3>
     
     <div id="game-container">
         <canvas id="nes-canvas" width="256" height="240"></canvas>
     </div>
 
-    <!-- Кнопки управления на экране телефона -->
     <div id="controls">
         <div class="dpad">
             <div></div><div class="btn" id="up">▲</div><div></div>
             <div class="btn" id="left">◀</div><div></div><div class="btn" id="right">▶</div>
             <div></div><div class="btn" id="down">▼</div><div></div>
         </div>
-        <div class="action-buttons">
-            <div class="round-btn" id="btn-b">B</div>
-            <div class="round-btn" id="btn-a">A</div>
+        
+        <div class="action-container">
+            <!-- 🔥 КНОПКИ СЕЛЕКТ И СТАРТ ТЕПЕРЬ ТУТ -->
+            <div class="system-buttons">
+                <div class="sys-btn" id="btn-select">Select</div>
+                <div class="sys-btn" id="btn-start">Start</div>
+            </div>
+            <div class="action-buttons">
+                <div class="round-btn" id="btn-b">B</div>
+                <div class="round-btn" id="btn-a">A</div>
+            </div>
         </div>
     </div>
 
     <script>
-        // Инициализируем Telegram WebApp
         window.Telegram.WebApp.ready();
         window.Telegram.WebApp.expand();
 
         var canvas = document.getElementById('nes-canvas');
         var ctx = canvas.getContext('2d');
         
-        // Создаем элемент для вывода логов прямо на экран (чтобы видеть ошибки)
-        var logger = document.createElement('div');
-        logger.style.position = 'absolute';
-        logger.style.top = '10px';
-        logger.style.left = '10px';
-        logger.style.color = '#00ff00';
-        logger.style.fontSize = '12px';
-        logger.style.fontFamily = 'monospace';
-        logger.style.pointerEvents = 'none';
-        document.body.appendChild(logger);
-
-        function log(msg) {
-            logger.innerHTML += msg + '<br>';
-            console.log(msg);
-        }
-
-        log("🚀 Эмулятор запускается...");
-
         var nes = new jsnes.NES({
             onFrame: function(buffer) {
                 var imageData = ctx.getImageData(0, 0, 256, 240);
                 var data = imageData.data;
                 for (var i = 0; i < buffer.length; i++) {
                     var pixel = buffer[i];
-                    var r = (pixel >> 16) & 0xff;
+                    
+                    // 🔥 ИСПРАВЛЕНИЕ ЦВЕТА: Меняем местами каналы R и B (из BGR в RGB)
+                    var r = pixel & 0xff; 
                     var g = (pixel >> 8) & 0xff;
-                    var b = pixel & 0xff;
+                    var b = (pixel >> 16) & 0xff;
+                    
                     var index = i * 4;
                     data[index] = r;
                     data[index+1] = g;
@@ -155,34 +167,18 @@
         });
 
         function loadRom(url) {
-            log("⏳ Загрузка игры: " + url);
             var req = new XMLHttpRequest();
             req.open("GET", url, true);
             req.overrideMimeType("text/plain; charset=x-user-defined");
-            
             req.onload = function() {
                 if (req.status === 200) {
-                    log("✅ Игра загружена успешно! Запуск... 🎮");
-                    try {
-                        nes.loadROM(this.responseText);
-                        setInterval(nes.frame, 1000 / 60);
-                    } catch(err) {
-                        log("❌ Ошибка запуска: " + err.message);
-                    }
-                } else {
-                    log("❌ Ошибка сети: статус " + req.status);
+                    nes.loadROM(this.responseText);
+                    setInterval(nes.frame, 1000 / 60);
                 }
             };
-            
-            req.onerror = function() {
-                log("🚨 Критическая ошибка CORS или сети при загрузке ROM!");
-            };
-            
             req.send();
         }
 
-        // 🔥 ВНИМАНИЕ: Проверь, чтобы имя файла на GitHub совпадало до последней буквы!
-        // Если залил "mario.nes", оставляй так. Если "Mario.nes", меняй на "Mario.nes"
         loadRom("mario.nes"); 
 
         function bindKey(elementId, nesKey) {
@@ -190,6 +186,9 @@
             if(el) {
                 el.addEventListener('touchstart', function(e) { e.preventDefault(); nes.buttonDown(1, nesKey); });
                 el.addEventListener('touchend', function(e) { e.preventDefault(); nes.buttonUp(1, nesKey); });
+                // Поддержка кликов мышки для тестов с ПК
+                el.addEventListener('mousedown', function(e) { nes.buttonDown(1, nesKey); });
+                el.addEventListener('mouseup', function(e) { nes.buttonUp(1, nesKey); });
             }
         }
 
@@ -199,6 +198,10 @@
         bindKey('right', jsnes.Controller.BUTTON_RIGHT);
         bindKey('btn-a', jsnes.Controller.BUTTON_A);
         bindKey('btn-b', jsnes.Controller.BUTTON_B);
+        
+        // 🔥 ПРИВЯЗЫВАЕМ СТАРТ И СЕЛЕКТ
+        bindKey('btn-start', jsnes.Controller.BUTTON_START);
+        bindKey('btn-select', jsnes.Controller.BUTTON_SELECT);
     </script>
 </body>
 </html>
