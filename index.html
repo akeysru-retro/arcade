@@ -127,19 +127,33 @@
         window.Telegram.WebApp.ready();
         window.Telegram.WebApp.expand();
 
-        var gamesToLoad = window.MY_GAMES || [];
+        // 🔥 ЗАЩИТА ОТ СБОЕВ: Если внешний games.js не загрузился, берём этот список по умолчанию
+        var gamesToLoad = window.MY_GAMES || [
+            { file: "mario.nes", title: "SUPER MARIO BROS", system: "nes" },
+            { file: "tanks.nes", title: "TANK 1990 (BATTLE CITY)", system: "nes" },
+            { file: "chip.nes", title: "CHIP N DALE", system: "nes" },
+            { file: "contra.nes", title: "CONTRA (RAMBO)", system: "nes" },
+            { file: "sonic.gen", title: "SONIC THE HEDGEHOG", system: "sega" },
+            { file: "mk3.gen", title: "MORTAL KOMBAT 3 ULTIMATE", system: "sega" }
+        ];
+
         var listContainer = document.getElementById('retro-game-list');
         
-        gamesToLoad.forEach(function(game, index) {
-            var num = (index + 1).toString().padStart(4, '0'); 
-            var item = document.createElement('div');
-            item.className = 'retro-item';
-            item.textContent = num + ". " + game.title;
-            item.addEventListener('click', function() {
-                startGame(game.file, game.title, game.system);
+        // Очищаем контейнер на всякий случай перед рендером
+        if (listContainer) {
+            listContainer.innerHTML = "";
+            
+            gamesToLoad.forEach(function(game, index) {
+                var num = (index + 1).toString().padStart(4, '0'); 
+                var item = document.createElement('div');
+                item.className = 'retro-item';
+                item.textContent = num + ". " + game.title;
+                item.addEventListener('click', function() {
+                    startGame(game.file, game.title, game.system);
+                });
+                listContainer.appendChild(item);
             });
-            listContainer.appendChild(item);
-        });
+        }
 
         var canvas = document.getElementById('nes-canvas');
         var ctx = canvas.getContext('2d');
@@ -152,7 +166,6 @@
         var currentRomName = ""; 
         var currentSystem = "nes";
 
-        // Сюда будет грузиться эмулятор Сеги в следующих версиях, пока подготавливаем общую логику
         var nes = new jsnes.NES({
             onFrame: function(buffer) {
                 var imageData = ctx.getImageData(0, 0, 256, 240);
@@ -202,7 +215,6 @@
             });
         }
 
-        // 🔥 ДИНАМИЧЕСКИЙ ЗАПУСК ИГРЫ И НАСТРОЙКА ГЕЙМПАДА
         function startGame(romUrl, gameTitle, system) {
             currentRomName = romUrl;
             currentSystem = system || "nes";
@@ -212,7 +224,6 @@
             document.getElementById('back-to-catalog').style.display = 'block';
             document.getElementById('main-title').textContent = gameTitle;
 
-            // Переключаем кнопки джойстика в зависимости от системы
             if (currentSystem === "sega") {
                 document.getElementById('nes-buttons').style.display = 'none';
                 document.getElementById('sega-buttons').style.display = 'grid';
@@ -225,7 +236,6 @@
                 window.Telegram.WebApp.HapticFeedback.impactOccurred('medium');
             }
 
-            // Загрузка файла игры
             var req = new XMLHttpRequest();
             req.open("GET", romUrl, true);
             req.overrideMimeType("text/plain; charset=x-user-defined");
@@ -236,8 +246,7 @@
                         if(gameLoopInterval) clearInterval(gameLoopInterval);
                         gameLoopInterval = setInterval(nes.frame, 1000 / 60);
                     } else {
-                        // Заглушка под WASM-ядро Сеги (встроим в следующем шаге)
-                        alert("Ядро Сеги готово к развертыванию WASM-контейнера! Файл " + romUrl + " успешно прочитан.");
+                        alert("WASM Сеги подготавливается! Файл " + romUrl + " успешно считан системой.");
                     }
                 } else {
                     alert("ОШИБКА ЗАГРУЗКИ РОМА!");
@@ -257,7 +266,6 @@
         
         document.getElementById('back-to-catalog').addEventListener('click', exitToCatalog);
 
-        // Навешивание кнопок геймпада Денди
         function bindKey(elementId, nesKey) {
             var el = document.getElementById(elementId);
             if(el) {
@@ -272,11 +280,10 @@
         bindKey('btn-a', jsnes.Controller.BUTTON_A); bindKey('btn-b', jsnes.Controller.BUTTON_B);
         bindKey('btn-start', jsnes.Controller.BUTTON_START); bindKey('btn-select', jsnes.Controller.BUTTON_SELECT);
 
-        // Навешивание обработчиков на кнопки СЕГИ (A, B, C, X, Y, Z) для будущего WASM-движка
         function bindSegaKey(elementId, segaKeyName) {
             var el = document.getElementById(elementId);
             if(el) {
-                el.addEventListener('touchstart', function(e) { e.preventDefault(); console.log("Нажата кнопка Сеги: " + segaKeyName); });
+                el.addEventListener('touchstart', function(e) { e.preventDefault(); console.log("Кнопка Сеги: " + segaKeyName); });
             }
         }
         bindSegaKey('btn-sega-a', 'A'); bindSegaKey('btn-sega-b', 'B'); bindSegaKey('btn-sega-c', 'C');
