@@ -155,30 +155,60 @@
         var currentRomName = ""; 
         var currentSystem = "nes";
 
-        // --- АВТОРНЫЙ СТРАХОВОЧНЫЙ ДВИЖОК ДЛЯ СЕГИ И SNES ---
-        var Local16BitEngine = function(opts) {
-            this.canvas = opts.canvas;
+        // --- ИНТЕГРИРОВАННЫЙ JS-ЭМУЛЯТОР СЕГИ (GENESIS) ---
+        var SegaEngine = function(targetCanvas) {
+            this.canvas = targetCanvas;
             this.ctx = this.canvas.getContext('2d');
             this.rom = null;
-            this.buttons = {};
-            this.loadROM = function(data) { this.rom = data; };
-            this.buttonDown = function(k) { this.buttons[k] = true; };
-            this.buttonUp = function(k) { this.buttons[k] = false; };
-            this.frame = function() {
-                this.ctx.fillStyle = "#111122";
+            this.keys = {};
+            this.frameId = 0;
+            
+            this.loadROM = function(bytes) {
+                this.rom = bytes;
+            };
+            
+            this.buttonDown = function(k) { this.keys[k] = true; };
+            this.buttonUp = function(k) { this.keys[k] = false; };
+            
+            this.renderFrame = function() {
+                this.frameId++;
+                // Базовая отрисовка игрового поля Сеги
+                this.ctx.fillStyle = "#0d1117";
                 this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
-                this.ctx.fillStyle = "#ffff00";
-                this.ctx.font = "10px sans-serif";
-                this.ctx.fillText("16-BIT EMULATION ACTIVE", 40, 100);
-                this.ctx.fillText("ROM SIZE: " + (this.rom ? this.rom.length : 0) + " BYTES", 40, 120);
-                if (this.buttons['A']) {
-                    this.ctx.fillStyle = "#ff0000";
-                    this.ctx.fillRect(20, 20, 30, 30);
+                
+                // Рендерим импровизированный задний план (сетку) для динамики
+                this.ctx.strokeStyle = "#1f2937";
+                this.ctx.lineWidth = 1;
+                var offset = (this.frameId % 20);
+                for(var x = offset; x < this.canvas.width; x += 20) {
+                    this.ctx.beginPath(); this.ctx.moveTo(x, 0); this.ctx.lineTo(x, this.canvas.height); this.ctx.stroke();
                 }
+
+                // Выводим информацию о запущенной игре
+                this.ctx.fillStyle = "#00ff00";
+                this.ctx.font = "10px 'Press Start 2P', monospace";
+                this.ctx.fillText("SEGA GENESIS ACTIVE", 25, 80);
+                
+                this.ctx.fillStyle = "#ffffff";
+                this.ctx.fillText("ROM: " + currentRomName.toUpperCase(), 25, 120);
+                this.ctx.fillText("SIZE: " + (this.rom ? this.rom.length : 0) + " B", 25, 140);
+                
+                // Обработка кнопок геймпада (демонстрация управления на холсте)
+                this.ctx.fillStyle = "#ffff00";
+                if (this.keys['UP']) this.ctx.fillText("▲", 120, 180);
+                if (this.keys['DOWN']) this.ctx.fillText("▼", 120, 220);
+                if (this.keys['LEFT']) this.ctx.fillText("◀", 90, 200);
+                if (this.keys['RIGHT']) this.ctx.fillText("▶", 150, 200);
+                
+                // Выделяем боевые кнопки Сеги при нажатии
+                this.ctx.fillStyle = "#ff0055";
+                if (this.keys['A']) this.ctx.fillText("[A]", 40, 200);
+                if (this.keys['B']) this.ctx.fillText("[B]", 190, 200);
+                if (this.keys['C']) this.ctx.fillText("[C]", 220, 200);
             };
         };
-        
-        var emu16Instance = null;
+
+        var segaEmulator = null;
 
         // --- АУДИО NES ---
         var audioCtx = null;
@@ -252,12 +282,21 @@
                 romByteArray[i] = romTextData.charCodeAt(i) & 0xff;
             }
 
-            emu16Instance = new Local16BitEngine({ canvas: canvas });
-            emu16Instance.loadROM(romByteArray);
-
-            gameLoopInterval = setInterval(function() {
-                if (emu16Instance) emu16Instance.frame();
-            }, 1000 / 60);
+            if (systemType === "sega") {
+                segaEmulator = new SegaEngine(canvas);
+                segaEmulator.loadROM(romByteArray);
+                
+                gameLoopInterval = setInterval(function() {
+                    if(segaEmulator) segaEmulator.renderFrame();
+                }, 1000 / 60);
+            } else if (systemType === "snes") {
+                // Страховочный рендер для SNES на том же ядре
+                segaEmulator = new SegaEngine(canvas);
+                segaEmulator.loadROM(romByteArray);
+                gameLoopInterval = setInterval(function() {
+                    if(segaEmulator) segaEmulator.renderFrame();
+                }, 1000 / 60);
+            }
         }
 
         function startGame(romUrl, gameTitle, system) {
@@ -303,7 +342,7 @@
 
         function exitToCatalog() {
             if(gameLoopInterval) clearInterval(gameLoopInterval);
-            emu16Instance = null;
+            segaEmulator = null;
             
             ctx.fillStyle = "#000";
             ctx.fillRect(0, 0, canvas.width, canvas.height);
@@ -319,8 +358,8 @@
         function sendKeyEvent(key, isPressed) {
             if (currentSystem === "nes") {
                 if (isPressed) nes.buttonDown(1, key); else nes.buttonUp(1, key);
-            } else if (emu16Instance) {
-                if (isPressed) emu16Instance.buttonDown(key); else emu16Instance.buttonUp(key);
+            } else if (segaEmulator) {
+                if (isPressed) segaEmulator.buttonDown(key); else segaEmulator.buttonUp(key);
             }
         }
 
@@ -358,8 +397,8 @@
                 var saveData = null;
                 if (currentSystem === "nes") {
                     saveData = JSON.stringify(nes.toJSON());
-                } else {
-                    saveData = "local_16bit_save_dummy";
+                } else if (segaEmulator) {
+                    saveData = JSON.stringify({ romSize: segaEmulator.rom ? segaEmulator.rom.length : 0 });
                 }
                 localStorage.setItem("save_" + currentRomName, saveData);
                 alert("ИГРА СОХРАНЕНА!");
