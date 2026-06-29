@@ -22,7 +22,6 @@
             user-select: none;
         }
         
-        /* Шапка с кнопкой звука */
         .header-panel {
             display: flex;
             width: 100%;
@@ -38,7 +37,6 @@
             letter-spacing: 1px;
             font-weight: bold;
         }
-        /* Стильная кнопка звука */
         #sound-toggle {
             background: #222;
             border: 1px solid #444;
@@ -139,14 +137,20 @@
         }
         .round-btn:active { background: #b3261e; }
         
+        /* Панель системных кнопок */
         .system-buttons {
             display: flex;
-            justify-content: center;
-            gap: 30px;
+            flex-direction: column;
+            gap: 12px;
             width: 100%;
-            margin-top: 15px;
+            margin-top: 10px;
             padding-top: 10px;
             border-top: 1px solid #2a2a2a;
+        }
+        .sys-row {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
         }
         .sys-btn {
             background: #444;
@@ -164,13 +168,26 @@
             box-shadow: inset 0 2px 3px rgba(0,0,0,0.5);
         }
         .sys-btn:active { background: #222; color: #fff; }
+
+        /* 🔥 Стили для кнопок сохранения и загрузки */
+        .save-btn {
+            background: #2a442a;
+            border-color: #3b663b;
+            color: #8fdf8f;
+        }
+        .save-btn:active { background: #152415; color: #fff; }
+        .load-btn {
+            background: #2a3844;
+            border-color: #3b5066;
+            color: #8fbadf;
+        }
+        .load-btn:active { background: #151c24; color: #fff; }
     </style>
 </head>
 <body>
 
-    <!-- 🔥 Новая панелька сверху: Заголовок + Аккуратная кнопка звука -->
     <div class="header-panel">
-        <div style="width: 50px;"></div> <!-- Отступ для центровки текста -->
+        <div style="width: 50px;"></div>
         <h3 class="header-title">🕹️ AKEYS RETRO 🕹️</h3>
         <button id="sound-toggle" class="muted">🔇 Звук</button>
     </div>
@@ -198,8 +215,14 @@
         </div>
         
         <div class="system-buttons">
-            <div class="sys-btn" id="btn-select">Select</div>
-            <div class="sys-btn" id="btn-start">Start</div>
+            <div class="sys-row">
+                <div class="sys-btn" id="btn-select">Select</div>
+                <div class="sys-btn" id="btn-start">Start</div>
+            </div>
+            <div class="sys-row">
+                <div class="sys-btn save-btn" id="btn-save">💾 Сохр.</div>
+                <div class="sys-btn load-btn" id="btn-load">📂 Загр.</div>
+            </div>
         </div>
     </div>
 
@@ -210,7 +233,6 @@
         var canvas = document.getElementById('nes-canvas');
         var ctx = canvas.getContext('2d');
         
-        // --- 📻 НАСТРОЙКА ЗВУКОВОГО ДВИЖКА (Web Audio API) ---
         var audioCtx = null;
         var audioEnabled = false;
         var bufferSize = 4096;
@@ -219,7 +241,6 @@
 
         function initAudio() {
             if (audioCtx) return;
-            // Создаем аудио-контекст под частоту Денди
             var AudioContext = window.AudioContext || window.webkitAudioContext;
             audioCtx = new AudioContext({ sampleRate: 44100 });
             
@@ -229,7 +250,6 @@
                 for (var i = 0; i < bufferSize; i++) {
                     output[i] = audioEnabled ? audioBuffer[i] : 0;
                 }
-                // Очищаем буфер после воспроизведения
                 audioBuffer.fill(0);
                 audioBufferIndex = 0;
             };
@@ -253,7 +273,6 @@
                 }
                 ctx.putImageData(imageData, 0, 0);
             },
-            // Запись звуковых сэмплов от чипа Денди в наш буфер
             onAudioSample: function(left, right) {
                 if (!audioEnabled) return;
                 if (audioBufferIndex < bufferSize) {
@@ -262,17 +281,11 @@
             }
         });
 
-        // 🔥 Кнопка ВКЛ/ВЫКЛ звук
-        var soundBtn = document.getElementById('sound-toggle');
+        soundBtn = document.getElementById('sound-toggle');
         soundBtn.addEventListener('click', function() {
-            initAudio(); // Активируем контекст по первому ручному клику
-            
-            if (audioCtx.state === 'suspended') {
-                audioCtx.resume();
-            }
-
+            initAudio();
+            if (audioCtx.state === 'suspended') audioCtx.resume();
             audioEnabled = !audioEnabled;
-            
             if (audioEnabled) {
                 soundBtn.textContent = "🔊 Звук: ВКЛ";
                 soundBtn.classList.remove('muted');
@@ -281,6 +294,44 @@
                 soundBtn.classList.add('muted');
             }
         });
+
+        // --- 💾 ЛОГИКА СОХРАНЕНИЙ И ЗАГРУЗОК (Save / Load State) ---
+        
+        // Функция сохранения игры
+        document.getElementById('btn-save').addEventListener('click', function() {
+            try {
+                // Извлекаем текущий снимок ОЗУ и процессора из эмулятора JSNES
+                var state = nes.toJSON();
+                // Переводим его в текст и жестко пишем в память телефона
+                localStorage.setItem('akeys_mario_save', JSON.stringify(state));
+                
+                // Легкая вибрация телефона и уведомление, что всё ок
+                window.Telegram.WebApp.HapticFeedback.notificationOccurred('success');
+                alert("💾 Игра сохранена!");
+            } catch (err) {
+                alert("❌ Ошибка сохранения: " + err.message);
+            }
+        });
+
+        // Функция загрузки игры
+        document.getElementById('btn-load').addEventListener('click', function() {
+            try {
+                var savedData = localStorage.getItem('akeys_mario_save');
+                if (!savedData) {
+                    alert("🤷‍♂️ Сейвов пока нет. Сначала сохранитесь!");
+                    return;
+                }
+                // Разворачиваем текст обратно в объект состояния
+                var state = JSON.parse(savedData);
+                // Загружаем его в эмулятор на лету
+                nes.fromJSON(state);
+                
+                window.Telegram.WebApp.HapticFeedback.notificationOccurred('success');
+            } catch (err) {
+                alert("❌ Ошибка загрузки: " + err.message);
+            }
+        });
+
 
         function loadRom(url) {
             var req = new XMLHttpRequest();
