@@ -203,13 +203,14 @@
         var canvas = document.getElementById('nes-canvas');
         var ctx = canvas.getContext('2d');
         
+        // --- 📻 НАСТРОЙКА ЗВУКОВОГО ДВИЖКА ---
         var audioCtx = null;
         var audioEnabled = false;
         var bufferSize = 4096;
         var audioBuffer = new Float32Array(bufferSize);
         var audioBufferIndex = 0;
         var gameLoopInterval = null;
-        var currentRomName = ""; // ID для раздельных сохранений
+        var currentRomName = ""; 
 
         function initAudio() {
             if (audioCtx) return;
@@ -249,26 +250,30 @@
             }
         });
 
-        // Переключатель звука
-        document.getElementById('sound-toggle').addEventListener('click', function() {
-            initAudio();
-            if (audioCtx && audioCtx.state === 'suspended') audioCtx.resume();
-            audioEnabled = !audioEnabled;
-            this.textContent = audioEnabled ? "🔊 Звук: ВКЛ" : "🔇 Звук";
-            if(audioEnabled) this.classList.remove('muted'); else this.classList.add('muted');
-        });
+        // 🔥 ИСПРАВЛЕНО: Добавлено var, теперь скрипт не падает!
+        var soundBtn = document.getElementById('sound-toggle');
+        if (soundBtn) {
+            soundBtn.addEventListener('click', function() {
+                initAudio();
+                if (audioCtx && audioCtx.state === 'suspended') audioCtx.resume();
+                audioEnabled = !audioEnabled;
+                this.textContent = audioEnabled ? "🔊 Звук: ВКЛ" : "🔇 Звук";
+                if(audioEnabled) this.classList.remove('muted'); else this.classList.add('muted');
+            });
+        }
 
-        // 🔥 ФУНКЦИЯ ЗАПУСКА ВЫБРАННОЙ ИГРЫ Из КАТАЛОГА
+        // --- 🔥 ФУНКЦИЯ ЗАПУСКА ВЫБРАННОЙ ИГРЫ ---
         function startGame(romUrl, gameTitle) {
-            currentRomName = romUrl; // Запоминаем имя для сейвов
+            currentRomName = romUrl; 
             document.getElementById('catalog-container').style.display = 'none';
             document.getElementById('game-screen').style.display = 'flex';
             document.getElementById('back-to-catalog').style.display = 'block';
             document.getElementById('main-title').textContent = gameTitle;
             
-            window.Telegram.WebApp.HapticFeedback.impactOccurred('medium');
+            if (window.Telegram && window.Telegram.WebApp && window.Telegram.WebApp.HapticFeedback) {
+                window.Telegram.WebApp.HapticFeedback.impactOccurred('medium');
+            }
 
-            // Скачиваем выбранный ROM
             var req = new XMLHttpRequest();
             req.open("GET", romUrl, true);
             req.overrideMimeType("text/plain; charset=x-user-defined");
@@ -285,39 +290,70 @@
             req.send();
         }
 
-        // 🔥 ВЫХОД ОБРАТНО В КАТАЛОГ
+        // --- 🔥 ВЫХОД ОБРАТНО В КАТАЛОГ ---
         function exitToCatalog() {
             if(gameLoopInterval) clearInterval(gameLoopInterval);
             document.getElementById('game-screen').style.display = 'none';
             document.getElementById('back-to-catalog').style.display = 'none';
             document.getElementById('catalog-container').style.display = 'grid';
             document.getElementById('main-title').textContent = '🕹️ AKEYS RETRO 🕹️';
-            window.Telegram.WebApp.HapticFeedback.impactOccurred('light');
+            
+            if (window.Telegram && window.Telegram.WebApp && window.Telegram.WebApp.HapticFeedback) {
+                window.Telegram.WebApp.HapticFeedback.impactOccurred('light');
+            }
         }
-        document.getElementById('back-to-catalog').addEventListener('click', exitToCatalog);
+        
+        var backBtn = document.getElementById('back-to-catalog');
+        if (backBtn) {
+            backBtn.addEventListener('click', exitToCatalog);
+        }
 
-        // КНОПКИ СОХРАНЕНИЙ (Привязаны к имени текущей игры!)
-        document.getElementById('btn-save').addEventListener('click', function() {
-            try {
-                var state = nes.toJSON();
-                localStorage.setItem('save_' + currentRomName, JSON.stringify(state));
-                window.Telegram.WebApp.HapticFeedback.notificationOccurred('success');
-                alert("💾 Прогресс сохранен!");
-            } catch (err) { alert("Ошибка: " + err.message); }
-        });
+        // --- КНОПКИ СОХРАНЕНИЙ ---
+        var saveBtn = document.getElementById('btn-save');
+        if (saveBtn) {
+            saveBtn.addEventListener('click', function() {
+                try {
+                    var state = nes.toJSON();
+                    localStorage.setItem('save_' + currentRomName, JSON.stringify(state));
+                    if (window.Telegram && window.Telegram.WebApp && window.Telegram.WebApp.HapticFeedback) {
+                        window.Telegram.WebApp.HapticFeedback.notificationOccurred('success');
+                    }
+                    alert("💾 Прогресс сохранен!");
+                } catch (err) { alert("Ошибка: " + err.message); }
+            });
+        }
 
-        document.getElementById('btn-load').addEventListener('click', function() {
-            try {
-                var savedData = localStorage.getItem('save_' + currentRomName);
-                if (!savedData) { alert("🤷‍♂️ Для этой игры пока нет сохранений!"); return; }
-                nes.fromJSON(JSON.parse(savedData));
-                window.Telegram.WebApp.HapticFeedback.notificationOccurred('success');
-            } catch (err) { alert("Ошибка: " + err.message); }
-        });
+        var loadBtn = document.getElementById('btn-load');
+        if (loadBtn) {
+            loadBtn.addEventListener('click', function() {
+                try {
+                    var savedData = localStorage.getItem('save_' + currentRomName);
+                    if (!savedData) { alert("🤷‍♂️ Для этой игры пока нет сохранений!"); return; }
+                    nes.fromJSON(JSON.parse(savedData));
+                    if (window.Telegram && window.Telegram.WebApp && window.Telegram.WebApp.HapticFeedback) {
+                        window.Telegram.WebApp.HapticFeedback.notificationOccurred('success');
+                    }
+                } catch (err) { alert("Ошибка: " + err.message); }
+            });
+        }
 
         // Навешивание кнопок геймпада
         function bindKey(elementId, nesKey) {
             var el = document.getElementById(elementId);
             if(el) {
                 el.addEventListener('touchstart', function(e) { e.preventDefault(); nes.buttonDown(1, nesKey); });
-                el.
+                el.addEventListener('touchend', function(e) { e.preventDefault(); nes.buttonUp(1, nesKey); });
+                el.addEventListener('mousedown', function(e) { nes.buttonDown(1, nesKey); });
+                el.addEventListener('mouseup', function(e) { nes.buttonUp(1, nesKey); });
+            }
+        }
+        
+        bindKey('up', jsnes.Controller.BUTTON_UP); 
+        bindKey('down', jsnes.Controller.BUTTON_DOWN);
+        bindKey('left', jsnes.Controller.BUTTON_LEFT); 
+        bindKey('right', jsnes.Controller.BUTTON_RIGHT);
+        bindKey('btn-a', jsnes.Controller.BUTTON_A); 
+        bindKey('btn-b', jsnes.Controller.BUTTON_B);
+        bindKey('btn-start', jsnes.Controller.BUTTON_START); 
+        bindKey('btn-select', jsnes.Controller.BUTTON_SELECT);
+    </script>
