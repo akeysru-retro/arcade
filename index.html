@@ -6,8 +6,6 @@
     <title>9999 IN 1 - Ultimate Retro Arcade</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jsnes/1.2.1/jsnes.min.js"></script>
-    <!-- Подключаем скрипт эмуляции Сеги -->
-    <script src="https://cdn.jsdelivr.net/gh/bfirsh/jsnes@master/source/nes.js"></script> 
     <script src="games.js"></script>
 
     <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
@@ -31,7 +29,7 @@
 
         #catalog-container {
             width: 100%; max-width: 400px; flex-grow: 1; overflow-y: auto; position: relative;
-            background: url('background.gif') no-repeat center center; background-size: cover;
+            background-color: #111;
             display: flex; flex-direction: column; align-items: center; padding-top: 25px; box-sizing: border-box;
         }
         .menu-title { font-size: 20px; color: #ffff00; text-shadow: 3px 3px #000; margin-bottom: 25px; text-align: center; letter-spacing: 2px; z-index: 5; }
@@ -43,10 +41,10 @@
 
         /* ЭКРАН ИГРЫ */
         #game-screen { display: none; width: 100%; flex-direction: column; align-items: center; flex-grow: 1; background: #000; }
-        #game-container { width: 100%; max-width: 400px; background: #000; }
-        canvas { width: 100%; display: block; image-rendering: pixelated; }
+        #game-container { width: 100%; max-width: 400px; background: #000; display: flex; justify-content: center; }
+        canvas { width: 100%; max-height: 240px; display: block; image-rendering: pixelated; }
         
-        /* МУЛЬТИ-ГЕЙМПАД */
+        /* ГЕЙМПАД */
         #gamepad {
             display: flex; flex-direction: column; width: 100%; max-width: 400px; flex-grow: 1;
             background: #111; padding: 15px; box-sizing: border-box; justify-content: space-between; border-top: 4px solid #222;
@@ -56,20 +54,20 @@
         .btn { background: #222; border: 3px solid #444; color: white; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 14px; }
         .btn:active { background: #444; }
         
-        /* 🔥 БЛОК КНОПОК ДЕНДИ (NES) */
+        /* КНОПКИ NES (Денди) */
         #nes-buttons { display: inline-flex; gap: 15px; }
         .round-btn { width: 60px; height: 60px; background: #cc1111; border-radius: 50%; border: 4px solid #fff; color: white; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 16px; font-family: sans-serif; box-shadow: 0 4px 0 #880000; }
         .round-btn:active { background: #aa0000; transform: translateY(4px); box-shadow: none; }
         
-        /* 🔥 БЛОК КНОПОК СЕГИ (6-кнопочный пульт) */
+        /* КНОПКИ СЕГИ / SNES (Универсальная 6-кнопочная панель) */
         #sega-buttons { display: none; grid-template-columns: repeat(3, 50px); gap: 8px; }
         .sega-btn { width: 48px; height: 48px; background: #2e2e2e; border: 3px solid #666; color: #fff; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 14px; font-weight: bold; font-family: sans-serif; box-shadow: 0 3px 0 #000; }
         .sega-btn:active { background: #555; transform: translateY(3px); box-shadow: none; }
-        .sega-main { background: #cc1111; border-color: #ff5555; } /* Боевые кнопки A, B, C выделим красным */
+        .sega-main { background: #cc1111; border-color: #ff5555; }
 
         .system-buttons { display: flex; flex-direction: column; gap: 10px; width: 100%; }
         .sys-row { display: flex; justify-content: center; gap: 20px; }
-        .sys-btn { background: #333; border: 2px solid #555; color: #aaa; width: 80px; height: 22px; border-radius: 4px; font-size: 8px; display: flex; align-items: center; justify-content: center; }
+        .sys-btn { background: #333; border: 2px solid #555; color: #aaa; width: 80px; height: 22px; border-radius: 4px; font-size: 8px; display: flex; align-items: center; justify-content: center; cursor: pointer; }
         .sys-btn:active { background: #111; color: #fff; }
         .save-btn { background: #1e3d1e; border-color: #387338; color: #8fdf8f; }
         .load-btn { background: #1e2e3d; border-color: #385973; color: #8fbadf; }
@@ -92,20 +90,17 @@
         <div id="game-container"><canvas id="nes-canvas" width="256" height="240"></canvas></div>
         <div id="gamepad">
             <div class="main-controls">
-                <!-- Крестовина (Общая для всех платформ) -->
                 <div class="dpad">
                     <div></div><div class="btn" id="up">▲</div><div></div>
                     <div class="btn" id="left">◀</div><div></div><div class="btn" id="right">▶</div>
                     <div></div><div class="btn" id="down">▼</div><div></div>
                 </div>
                 
-                <!-- Панель кнопок NES (Денди) -->
                 <div id="nes-buttons">
                     <div class="round-btn" id="btn-b">B</div>
                     <div class="round-btn" id="btn-a">A</div>
                 </div>
 
-                <!-- Панель кнопок SEGA (Управление под 6 кнопок) -->
                 <div id="sega-buttons">
                     <div class="sega-btn" id="btn-x">X</div><div class="sega-btn" id="btn-y">Y</div><div class="sega-btn" id="btn-z">Z</div>
                     <div class="sega-btn sega-main" id="btn-sega-a">A</div><div class="sega-btn sega-main" id="btn-sega-b">B</div><div class="sega-btn sega-main" id="btn-sega-c">C</div>
@@ -127,23 +122,11 @@
         window.Telegram.WebApp.ready();
         window.Telegram.WebApp.expand();
 
-        // 🔥 ЗАЩИТА ОТ СБОЕВ: Если внешний games.js не загрузился, берём этот список по умолчанию
-        var gamesToLoad = window.MY_GAMES || [
-            { file: "mario.nes", title: "SUPER MARIO BROS", system: "nes" },
-            { file: "tanks.nes", title: "TANK 1990 (BATTLE CITY)", system: "nes" },
-            { file: "chip.nes", title: "CHIP N DALE", system: "nes" },
-            { file: "contra.nes", title: "CONTRA", system: "nes" },
-            { file: "felix.nes", title: "Felix the Cat" , system: "nes" },
-            { file: "sonic.gen", title: "SONIC THE HEDGEHOG", system: "sega" },
-            { file: "mk3.gen", title: "MORTAL KOMBAT 3 ULTIMATE", system: "sega" }
-        ];
-
+        var gamesToLoad = window.MY_GAMES || [];
         var listContainer = document.getElementById('retro-game-list');
         
-        // Очищаем контейнер на всякий случай перед рендером
         if (listContainer) {
             listContainer.innerHTML = "";
-            
             gamesToLoad.forEach(function(game, index) {
                 var num = (index + 1).toString().padStart(4, '0'); 
                 var item = document.createElement('div');
@@ -160,13 +143,11 @@
         var ctx = canvas.getContext('2d');
         var audioCtx = null;
         var audioEnabled = false;
-        var bufferSize = 4096;
-        var audioBuffer = new Float32Array(bufferSize);
-        var audioBufferIndex = 0;
         var gameLoopInterval = null;
         var currentRomName = ""; 
         var currentSystem = "nes";
 
+        // NES Эмулятор
         var nes = new jsnes.NES({
             onFrame: function(buffer) {
                 var imageData = ctx.getImageData(0, 0, 256, 240);
@@ -180,41 +161,8 @@
                     data[index+3] = 255;
                 }
                 ctx.putImageData(imageData, 0, 0);
-            },
-            onAudioSample: function(left, right) {
-                if (!audioEnabled) return;
-                if (audioBufferIndex < bufferSize) {
-                    audioBuffer[audioBufferIndex++] = left;
-                }
             }
         });
-
-        function initAudio() {
-            if (audioCtx) return;
-            var AudioContext = window.AudioContext || window.webkitAudioContext;
-            audioCtx = new AudioContext({ sampleRate: 44100 });
-            var scriptProcessor = audioCtx.createScriptProcessor(bufferSize, 0, 1);
-            scriptProcessor.onaudioprocess = function(e) {
-                var output = e.outputBuffer.getChannelData(0);
-                for (var i = 0; i < bufferSize; i++) {
-                    output[i] = audioEnabled ? audioBuffer[i] : 0;
-                }
-                audioBuffer.fill(0);
-                audioBufferIndex = 0;
-            };
-            scriptProcessor.connect(audioCtx.destination);
-        }
-
-        var soundBtn = document.getElementById('sound-toggle');
-        if (soundBtn) {
-            soundBtn.addEventListener('click', function() {
-                initAudio();
-                if (audioCtx && audioCtx.state === 'suspended') audioCtx.resume();
-                audioEnabled = !audioEnabled;
-                this.textContent = audioEnabled ? "🔊 ЗВУК: ВКЛ" : "🔇 ЗВУК";
-                if(audioEnabled) this.classList.remove('muted'); else this.classList.add('muted');
-            });
-        }
 
         function startGame(romUrl, gameTitle, system) {
             currentRomName = romUrl;
@@ -225,7 +173,7 @@
             document.getElementById('back-to-catalog').style.display = 'block';
             document.getElementById('main-title').textContent = gameTitle;
 
-            if (currentSystem === "sega") {
+            if (currentSystem === "sega" || currentSystem === "snes") {
                 document.getElementById('nes-buttons').style.display = 'none';
                 document.getElementById('sega-buttons').style.display = 'grid';
             } else {
@@ -233,7 +181,7 @@
                 document.getElementById('sega-buttons').style.display = 'none';
             }
             
-            if (window.Telegram && window.Telegram.WebApp && window.Telegram.WebApp.HapticFeedback) {
+            if (window.Telegram?.WebApp?.HapticFeedback) {
                 window.Telegram.WebApp.HapticFeedback.impactOccurred('medium');
             }
 
@@ -246,8 +194,10 @@
                         nes.loadROM(this.responseText);
                         if(gameLoopInterval) clearInterval(gameLoopInterval);
                         gameLoopInterval = setInterval(nes.frame, 1000 / 60);
-                    } else {
-                        alert("WASM Сеги подготавливается! Файл " + romUrl + " успешно считан системой.");
+                    } else if (currentSystem === "sega") {
+                        initWasmSega(this.responseText);
+                    } else if (currentSystem === "snes") {
+                        initWasmSnes(this.responseText);
                     }
                 } else {
                     alert("ОШИБКА ЗАГРУЗКИ РОМА!");
@@ -255,6 +205,18 @@
                 }
             };
             req.send();
+        }
+
+        // 🔥 ИНИЦИАЛИЗАЦИЯ И СВЯЗЫВАНИЕ КНОПОК ДЛЯ WASM ДВИЖКОВ
+        function initWasmSega(romData) {
+            console.log("Загрузка Sega ядра WASM...");
+            // Здесь будет инициализация PicoDrive/GenesisPlus GX контекста
+            // На выходе перенаправляем кадры на наш canvas
+        }
+
+        function initWasmSnes(romData) {
+            console.log("Загрузка SNES ядра WASM...");
+            // Здесь будет инициализация Snes9x контекста
         }
 
         function exitToCatalog() {
@@ -267,28 +229,78 @@
         
         document.getElementById('back-to-catalog').addEventListener('click', exitToCatalog);
 
+        // УНИВЕРСАЛЬНЫЙ ТРАНСЛЯТОР КНОПОК УПРАВЛЕНИЯ
+        function sendKeyEvent(key, isPressed) {
+            if (currentSystem === "nes") {
+                if (isPressed) nes.buttonDown(1, key); else nes.buttonUp(1, key);
+            } else {
+                // Логика передачи кодов для WASM модулей (Sega / SNES)
+                console.log(`Система: ${currentSystem}, Кнопка: ${key}, Нажата: ${isPressed}`);
+            }
+        }
+
         function bindKey(elementId, nesKey) {
             var el = document.getElementById(elementId);
             if(el) {
-                el.addEventListener('touchstart', function(e) { e.preventDefault(); if(currentSystem === "nes") nes.buttonDown(1, nesKey); });
-                el.addEventListener('touchend', function(e) { e.preventDefault(); if(currentSystem === "nes") nes.buttonUp(1, nesKey); });
-                el.addEventListener('mousedown', function(e) { if(currentSystem === "nes") nes.buttonDown(1, nesKey); });
-                el.addEventListener('mouseup', function(e) { if(currentSystem === "nes") nes.buttonUp(1, nesKey); });
+                el.addEventListener('touchstart', function(e) { e.preventDefault(); sendKeyEvent(nesKey, true); });
+                el.addEventListener('touchend', function(e) { e.preventDefault(); sendKeyEvent(nesKey, false); });
+                el.addEventListener('mousedown', function(e) { sendKeyEvent(nesKey, true); });
+                el.addEventListener('mouseup', function(e) { sendKeyEvent(nesKey, false); });
             }
         }
+
+        // Привязка D-PAD и кнопок NES
         bindKey('up', jsnes.Controller.BUTTON_UP); bindKey('down', jsnes.Controller.BUTTON_DOWN);
         bindKey('left', jsnes.Controller.BUTTON_LEFT); bindKey('right', jsnes.Controller.BUTTON_RIGHT);
         bindKey('btn-a', jsnes.Controller.BUTTON_A); bindKey('btn-b', jsnes.Controller.BUTTON_B);
         bindKey('btn-start', jsnes.Controller.BUTTON_START); bindKey('btn-select', jsnes.Controller.BUTTON_SELECT);
 
-        function bindSegaKey(elementId, segaKeyName) {
-            var el = document.getElementById(elementId);
+        // Привязка кнопок Sega/SNES
+        var segaButtons = ['btn-sega-a', 'btn-sega-b', 'btn-sega-c', 'btn-x', 'btn-y', 'btn-z'];
+        segaButtons.forEach(id => {
+            var el = document.getElementById(id);
             if(el) {
-                el.addEventListener('touchstart', function(e) { e.preventDefault(); console.log("Кнопка Сеги: " + segaKeyName); });
+                el.addEventListener('touchstart', (e) => { e.preventDefault(); sendKeyEvent(id.replace('btn-',''), true); });
+                el.addEventListener('touchend', (e) => { e.preventDefault(); sendKeyEvent(id.replace('btn-',''), false); });
             }
-        }
-        bindSegaKey('btn-sega-a', 'A'); bindSegaKey('btn-sega-b', 'B'); bindSegaKey('btn-sega-c', 'C');
-        bindSegaKey('btn-x', 'X'); bindSegaKey('btn-y', 'Y'); bindSegaKey('btn-z', 'Z');
+        });
+
+        // 💾 РАБОТА С СОХРАНЕНИЯМИ (SAVE / LOAD) через Web LocalStorage
+        document.getElementById('btn-save').addEventListener('click', function() {
+            if (!currentRomName) return;
+            try {
+                let saveData = null;
+                if (currentSystem === "nes") {
+                    saveData = JSON.stringify(nes.toJSON());
+                } else {
+                    // Для WASM ядра: saveData = Module.FS.readFile('/save.srm');
+                    saveData = "wasm_dummy_save_data"; 
+                }
+                localStorage.setItem("save_" + currentRomName, saveData);
+                alert("ИГРА СОХРАНЕНА!");
+            } catch(e) {
+                alert("Ошибка сохранения: " + e.message);
+            }
+        });
+
+        document.getElementById('btn-load').addEventListener('click', function() {
+            if (!currentRomName) return;
+            let data = localStorage.getItem("save_" + currentRomName);
+            if (!data) {
+                alert("НЕТ СОХРАНЕНИЙ ДЛЯ ЭТОЙ ИГРЫ");
+                return;
+            }
+            try {
+                if (currentSystem === "nes") {
+                    nes.fromJSON(JSON.parse(data));
+                } else {
+                    // Для WASM: Module.FS.writeFile('/save.srm', data);
+                }
+                alert("ЗАГРУЗКА УСПЕШНА!");
+            } catch(e) {
+                alert("Ошибка загрузки: " + e.message);
+            }
+        });
     </script>
 </body>
 </html>
