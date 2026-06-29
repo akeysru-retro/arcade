@@ -29,7 +29,7 @@
 
         #catalog-container {
             width: 100%; max-width: 400px; flex-grow: 1; overflow-y: auto; position: relative;
-            background: url('background.gif') no-repeat center center; background-size: cover;
+            background-color: #111;
             display: flex; flex-direction: column; align-items: center; padding-top: 25px; box-sizing: border-box;
         }
         .menu-title { font-size: 20px; color: #ffff00; text-shadow: 3px 3px #000; margin-bottom: 25px; text-align: center; letter-spacing: 2px; z-index: 5; }
@@ -42,12 +42,12 @@
         /* ЭКРАН ИГРЫ */
         #game-screen { display: none; width: 100%; flex-direction: column; align-items: center; flex-grow: 1; background: #000; }
         #game-container { width: 100%; max-width: 400px; background: #000; display: flex; justify-content: center; position: relative; }
-        canvas { width: 100%; max-height: 240px; display: block; image-rendering: pixelated; }
+        canvas { width: 100%; display: block; image-rendering: pixelated; }
         
         /* КОНТЕЙНЕР ДЛЯ EMULATOR JS */
-        #emulatorjs-frame { display: none; width: 100%; height: 240px; background: #000; }
+        #emulator_frame { display: none; width: 100%; height: 240px; background: #000; }
 
-        /* ГЕЙМПАД ДЛЯ NES */
+        /* РОДНОЙ ГЕЙМПАД ДЛЯ NES */
         #gamepad {
             display: flex; flex-direction: column; width: 100%; max-width: 400px; flex-grow: 1;
             background: #111; padding: 15px; box-sizing: border-box; justify-content: space-between; border-top: 4px solid #222;
@@ -63,7 +63,7 @@
         
         .system-buttons { display: flex; flex-direction: column; gap: 10px; width: 100%; }
         .sys-row { display: flex; justify-content: center; gap: 20px; }
-        .sys-btn { background: #333; border: 2px solid #555; color: #aaa; width: 80px; height: 22px; border-radius: 4px; font-size: 8px; display: flex; align-items: center; justify-content: center; cursor: pointer; }
+        .sys-btn { background: #333; border: 2px solid #555; color: #aaa; width: 80px; height: 22px; border-radius: 4px; font-size: 8px; display: flex; align-items: center; justify-content: center; }
         .sys-btn:active { background: #111; color: #fff; }
         .save-btn { background: #1e3d1e; border-color: #387338; color: #8fdf8f; }
         .load-btn { background: #1e2e3d; border-color: #385973; color: #8fbadf; }
@@ -85,9 +85,8 @@
     <div id="game-screen">
         <div id="game-container">
             <canvas id="nes-canvas" width="256" height="240"></canvas>
-            <div id="emulatorjs-frame"></div>
+            <div id="emulator_frame"></div>
         </div>
-        
         <div id="gamepad">
             <div class="main-controls">
                 <div class="dpad">
@@ -112,21 +111,12 @@
     </div>
 
     <script>
-        window.onerror = function(message, source, lineno, colno, error) {
-            alert("Ошибка JS: " + message + " на строке " + lineno);
-            return false;
-        };
+        window.Telegram.WebApp.ready();
+        window.Telegram.WebApp.expand();
 
-        if (window.Telegram && window.Telegram.WebApp) {
-            window.Telegram.WebApp.ready();
-            window.Telegram.WebApp.expand();
-        }
-
-        var gamesToLoad = window.MY_GAMES || [
-            { file: "mario.nes", title: "SUPER MARIO BROS", system: "nes" }
-        ];
-
+        var gamesToLoad = window.MY_GAMES || [];
         var listContainer = document.getElementById('retro-game-list');
+        
         if (listContainer) {
             listContainer.innerHTML = "";
             gamesToLoad.forEach(function(game, index) {
@@ -143,49 +133,15 @@
 
         var canvas = document.getElementById('nes-canvas');
         var ctx = canvas.getContext('2d');
-        var gameLoopInterval = null;
-        var currentRomName = ""; 
-        var currentSystem = "nes";
-
-        // --- АУДИО NES ---
         var audioCtx = null;
         var audioEnabled = false;
         var bufferSize = 4096;
         var audioBuffer = new Float32Array(bufferSize);
         var audioBufferIndex = 0;
+        var gameLoopInterval = null;
+        var currentRomName = ""; 
+        var currentSystem = "nes";
 
-        function initAudio() {
-            if (audioCtx) return;
-            try {
-                var AudioContext = window.AudioContext || window.webkitAudioContext;
-                audioCtx = new AudioContext({ sampleRate: 44100 });
-                var scriptProcessor = audioCtx.createScriptProcessor(bufferSize, 0, 1);
-                scriptProcessor.onaudioprocess = function(e) {
-                    var output = e.outputBuffer.getChannelData(0);
-                    for (var i = 0; i < bufferSize; i++) {
-                        output[i] = audioEnabled ? audioBuffer[i] : 0;
-                    }
-                    audioBuffer.fill(0);
-                    audioBufferIndex = 0;
-                };
-                scriptProcessor.connect(audioCtx.destination);
-            } catch(e) {
-                console.log(e.message);
-            }
-        }
-
-        var soundBtn = document.getElementById('sound-toggle');
-        if (soundBtn) {
-            soundBtn.addEventListener('click', function() {
-                initAudio();
-                if (audioCtx && audioCtx.state === 'suspended') audioCtx.resume();
-                audioEnabled = !audioEnabled;
-                this.textContent = audioEnabled ? "🔊 ЗВУК: ВКЛ" : "🔇 ЗВУК";
-                if(audioEnabled) this.classList.remove('muted'); else this.classList.add('muted');
-            });
-        }
-
-        // NES Движок
         var nes = new jsnes.NES({
             onFrame: function(buffer) {
                 var imageData = ctx.getImageData(0, 0, 256, 240);
@@ -208,23 +164,44 @@
             }
         });
 
-        // --- ЛОГИКА ИНИЦИАЛИЗАЦИИ EMULATOR JS (Sega / SNES) ---
-        function launchEmulatorJS(romUrl, systemType) {
-            // Динамически определяем имя ядра для EmulatorJS
-            var coreName = (systemType === "sega") ? "segaMD" : "snes";
-            
-            // Задаем глобальные конфигурационные параметры для официального loader.js
-            window.EJS_player = "#emulatorjs-frame";
-            window.EJS_core = coreName;
-            window.EJS_pathtodata = "https://cdn.emulatorjs.org/stable/data/"; // Официальный стабильный дата-сервер
-            window.EJS_gameUrl = window.location.origin + window.location.pathname.replace("index.html", "") + romUrl; // Абсолютный путь к РОМу на GitHub Pages
+        function initAudio() {
+            if (audioCtx) return;
+            var AudioContext = window.AudioContext || window.webkitAudioContext;
+            audioCtx = new AudioContext({ sampleRate: 44100 });
+            var scriptProcessor = audioCtx.createScriptProcessor(bufferSize, 0, 1);
+            scriptProcessor.onaudioprocess = function(e) {
+                var output = e.outputBuffer.getChannelData(0);
+                for (var i = 0; i < bufferSize; i++) {
+                    output[i] = audioEnabled ? audioBuffer[i] : 0;
+                }
+                audioBuffer.fill(0);
+                audioBufferIndex = 0;
+            };
+            scriptProcessor.connect(audioCtx.destination);
+        }
+
+        var soundBtn = document.getElementById('sound-toggle');
+        if (soundBtn) {
+            soundBtn.addEventListener('click', function() {
+                initAudio();
+                if (audioCtx && audioCtx.state === 'suspended') audioCtx.resume();
+                audioEnabled = !audioEnabled;
+                this.textContent = audioEnabled ? "🔊 ЗВУК: ВКЛ" : "🔇 ЗВУК";
+                if(audioEnabled) this.classList.remove('muted'); else this.classList.add('muted');
+            });
+        }
+
+        function launchSega(romUrl) {
+            window.EJS_player = "#emulator_frame";
+            window.EJS_core = "segaMD";
+            window.EJS_pathtodata = "https://cdn.emulatorjs.org/stable/data/"; // Официальные WASM файлы ядер
+            window.EJS_gameUrl = window.location.origin + window.location.pathname.replace("index.html", "") + romUrl;
             window.EJS_startOnLoaded = true;
             window.EJS_Volume = audioEnabled ? 1 : 0;
 
-            // Динамически подгружаем скрипт загрузчика с официального CDN
-            var loaderScript = document.createElement("script");
-            loaderScript.src = "https://cdn.emulatorjs.org/stable/data/loader.js";
-            document.head.appendChild(loaderScript);
+            var loader = document.createElement("script");
+            loader.src = "https://cdn.emulatorjs.org/stable/data/loader.js";
+            document.head.appendChild(loader);
         }
 
         function startGame(romUrl, gameTitle, system) {
@@ -236,19 +213,15 @@
             document.getElementById('back-to-catalog').style.display = 'block';
             document.getElementById('main-title').textContent = gameTitle;
 
-            if (currentSystem === "sega" || currentSystem === "snes") {
-                // Переключаем экраны под EmulatorJS
+            if (currentSystem === "sega") {
                 document.getElementById('nes-canvas').style.display = 'none';
-                document.getElementById('gamepad').style.display = 'none'; // EmulatorJS создаст свой виртуальный пульт поверх фрейма
-                document.getElementById('emulatorjs-frame').style.display = 'block';
-                
-                // Запускаем 16-битную систему
-                launchEmulatorJS(romUrl, currentSystem);
+                document.getElementById('gamepad').style.display = 'none';
+                document.getElementById('emulator_frame').style.display = 'block';
+                launchSega(romUrl);
             } else {
-                // Включаем классический NES режим
                 document.getElementById('nes-canvas').style.display = 'block';
                 document.getElementById('gamepad').style.display = 'flex';
-                document.getElementById('emulatorjs-frame').style.display = 'none';
+                document.getElementById('emulator_frame').style.display = 'none';
                 
                 var req = new XMLHttpRequest();
                 req.open("GET", romUrl, true);
@@ -265,25 +238,25 @@
                 };
                 req.send();
             }
+            
+            if (window.Telegram && window.Telegram.WebApp && window.Telegram.WebApp.HapticFeedback) {
+                window.Telegram.WebApp.HapticFeedback.impactOccurred('medium');
+            }
         }
 
         function exitToCatalog() {
             if(gameLoopInterval) clearInterval(gameLoopInterval);
-            
-            // Если была запущена Сега/SNES — перезагружаем окно фрейма для очистки памяти
-            if(currentSystem !== "nes") {
-                document.getElementById('emulatorjs-frame').innerHTML = "";
+            if(currentSystem === "sega") {
+                document.getElementById('emulator_frame').innerHTML = "";
             }
-
             document.getElementById('game-screen').style.display = 'none';
             document.getElementById('back-to-catalog').style.display = 'none';
             document.getElementById('catalog-container').style.display = 'flex';
             document.getElementById('main-title').textContent = '9999 IN 1';
         }
-
+        
         document.getElementById('back-to-catalog').addEventListener('click', exitToCatalog);
 
-        // Привязка кнопок для NES режима
         function bindKey(elementId, nesKey) {
             var el = document.getElementById(elementId);
             if(el) {
@@ -298,11 +271,10 @@
         bindKey('btn-a', jsnes.Controller.BUTTON_A); bindKey('btn-b', jsnes.Controller.BUTTON_B);
         bindKey('btn-start', jsnes.Controller.BUTTON_START); bindKey('btn-select', jsnes.Controller.BUTTON_SELECT);
 
-        // СОХРАНЕНИЯ ДЛЯ NES КНОПОК
         document.getElementById('btn-save').addEventListener('click', function() {
             if (currentSystem === "nes" && currentRomName) {
                 localStorage.setItem("save_" + currentRomName, JSON.stringify(nes.toJSON()));
-                alert("NES ИГРА СОХРАНЕНА!");
+                alert("ИГРА NES СОХРАНЕНА!");
             }
         });
 
