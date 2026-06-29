@@ -6,6 +6,10 @@
     <title>9999 IN 1 - Akeys Arcade</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jsnes/1.2.1/jsnes.min.js"></script>
+    
+    <!-- 🔥 ПОДКЛЮЧАЕМ НАШ ВНЕШНИЙ СПИСОК ИГР -->
+    <script src="games.js"></script>
+
     <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
     <style>
         body {
@@ -48,7 +52,6 @@
         #sound-toggle.muted { color: #ffaa00; border-color: #663333; }
         #back-to-catalog { display: none; background: #224; border-color: #448; }
 
-        /* 🔥 ЛЕГЕНДАРНЫЙ ЗАДНИЙ ФОН «9999 IN 1» С ЧАЙКАМИ И ПАЛЬМАМИ */
         #catalog-container {
             width: 100%;
             max-width: 400px;
@@ -63,7 +66,7 @@
             box-sizing: border-box;
         }
 
-        /* Отрисовка графики из 90-х прямо внутри кода */
+        /* Сюда мы и воткнем твою гифку, как только ты её пришлешь */
         .retro-background-svg {
             position: absolute;
             top: 0;
@@ -102,28 +105,12 @@
             align-items: center;
             text-transform: uppercase;
         }
-        .retro-item:active {
-            color: #ffff00;
-        }
-        .retro-item::before {
-            content: "▶ ";
-            opacity: 0;
-            margin-right: 8px;
-            color: #ffff00;
-        }
-        .retro-item:active::before {
-            opacity: 1;
-        }
+        .retro-item:active { color: #ffff00; }
+        .retro-item::before { content: "▶ "; opacity: 0; margin-right: 8px; color: #ffff00; }
+        .retro-item:active::before { opacity: 1; }
 
         /* ЭКРАН ИГРЫ И ГЕЙМПАД */
-        #game-screen {
-            display: none;
-            width: 100%;
-            flex-direction: column;
-            align-items: center;
-            flex-grow: 1;
-            background: #000;
-        }
+        #game-screen { display: none; width: 100%; flex-direction: column; align-items: center; flex-grow: 1; background: #000; }
         #game-container { width: 100%; max-width: 400px; background: #000; }
         canvas { width: 100%; display: block; image-rendering: pixelated; }
         
@@ -165,61 +152,29 @@
         <button id="sound-toggle" class="head-btn muted">🔇 ЗВУК</button>
     </div>
     
-    <!-- НАШЕ МЕНЮ ИЗ ВИНТАЖНОГО ВИДЕО -->
     <div id="catalog-container">
-        
-        <!-- Векторный бэкграунд, полностью копирующий многоигровку с чайками -->
+        <!-- Временный векторный бэкграунд (заменим его на твою гифку) -->
         <svg class="retro-background-svg" viewBox="0 0 400 500" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
             <defs>
-                <!-- Небо: переход от синего к голубому и оранжевому закату -->
                 <linearGradient id="skyGrad" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%" stop-color="#2471a3"/>
-                    <stop offset="45%" stop-color="#5dade2"/>
-                    <stop offset="65%" stop-color="#ff7f50"/>
-                    <stop offset="74%" stop-color="#f4d03f"/>
-                    <stop offset="75%" stop-color="#1b4f72"/>
-                    <stop offset="100%" stop-color="#0b2240"/>
+                    <stop offset="0%" stop-color="#2471a3"/><stop offset="45%" stop-color="#5dade2"/>
+                    <stop offset="65%" stop-color="#ff7f50"/><stop offset="74%" stop-color="#f4d03f"/>
+                    <stop offset="75%" stop-color="#1b4f72"/><stop offset="100%" stop-color="#0b2240"/>
                 </linearGradient>
             </defs>
-            
-            <!-- Фон неба и моря -->
             <rect width="400" height="500" fill="url(#skyGrad)"/>
-            
-            <!-- Солнце на горизонте -->
             <circle cx="200" cy="375" r="35" fill="#f5b041" opacity="0.8"/>
-            
-            <!-- Пиксельные облака -->
-            <path d="M30 60 h40 v10 h-40 z M50 50 h30 v10 h-30 z M280 80 h60 v10 h-60 z M300 70 h30 v10 h-30 z" fill="#ffffff" opacity="0.3"/>
-            
-            <!-- Тот самый летящий пиксельный кораблик -->
-            <path d="M280 368 h15 l-5 7 h-15 z M288 360 l4 8 h-4 z" fill="#000000" opacity="0.6"/>
-            
-            <!-- Легендарные Чайки -->
             <path d="M40 120 l8 4 l8 -4 M48 124 v4 M120 90 l6 3 l6 -3 M220 110 l10 5 l10 -5" stroke="#000" stroke-width="2" fill="none" opacity="0.7"/>
-            
-            <!-- Песчаный берег/Остров снизу -->
             <path d="M0 460 Q 100 440, 200 465 T 400 450 L 400 500 L 0 500 Z" fill="#d35400"/>
             <path d="M0 465 Q 120 450, 230 472 T 400 460 L 400 500 L 0 500 Z" fill="#e67e22"/>
-            
-            <!-- Пальмы слева -->
-            <path d="M20 500 Q 25 430, 40 390 Q 30 395, 15 400 M40 390 Q 55 385, 70 390 M40 390 Q 45 370, 40 355 M40 390 Q 35 410, 45 430" stroke="#145a32" stroke-width="4" fill="none"/>
-            <path d="M20 500 Q 25 430, 40 390" stroke="#6e2c00" stroke-width="5" fill="none"/>
-            
-            <!-- Пальмы справа -->
-            <path d="M370 500 Q 360 440, 340 400 Q 320 405, 310 415 M340 400 Q 355 390, 365 380 M340 400 Q 335 380, 330 360" stroke="#145a32" stroke-width="4" fill="none"/>
-            <path d="M370 500 Q 360 440, 340 400" stroke="#6e2c00" stroke-width="5" fill="none"/>
         </svg>
 
         <div class="menu-title">9999 IN 1</div>
         <div class="game-list" id="retro-game-list"></div>
     </div>
 
-    <!-- ЭКРАН С ЭМУЛЯТОРОМ -->
     <div id="game-screen">
-        <div id="game-container">
-            <canvas id="nes-canvas" width="256" height="240"></canvas>
-        </div>
-
+        <div id="game-container"><canvas id="nes-canvas" width="256" height="240"></canvas></div>
         <div id="gamepad">
             <div class="main-controls">
                 <div class="dpad-cell">
@@ -231,19 +186,16 @@
                 </div>
                 <div class="action-cell">
                     <div class="action-buttons">
-                        <div class="round-btn" id="btn-b">B</div>
-                        <div class="round-btn" id="btn-a">A</div>
+                        <div class="round-btn" id="btn-b">B</div><div class="round-btn" id="btn-a">A</div>
                     </div>
                 </div>
             </div>
             <div class="system-buttons">
                 <div class="sys-row">
-                    <div class="sys-btn" id="btn-select">SELECT</div>
-                    <div class="sys-btn" id="btn-start">START</div>
+                    <div class="sys-btn" id="btn-select">SELECT</div><div class="sys-btn" id="btn-start">START</div>
                 </div>
                 <div class="sys-row">
-                    <div class="sys-btn save-btn" id="btn-save">SAVE</div>
-                    <div class="sys-btn load-btn" id="btn-load">LOAD</div>
+                    <div class="sys-btn save-btn" id="btn-save">SAVE</div><div class="sys-btn load-btn" id="btn-load">LOAD</div>
                 </div>
             </div>
         </div>
@@ -253,15 +205,11 @@
         window.Telegram.WebApp.ready();
         window.Telegram.WebApp.expand();
 
-        var MY_GAMES = [
-            { file: "mario.nes", title: "SUPER MARIO BROS" },
-            { file: "tanks.nes", title: "TANK 1990 (BATTLE CITY)" },
-            { file: "chip.nes", title: "CHIP N DALE" },
-            { file: "contra.nes", title: "CONTRA" }
-        ];
-
+        // 🔥 ЧИТАЕМ ИГРЫ ИЗ НАШЕГО ВНЕШНЕГО ФАЙЛА ГИТХАБА
+        var gamesToLoad = window.MY_GAMES || [];
         var listContainer = document.getElementById('retro-game-list');
-        MY_GAMES.forEach(function(game, index) {
+        
+        gamesToLoad.forEach(function(game, index) {
             var num = (index + 1).toString().padStart(4, '0'); 
             var item = document.createElement('div');
             item.className = 'retro-item';
@@ -351,7 +299,7 @@
                     if(gameLoopInterval) clearInterval(gameLoopInterval);
                     gameLoopInterval = setInterval(nes.frame, 1000 / 60);
                 } else {
-                    alert("ОШИБКА: ЗАГРУЗИ ФАЙЛ " + romUrl + " НА GITHUB!");
+                    alert("ОШИБКА СЕТИ ПРИ ЗАГРУЗКЕ .NES ФАЙЛА!");
                     exitToCatalog();
                 }
             };
@@ -364,7 +312,6 @@
             document.getElementById('back-to-catalog').style.display = 'none';
             document.getElementById('catalog-container').style.display = 'flex';
             document.getElementById('main-title').textContent = '9999 IN 1';
-            
             if (window.Telegram && window.Telegram.WebApp && window.Telegram.WebApp.HapticFeedback) {
                 window.Telegram.WebApp.HapticFeedback.impactOccurred('light');
             }
@@ -410,7 +357,6 @@
                 el.addEventListener('mouseup', function(e) { nes.buttonUp(1, nesKey); });
             }
         }
-        
         bindKey('up', jsnes.Controller.BUTTON_UP); bindKey('down', jsnes.Controller.BUTTON_DOWN);
         bindKey('left', jsnes.Controller.BUTTON_LEFT); bindKey('right', jsnes.Controller.BUTTON_RIGHT);
         bindKey('btn-a', jsnes.Controller.BUTTON_A); bindKey('btn-b', jsnes.Controller.BUTTON_B);
