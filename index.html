@@ -6,6 +6,7 @@
     <title>9999 IN 1 - Ultimate Retro Arcade</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jsnes/1.2.1/jsnes.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/gh/Stvprof/NeptuneJS@master/dist/neptune.min.js"></script>
     <script src="games.js"></script>
 
     <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
@@ -155,9 +156,8 @@
         var currentRomName = ""; 
         var currentSystem = "nes";
         
-        // Переменные для эмуляции 16-бит
-        var segaEmulator = null;
-        var snesEmulator = null;
+        // Переменная для инстанса WASM 16-бит плеера
+        var wasmEmuInstance = null;
 
         // --- АУДИО NES ---
         var audioCtx = null;
@@ -222,20 +222,36 @@
             }
         });
 
-        // Эмуляция 16-битных систем
+        // Запуск 16-битных WASM систем (Sega и SNES)
         function init16BitSystem(romTextData, systemType) {
             if(gameLoopInterval) clearInterval(gameLoopInterval);
             
-            // Чистим экран перед запуском новой графики
-            ctx.fillStyle = "#000";
-            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            if (typeof NeptuneJS === 'undefined') {
+                alert("Ошибка загрузки ядра ядра WASM плеера. Проверь сеть.");
+                exitToCatalog();
+                return;
+            }
 
-            if (systemType === "sega") {
-                alert("Запуск Sega: файл считан. Подключаем локальное ядро обработки кадров.");
-                // Логика кадрового рендеринга Сеги на canvas
-            } else if (systemType === "snes") {
-                alert("Запуск SNES: файл считан. Подключаем локальное ядро обработки кадров.");
-                // Логика кадрового рендеринга SNES на canvas
+            // Переводим данные РОМа в массив байт для WASM
+            var len = romTextData.length;
+            var romByteArray = new Uint8Array(len);
+            for (var i = 0; i < len; i++) {
+                romByteArray[i] = romTextData.charCodeAt(i) & 0xff;
+            }
+
+            var consoleType = (systemType === "sega") ? NeptuneJS.Console.SegaGenesis : NeptuneJS.Console.SNES;
+
+            try {
+                wasmEmuInstance = new NeptuneJS({
+                    canvas: canvas,
+                    console: consoleType,
+                    audio: audioEnabled
+                });
+                
+                wasmEmuInstance.loadRom(romByteArray);
+                wasmEmuInstance.start();
+            } catch(e) {
+                alert("Ошибка инициализации 16-бит: " + e.message);
             }
         }
 
@@ -282,6 +298,14 @@
 
         function exitToCatalog() {
             if(gameLoopInterval) clearInterval(gameLoopInterval);
+            if(wasmEmuInstance && wasmEmuInstance.stop) {
+                try { wasmEmuInstance.stop(); } catch(e){}
+            }
+            wasmEmuInstance = null;
+            
+            ctx.fillStyle = "#000";
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
             document.getElementById('game-screen').style.display = 'none';
             document.getElementById('back-to-catalog').style.display = 'none';
             document.getElementById('catalog-container').style.display = 'flex';
@@ -290,11 +314,22 @@
 
         document.getElementById('back-to-catalog').addEventListener('click', exitToCatalog);
 
+        // Управление кнопками
         function sendKeyEvent(key, isPressed) {
             if (currentSystem === "nes") {
                 if (isPressed) nes.buttonDown(1, key); else nes.buttonUp(1, key);
-            } else {
-                console.log("Кнопка 16-бит: " + key + ", Нажата: " + isPressed);
+            } else if ((currentSystem === "sega" || currentSystem === "snes") && wasmEmuInstance) {
+                var wasmKeys = {
+                    'up': wasmEmuInstance.BUTTON_UP, 'down': wasmEmuInstance.BUTTON_DOWN,
+                    'left': wasmEmuInstance.BUTTON_LEFT, 'right': wasmEmuInstance.BUTTON_RIGHT,
+                    'btn-sega-a': wasmEmuInstance.BUTTON_A, 'btn-sega-b': wasmEmuInstance.BUTTON_B, 'btn-sega-c': wasmEmuInstance.BUTTON_X,
+                    'btn-x': wasmEmuInstance.BUTTON_Y, 'btn-y': wasmEmuInstance.BUTTON_L, 'btn-z': wasmEmuInstance.BUTTON_R,
+                    'btn-start': wasmEmuInstance.BUTTON_START, 'btn-select': wasmEmuInstance.BUTTON_SELECT
+                };
+                var targetKey = wasmKeys[key];
+                if (targetKey !== undefined) {
+                    if (isPressed) wasmEmuInstance.buttonDown(targetKey); else wasmEmuInstance.buttonUp(targetKey);
+                }
             }
         }
 
@@ -317,10 +352,10 @@
         segaButtons.forEach(function(id) {
             var el = document.getElementById(id);
             if(el) {
-                el.addEventListener('touchstart', function(e) { e.preventDefault(); sendKeyEvent(id, true); });
-                el.addEventListener('touchend', function(e) { e.preventDefault(); sendKeyEvent(id, false); });
-                el.addEventListener('mousedown', function(e) { sendKeyEvent(id, true); });
-                el.addEventListener('mouseup', function(e) { sendKeyEvent(id, false); });
+                el.addEventListener('touchstart', function(e) { e.preventDefault(); sendKeyEvent(id.replace('btn-',''), true); });
+                el.addEventListener('touchend', function(e) { e.preventDefault(); sendKeyEvent(id.replace('btn-',''), false); });
+                el.addEventListener('mousedown', function(e) { sendKeyEvent(id.replace('btn-',''), true); });
+                el.addEventListener('mouseup', function(e) { sendKeyEvent(id.replace('btn-',''), false); });
             }
         });
 
@@ -331,11 +366,13 @@
                 var saveData = null;
                 if (currentSystem === "nes") {
                     saveData = JSON.stringify(nes.toJSON());
-                } else {
-                    saveData = "16bit_local_save_dummy";
+                } else if (wasmEmuInstance && wasmEmuInstance.getSaveState) {
+                    saveData = wasmEmuInstance.getSaveState(); 
                 }
-                localStorage.setItem("save_" + currentRomName, saveData);
-                alert("ИГРА СОХРАНЕНА!");
+                if(saveData) {
+                    localStorage.setItem("save_" + currentRomName, saveData);
+                    alert("ИГРА СОХРАНЕНА!");
+                }
             } catch(e) {
                 alert("Ошибка сохранения: " + e.message);
             }
@@ -351,6 +388,8 @@
             try {
                 if (currentSystem === "nes") {
                     nes.fromJSON(JSON.parse(data));
+                } else if (wasmEmuInstance && wasmEmuInstance.loadSaveState) {
+                    wasmEmuInstance.loadSaveState(data);
                 }
                 alert("ЗАГРУЗКА УСПЕШНА!");
             } catch(e) {
