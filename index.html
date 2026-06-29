@@ -110,12 +110,31 @@
     </div>
 
     <script>
-        // Инициализируем Telegram WebApp, чтобы кнопка закрытия была красивой
+        // Инициализируем Telegram WebApp
         window.Telegram.WebApp.ready();
-        window.Telegram.WebApp.expand(); // Разворачиваем на весь экран
+        window.Telegram.WebApp.expand();
 
         var canvas = document.getElementById('nes-canvas');
         var ctx = canvas.getContext('2d');
+        
+        // Создаем элемент для вывода логов прямо на экран (чтобы видеть ошибки)
+        var logger = document.createElement('div');
+        logger.style.position = 'absolute';
+        logger.style.top = '10px';
+        logger.style.left = '10px';
+        logger.style.color = '#00ff00';
+        logger.style.fontSize = '12px';
+        logger.style.fontFamily = 'monospace';
+        logger.style.pointerEvents = 'none';
+        document.body.appendChild(logger);
+
+        function log(msg) {
+            logger.innerHTML += msg + '<br>';
+            console.log(msg);
+        }
+
+        log("🚀 Эмулятор запускается...");
+
         var nes = new jsnes.NES({
             onFrame: function(buffer) {
                 var imageData = ctx.getImageData(0, 0, 256, 240);
@@ -135,26 +154,43 @@
             }
         });
 
-        // Функция загрузки игры (ROM файла)
         function loadRom(url) {
+            log("⏳ Загрузка игры: " + url);
             var req = new XMLHttpRequest();
             req.open("GET", url, true);
             req.overrideMimeType("text/plain; charset=x-user-defined");
+            
             req.onload = function() {
-                nes.loadROM(this.responseText);
-                setInterval(nes.frame, 1000 / 60); // 60 FPS
+                if (req.status === 200) {
+                    log("✅ Игра загружена успешно! Запуск... 🎮");
+                    try {
+                        nes.loadROM(this.responseText);
+                        setInterval(nes.frame, 1000 / 60);
+                    } catch(err) {
+                        log("❌ Ошибка запуска: " + err.message);
+                    }
+                } else {
+                    log("❌ Ошибка сети: статус " + req.status);
+                }
             };
+            
+            req.onerror = function() {
+                log("🚨 Критическая ошибка CORS или сети при загрузке ROM!");
+            };
+            
             req.send();
         }
 
-        // Ссылаемся на файл игры. Положим его в ту же папку на GitHub
+        // 🔥 ВНИМАНИЕ: Проверь, чтобы имя файла на GitHub совпадало до последней буквы!
+        // Если залил "mario.nes", оставляй так. Если "Mario.nes", меняй на "Mario.nes"
         loadRom("mario.nes"); 
 
-        // Маппинг экранных кнопок на управление JSNES
         function bindKey(elementId, nesKey) {
             var el = document.getElementById(elementId);
-            el.addEventListener('touchstart', function(e) { e.preventDefault(); nes.buttonDown(1, nesKey); });
-            el.addEventListener('touchend', function(e) { e.preventDefault(); nes.buttonUp(1, nesKey); });
+            if(el) {
+                el.addEventListener('touchstart', function(e) { e.preventDefault(); nes.buttonDown(1, nesKey); });
+                el.addEventListener('touchend', function(e) { e.preventDefault(); nes.buttonUp(1, nesKey); });
+            }
         }
 
         bindKey('up', jsnes.Controller.BUTTON_UP);
