@@ -32,23 +32,46 @@
             display: block;
             image-rendering: pixelated;
         }
-        #controls {
-            display: grid;
-            grid-template-columns: 1.2fr 1fr;
+        
+        /* Главная панель управления */
+        #gamepad {
+            display: flex;
+            flex-direction: column;
             width: 100%;
             max-width: 400px;
             flex-grow: 1;
-            padding: 15px;
-            box-sizing: border-box;
             background: #1a1a1a;
+            padding: 10px 15px 20px 15px;
+            box-sizing: border-box;
+            justify-content: space-between;
         }
+
+        /* Верхняя часть: Крестовина и Кнопки А/В */
+        .main-controls {
+            display: table;
+            width: 100%;
+            margin-top: 10px;
+        }
+        .dpad-cell {
+            display: table-cell;
+            width: 50%;
+            vertical-align: middle;
+        }
+        .action-cell {
+            display: table-cell;
+            width: 50%;
+            vertical-align: middle;
+            text-align: right;
+        }
+
+        /* Стили крестовины */
         .dpad {
             display: grid;
             grid-template-columns: repeat(3, 1fr);
             grid-template-rows: repeat(3, 1fr);
             width: 140px;
             height: 140px;
-            align-self: center;
+            margin: 0 auto;
         }
         .btn {
             background: #333;
@@ -63,20 +86,15 @@
         }
         .btn:active { background: #555; }
         
-        .action-container {
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            gap: 15px;
-        }
+        /* Стили кнопок действий */
         .action-buttons {
-            display: flex;
+            display: inline-flex;
             gap: 15px;
+            justify-content: center;
         }
         .round-btn {
-            width: 60px;
-            height: 60px;
+            width: 65px;
+            height: 65px;
             background: #ff3b30;
             border-radius: 50%;
             border: 3px solid #fff;
@@ -85,56 +103,77 @@
             align-items: center;
             justify-content: center;
             font-weight: bold;
-            font-size: 20px;
+            font-size: 22px;
             box-shadow: 0 4px 6px rgba(0,0,0,0.3);
         }
         .round-btn:active { background: #b3261e; }
         
-        /* Стили для системных кнопок Старт и Селект */
+        /* 🔥 Нижняя скрытая панель для Старт/Селект */
         .system-buttons {
             display: flex;
-            gap: 10px;
+            justify-content: center;
+            gap: 30px;
+            width: 100%;
+            margin-top: 15px;
+            padding-top: 10px;
+            border-top: 1px solid #2a2a2a;
         }
         .sys-btn {
-            background: #555;
-            border: 1px solid #777;
-            color: white;
-            padding: 5px 15px;
-            border-radius: 5px;
-            font-size: 11px;
+            background: #444;
+            border: 1px solid #555;
+            color: #aaa;
+            width: 75px;
+            height: 22px;
+            border-radius: 12px;
+            font-size: 10px;
             font-weight: bold;
             text-transform: uppercase;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: inset 0 2px 3px rgba(0,0,0,0.5);
         }
-        .sys-btn:active { background: #777; }
+        .sys-btn:active { 
+            background: #222; 
+            color: #fff;
+        }
     </style>
 </head>
 <body>
 
-    <h3 style="margin: 8px 0; font-size: 16px;">🕹️ AKEYS RETRO 🕹️</h3>
+    <h3 style="margin: 6px 0; font-size: 15px; letter-spacing: 1px;">🕹️ AKEYS RETRO 🕹️</h3>
     
     <div id="game-container">
         <canvas id="nes-canvas" width="256" height="240"></canvas>
     </div>
 
-    <div id="controls">
-        <div class="dpad">
-            <div></div><div class="btn" id="up">▲</div><div></div>
-            <div class="btn" id="left">◀</div><div></div><div class="btn" id="right">▶</div>
-            <div></div><div class="btn" id="down">▼</div><div></div>
+    <!-- Общий пульт управления -->
+    <div id="gamepad">
+        
+        <!-- Верхний ярус: Игровые кнопки -->
+        <div class="main-controls">
+            <div class="dpad-cell">
+                <div class="dpad">
+                    <div></div><div class="btn" id="up">▲</div><div></div>
+                    <div class="btn" id="left">◀</div><div></div><div class="btn" id="right">▶</div>
+                    <div></div><div class="btn" id="down">▼</div><div></div>
+                </div>
+            </div>
+            
+            <div class="action-cell">
+                <div class="action-buttons">
+                    <div class="round-btn" id="btn-b">B</div>
+                    <div class="round-btn" id="btn-a">A</div>
+                </div>
+            </div>
         </div>
         
-        <div class="action-container">
-            <!-- 🔥 КНОПКИ СЕЛЕКТ И СТАРТ ТЕПЕРЬ ТУТ -->
-            <div class="system-buttons">
-                <div class="sys-btn" id="btn-select">Select</div>
-                <div class="sys-btn" id="btn-start">Start</div>
-            </div>
-            <div class="action-buttons">
-                <div class="round-btn" id="btn-b">B</div>
-                <div class="round-btn" id="btn-a">A</div>
-            </div>
+        <!-- 🔥 Нижний ярус: Узкие системные кнопки, защищенные от случайных кликов -->
+        <div class="system-buttons">
+            <div class="sys-btn" id="btn-select">Select</div>
+            <div class="sys-btn" id="btn-start">Start</div>
         </div>
+        
     </div>
 
     <script>
@@ -150,12 +189,9 @@
                 var data = imageData.data;
                 for (var i = 0; i < buffer.length; i++) {
                     var pixel = buffer[i];
-                    
-                    // 🔥 ИСПРАВЛЕНИЕ ЦВЕТА: Меняем местами каналы R и B (из BGR в RGB)
                     var r = pixel & 0xff; 
                     var g = (pixel >> 8) & 0xff;
                     var b = (pixel >> 16) & 0xff;
-                    
                     var index = i * 4;
                     data[index] = r;
                     data[index+1] = g;
@@ -186,7 +222,6 @@
             if(el) {
                 el.addEventListener('touchstart', function(e) { e.preventDefault(); nes.buttonDown(1, nesKey); });
                 el.addEventListener('touchend', function(e) { e.preventDefault(); nes.buttonUp(1, nesKey); });
-                // Поддержка кликов мышки для тестов с ПК
                 el.addEventListener('mousedown', function(e) { nes.buttonDown(1, nesKey); });
                 el.addEventListener('mouseup', function(e) { nes.buttonUp(1, nesKey); });
             }
@@ -198,8 +233,6 @@
         bindKey('right', jsnes.Controller.BUTTON_RIGHT);
         bindKey('btn-a', jsnes.Controller.BUTTON_A);
         bindKey('btn-b', jsnes.Controller.BUTTON_B);
-        
-        // 🔥 ПРИВЯЗЫВАЕМ СТАРТ И СЕЛЕКТ
         bindKey('btn-start', jsnes.Controller.BUTTON_START);
         bindKey('btn-select', jsnes.Controller.BUTTON_SELECT);
     </script>
