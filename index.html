@@ -27,9 +27,10 @@
         #sound-toggle.muted { color: #ffaa00; border-color: #663333; }
         #back-to-catalog { display: none; background: #224; border-color: #448; }
 
+        /* ВОЗВРАЩАЕМ ТВОЙ GIF-ФОН ДЛЯ КАТАЛОГА */
         #catalog-container {
             width: 100%; max-width: 400px; flex-grow: 1; overflow-y: auto; position: relative;
-            background-color: #111;
+            background: url('background.gif') no-repeat center center; background-size: cover;
             display: flex; flex-direction: column; align-items: center; padding-top: 25px; box-sizing: border-box;
         }
         .menu-title { font-size: 20px; color: #ffff00; text-shadow: 3px 3px #000; margin-bottom: 25px; text-align: center; letter-spacing: 2px; z-index: 5; }
@@ -44,11 +45,10 @@
         #game-container { width: 100%; max-width: 400px; height: 240px; background: #000; position: relative; display: flex; justify-content: center; align-items: center; }
         canvas { width: 100%; height: 100%; display: block; image-rendering: pixelated; }
         
-        /* КОНТЕЙНЕР ДЛЯ EMULATOR JS */
-        #emulator_container { display: none; width: 100%; height: 100%; position: absolute; top: 0; left: 0; }
-        #emulator_container iframe { width: 100%; height: 100%; border: none; }
+        /* КОНТЕЙНЕР ДЛЯ ВЫВОДА ЭКРАНА СЕГИ */
+        #emulator_container { display: none; width: 100%; height: 100%; position: absolute; top: 0; left: 0; z-index: 5; }
 
-        /* РОДНОЙ ГЕЙМПАД ДЛЯ NES */
+        /* ГЕЙМПАД ДЛЯ NES */
         #gamepad {
             display: flex; flex-direction: column; width: 100%; max-width: 400px; flex-grow: 1;
             background: #111; padding: 15px; box-sizing: border-box; justify-content: space-between; border-top: 4px solid #222;
@@ -193,21 +193,18 @@
         }
 
         function launchSega(romUrl) {
-            // Очищаем старый контейнер перед перезапуском
             var container = document.getElementById('emulator_container');
-            container.innerHTML = "";
+            container.innerHTML = ""; // Сбрасываем старый инстанс плеера
 
             window.EJS_player = "#emulator_container";
-            window.EJS_core = "segaMD";
+            window.EJS_core = "segaMD"; // Идентификатор ядра Сеги в EmulatorJS
             window.EJS_pathtodata = "https://cdn.emulatorjs.org/stable/data/"; 
+            // Формируем абсолютный URL к файлу рома на твоем гитхабе
             window.EJS_gameUrl = window.location.origin + window.location.pathname.replace("index.html", "") + romUrl;
             window.EJS_startOnLoaded = true;
             window.EJS_Volume = audioEnabled ? 1 : 0;
 
-            // Настройка адаптивного тач-интерфейса под мобилки внутри EmulatorJS
-            window.EJS_AdUrl = ""; 
-            window.EJS_mouse = false;
-
+            // Загружаем скрипт-загрузчик официального плеера EmulatorJS
             var loader = document.createElement("script");
             loader.src = "https://cdn.emulatorjs.org/stable/data/loader.js";
             document.head.appendChild(loader);
@@ -224,7 +221,7 @@
 
             if (currentSystem === "sega") {
                 document.getElementById('nes-canvas').style.display = 'none';
-                document.getElementById('gamepad').style.display = 'none'; 
+                document.getElementById('gamepad').style.display = 'none'; // Скрываем пульт NES, EmulatorJS выведет свой 6-кнопочный
                 document.getElementById('emulator_container').style.display = 'block';
                 launchSega(romUrl);
             } else {
@@ -256,7 +253,7 @@
         function exitToCatalog() {
             if(gameLoopInterval) clearInterval(gameLoopInterval);
             if(currentSystem === "sega") {
-                document.getElementById('emulator_container').innerHTML = "";
+                document.getElementById('emulator_container').innerHTML = ""; // Полностью очищаем плеер Сеги
             }
             document.getElementById('game-screen').style.display = 'none';
             document.getElementById('back-to-catalog').style.display = 'none';
