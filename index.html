@@ -6,7 +6,6 @@
     <title>9999 IN 1 - Akeys Arcade</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jsnes/1.2.1/jsnes.min.js"></script>
-    <!-- Подключаем ретро-шрифт для полной атмосферы -->
     <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
     <style>
         body {
@@ -14,7 +13,7 @@
             color: #fff;
             margin: 0;
             padding: 0;
-            font-family: 'Press Start 2P', monospace; /* Тот самый пиксельный шрифт */
+            font-family: 'Press Start 2P', monospace;
             display: flex;
             flex-direction: column;
             align-items: center;
@@ -49,46 +48,71 @@
         #sound-toggle.muted { color: #ffaa00; border-color: #663333; }
         #back-to-catalog { display: none; background: #224; border-color: #448; }
 
-        /* 🔥 СТИЛИЗАЦИЯ ПОД КАРТРИДЖ «9999 IN 1» */
+        /* 🔥 ЛЕГЕНДАРНЫЙ ЗАДНИЙ ФОН ИЗ ВИДЕО */
         #catalog-container {
             width: 100%;
             max-width: 400px;
             flex-grow: 1;
             overflow-y: auto;
             position: relative;
-            background: linear-index(to bottom, #4da6ff, #003366); /* Синее небо и море */
+            /* Градиент неба и заката */
+            background: linear-gradient(to bottom, 
+                #1b75bb 0%, 
+                #27aae1 40%, 
+                #ff6600 65%, 
+                #ffcc00 75%, 
+                #003366 75%, 
+                #001f3f 100%); 
             display: flex;
             flex-direction: column;
             align-items: center;
-            padding-top: 20px;
+            padding-top: 25px;
             box-sizing: border-box;
         }
 
-        /* Анимированный ретро-задник с чайками и пляжем */
-        .retro-bg {
+        /* Слои пиксельного пейзажа: Океан, Остров и Пальмы */
+        .retro-landscape {
             position: absolute;
             bottom: 0;
             left: 0;
             width: 100%;
-            height: 140px;
-            background: url('https://img.picshare.ru/uploads/240515/7O12p7W9eR.gif') no-repeat bottom center; /* Анимация чаек и пальм */
-            background-size: cover;
+            height: 120px;
             pointer-events: none;
-            opacity: 0.4; /* Чтобы текст легко читался */
+            z-index: 1;
+            background: 
+                /* Пальма слева */
+                
+                /* Остров/Пляж на горизонте */
+                linear-gradient(to right, #e67e22 0%, #d35400 30%, transparent 60%),
+                /* Силуэты деревьев */
+                linear-gradient(to top, #001122 20px, transparent 20px);
+        }
+
+        /* Облака на небе */
+        .retro-clouds {
+            position: absolute;
+            top: 20px;
+            width: 100%;
+            height: 40px;
+            background: radial-gradient(circle, #fff 10%, transparent 11%);
+            background-size: 80px 40px;
+            opacity: 0.2;
+            pointer-events: none;
         }
 
         .menu-title {
-            font-size: 16px;
-            color: #fff;
-            text-shadow: 2px 2px #000;
-            margin-bottom: 25px;
+            font-size: 18px;
+            color: #ffff00; /* Желтый заголовок картриджа */
+            text-shadow: 3px 3px #000;
+            margin-bottom: 30px;
             text-align: center;
             letter-spacing: 2px;
+            z-index: 5;
         }
 
         .game-list {
             width: 100%;
-            padding: 0 20px;
+            padding: 0 25px;
             box-sizing: border-box;
             z-index: 5;
         }
@@ -97,14 +121,14 @@
             font-size: 11px;
             color: #fff;
             text-shadow: 2px 2px #000;
-            padding: 10px 0;
+            padding: 12px 0;
             cursor: pointer;
             display: flex;
             align-items: center;
             text-transform: uppercase;
         }
-        .retro-item:active {
-            color: #ffff00; /* Подсветка желтым при тапе, как на Денди! */
+        .retro-item:active, .retro-item:hover {
+            color: #ffff00; /* Подсветка желтым как в оригинале */
         }
         .retro-item::before {
             content: "▶ ";
@@ -116,7 +140,7 @@
             opacity: 1;
         }
 
-        /* ЭКРАН ИГРЫ */
+        /* ЭКРАН ИГРЫ И ГЕЙМПАД */
         #game-screen {
             display: none;
             width: 100%;
@@ -128,7 +152,6 @@
         #game-container { width: 100%; max-width: 400px; background: #000; }
         canvas { width: 100%; display: block; image-rendering: pixelated; }
         
-        /* ГЕЙМПАД */
         #gamepad {
             display: flex;
             flex-direction: column;
@@ -167,15 +190,16 @@
         <button id="sound-toggle" class="head-btn muted">🔇 ЗВУК</button>
     </div>
     
-    <!-- 🔥 НАШЕ ЛЕГЕНДАРНОЕ МЕНЮ ИЗ 90-Х -->
+    <!-- НАШЕ МЕНЮ ИЗ ВИНТАЖНОГО ВИДЕО -->
     <div id="catalog-container">
         <div class="menu-title">9999 IN 1</div>
         
-        <!-- Сюда JS автоматически добавит все игры -->
+        <!-- Список игр -->
         <div class="game-list" id="retro-game-list"></div>
         
-        <!-- Чайки, пальмы и пляж на фоне -->
-        <div class="retro-bg"></div>
+        <!-- Генерация слоев пейзажа (небо, закат, море, берег) -->
+        <div class="retro-clouds"></div>
+        <div class="retro-landscape"></div>
     </div>
 
     <!-- ЭКРАН С ЭМУЛЯТОРОМ -->
@@ -217,24 +241,16 @@
         window.Telegram.WebApp.ready();
         window.Telegram.WebApp.expand();
 
-        // =======================================================
-        // 🔥 ИНСТРУКЦИЯ ДЛЯ ТЕБЯ: КАК ДОБАВЛЯТЬ ИГРЫ СЮДА
-        // Просто дописывай строчки в этот массив строго по шаблону:
-        // { file: "имя_файла_на_github.nes", title: "НАЗВАНИЕ В МЕНЮ" }
-        // =======================================================
         var MY_GAMES = [
             { file: "mario.nes", title: "SUPER MARIO BROS" },
             { file: "tanks.nes", title: "TANK 1990 (BATTLE CITY)" },
             { file: "chip.nes", title: "CHIP N DALE" },
             { file: "contra.nes", title: "CONTRA (RAMBO)" }
-            // Сюда можешь дописать новую игру, например:
-            // , { file: "turtle.nes", title: "TMNT TEENAGE TURTLES" }
         ];
 
-        // Автоматическая генерация списка меню на экране
         var listContainer = document.getElementById('retro-game-list');
         MY_GAMES.forEach(function(game, index) {
-            var num = (index + 1).toString().padStart(4, '0'); // Делает формат номера 0001, 0002
+            var num = (index + 1).toString().padStart(4, '0'); 
             var item = document.createElement('div');
             item.className = 'retro-item';
             item.textContent = num + ". " + game.title;
