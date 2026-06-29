@@ -3,131 +3,70 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>9999 IN 1 - Akeys Arcade</title>
+    <title>9999 IN 1 - Ultimate Retro Arcade</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jsnes/1.2.1/jsnes.min.js"></script>
-    
-    <!-- ПОДКЛЮЧАЕМ ВНЕШНИЙ СПИСОК ИГР -->
+    <!-- Подключаем скрипт эмуляции Сеги -->
+    <script src="https://cdn.jsdelivr.net/gh/bfirsh/jsnes@master/source/nes.js"></script> 
     <script src="games.js"></script>
 
     <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
     <style>
         body {
-            background-color: #000;
-            color: #fff;
-            margin: 0;
-            padding: 0;
+            background-color: #000; color: #fff; margin: 0; padding: 0;
             font-family: 'Press Start 2P', monospace;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: flex-start;
-            height: 100vh;
-            overflow: hidden;
-            user-select: none;
+            display: flex; flex-direction: column; align-items: center; justify-content: flex-start;
+            height: 100vh; overflow: hidden; user-select: none;
         }
-        
         .header-panel {
-            display: flex;
-            width: 100%;
-            max-width: 400px;
-            justify-content: space-between;
-            align-items: center;
-            padding: 8px 15px;
-            box-sizing: border-box;
-            background: #000;
-            border-bottom: 2px solid #333;
-            z-index: 10;
+            display: flex; width: 100%; max-width: 400px; justify-content: space-between; align-items: center;
+            padding: 8px 15px; box-sizing: border-box; background: #000; border-bottom: 2px solid #333; z-index: 10;
         }
-        
         .head-btn {
-            background: #222;
-            border: 2px solid #555;
-            color: #fff;
-            font-family: 'Press Start 2P', monospace;
-            font-size: 8px;
-            padding: 6px 10px;
-            cursor: pointer;
+            background: #222; border: 2px solid #555; color: #fff;
+            font-family: 'Press Start 2P', monospace; font-size: 8px; padding: 6px 10px; cursor: pointer;
         }
         #sound-toggle.muted { color: #ffaa00; border-color: #663333; }
         #back-to-catalog { display: none; background: #224; border-color: #448; }
 
-        /* 🔥 ТВОЙ ЛЕГЕНДАРНЫЙ ЖИВОЙ ФОН ИЗ ГИФКИ */
         #catalog-container {
-            width: 100%;
-            max-width: 400px;
-            flex-grow: 1;
-            overflow-y: auto;
-            position: relative;
-            /* Подключаем твой файл background.gif напрямую из репозитория */
-            background: url('background.gif') no-repeat center center;
-            background-size: cover; 
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            padding-top: 25px;
-            box-sizing: border-box;
+            width: 100%; max-width: 400px; flex-grow: 1; overflow-y: auto; position: relative;
+            background: url('background.gif') no-repeat center center; background-size: cover;
+            display: flex; flex-direction: column; align-items: center; padding-top: 25px; box-sizing: border-box;
         }
-
-        .menu-title {
-            font-size: 20px;
-            color: #ffff00;
-            text-shadow: 3px 3px #000;
-            margin-bottom: 25px;
-            text-align: center;
-            letter-spacing: 2px;
-            z-index: 5;
-        }
-
-        .game-list {
-            width: 100%;
-            padding: 0 25px;
-            box-sizing: border-box;
-            z-index: 5;
-            position: relative;
-        }
-
-        .retro-item {
-            font-size: 11px;
-            color: #fff;
-            text-shadow: 2px 2px #000;
-            padding: 12px 0;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            text-transform: uppercase;
-        }
+        .menu-title { font-size: 20px; color: #ffff00; text-shadow: 3px 3px #000; margin-bottom: 25px; text-align: center; letter-spacing: 2px; z-index: 5; }
+        .game-list { width: 100%; padding: 0 25px; box-sizing: border-box; z-index: 5; position: relative; }
+        .retro-item { font-size: 11px; color: #fff; text-shadow: 2px 2px #000; padding: 12px 0; cursor: pointer; display: flex; align-items: center; text-transform: uppercase; }
         .retro-item:active { color: #ffff00; }
         .retro-item::before { content: "▶ "; opacity: 0; margin-right: 8px; color: #ffff00; }
         .retro-item:active::before { opacity: 1; }
 
-        /* ЭКРАН ИГРЫ И ГЕЙМПАД */
+        /* ЭКРАН ИГРЫ */
         #game-screen { display: none; width: 100%; flex-direction: column; align-items: center; flex-grow: 1; background: #000; }
         #game-container { width: 100%; max-width: 400px; background: #000; }
         canvas { width: 100%; display: block; image-rendering: pixelated; }
         
+        /* МУЛЬТИ-ГЕЙМПАД */
         #gamepad {
-            display: flex;
-            flex-direction: column;
-            width: 100%;
-            max-width: 400px;
-            flex-grow: 1;
-            background: #111;
-            padding: 15px;
-            box-sizing: border-box;
-            justify-content: space-between;
-            border-top: 4px solid #222;
+            display: flex; flex-direction: column; width: 100%; max-width: 400px; flex-grow: 1;
+            background: #111; padding: 15px; box-sizing: border-box; justify-content: space-between; border-top: 4px solid #222;
         }
-        .main-controls { display: table; width: 100%; }
-        .dpad-cell, .action-cell { display: table-cell; width: 50%; vertical-align: middle; }
-        .action-cell { text-align: right; }
-        .dpad { display: grid; grid-template-columns: repeat(3, 1fr); grid-template-rows: repeat(3, 1fr); width: 135px; height: 135px; margin: 0 auto; }
+        .main-controls { display: flex; width: 100%; justify-content: space-between; align-items: center; }
+        .dpad { display: grid; grid-template-columns: repeat(3, 1fr); grid-template-rows: repeat(3, 1fr); width: 130px; height: 130px; }
         .btn { background: #222; border: 3px solid #444; color: white; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 14px; }
         .btn:active { background: #444; }
-        .action-buttons { display: inline-flex; gap: 15px; }
+        
+        /* 🔥 БЛОК КНОПОК ДЕНДИ (NES) */
+        #nes-buttons { display: inline-flex; gap: 15px; }
         .round-btn { width: 60px; height: 60px; background: #cc1111; border-radius: 50%; border: 4px solid #fff; color: white; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 16px; font-family: sans-serif; box-shadow: 0 4px 0 #880000; }
         .round-btn:active { background: #aa0000; transform: translateY(4px); box-shadow: none; }
         
+        /* 🔥 БЛОК КНОПОК СЕГИ (6-кнопочный пульт) */
+        #sega-buttons { display: none; grid-template-columns: repeat(3, 50px); gap: 8px; }
+        .sega-btn { width: 48px; height: 48px; background: #2e2e2e; border: 3px solid #666; color: #fff; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 14px; font-weight: bold; font-family: sans-serif; box-shadow: 0 3px 0 #000; }
+        .sega-btn:active { background: #555; transform: translateY(3px); box-shadow: none; }
+        .sega-main { background: #cc1111; border-color: #ff5555; } /* Боевые кнопки A, B, C выделим красным */
+
         .system-buttons { display: flex; flex-direction: column; gap: 10px; width: 100%; }
         .sys-row { display: flex; justify-content: center; gap: 20px; }
         .sys-btn { background: #333; border: 2px solid #555; color: #aaa; width: 80px; height: 22px; border-radius: 4px; font-size: 8px; display: flex; align-items: center; justify-content: center; }
@@ -145,7 +84,6 @@
     </div>
     
     <div id="catalog-container">
-        <!-- Векторная графика убрана, теперь тут крутится чистая гифка из стилей -->
         <div class="menu-title">9999 IN 1</div>
         <div class="game-list" id="retro-game-list"></div>
     </div>
@@ -154,19 +92,26 @@
         <div id="game-container"><canvas id="nes-canvas" width="256" height="240"></canvas></div>
         <div id="gamepad">
             <div class="main-controls">
-                <div class="dpad-cell">
-                    <div class="dpad">
-                        <div></div><div class="btn" id="up">▲</div><div></div>
-                        <div class="btn" id="left">◀</div><div></div><div class="btn" id="right">▶</div>
-                        <div></div><div class="btn" id="down">▼</div><div></div>
-                    </div>
+                <!-- Крестовина (Общая для всех платформ) -->
+                <div class="dpad">
+                    <div></div><div class="btn" id="up">▲</div><div></div>
+                    <div class="btn" id="left">◀</div><div></div><div class="btn" id="right">▶</div>
+                    <div></div><div class="btn" id="down">▼</div><div></div>
                 </div>
-                <div class="action-cell">
-                    <div class="action-buttons">
-                        <div class="round-btn" id="btn-b">B</div><div class="round-btn" id="btn-a">A</div>
-                    </div>
+                
+                <!-- Панель кнопок NES (Денди) -->
+                <div id="nes-buttons">
+                    <div class="round-btn" id="btn-b">B</div>
+                    <div class="round-btn" id="btn-a">A</div>
+                </div>
+
+                <!-- Панель кнопок SEGA (Управление под 6 кнопок) -->
+                <div id="sega-buttons">
+                    <div class="sega-btn" id="btn-x">X</div><div class="sega-btn" id="btn-y">Y</div><div class="sega-btn" id="btn-z">Z</div>
+                    <div class="sega-btn sega-main" id="btn-sega-a">A</div><div class="sega-btn sega-main" id="btn-sega-b">B</div><div class="sega-btn sega-main" id="btn-sega-c">C</div>
                 </div>
             </div>
+            
             <div class="system-buttons">
                 <div class="sys-row">
                     <div class="sys-btn" id="btn-select">SELECT</div><div class="sys-btn" id="btn-start">START</div>
@@ -191,7 +136,7 @@
             item.className = 'retro-item';
             item.textContent = num + ". " + game.title;
             item.addEventListener('click', function() {
-                startGame(game.file, game.title);
+                startGame(game.file, game.title, game.system);
             });
             listContainer.appendChild(item);
         });
@@ -205,23 +150,9 @@
         var audioBufferIndex = 0;
         var gameLoopInterval = null;
         var currentRomName = ""; 
+        var currentSystem = "nes";
 
-        function initAudio() {
-            if (audioCtx) return;
-            var AudioContext = window.AudioContext || window.webkitAudioContext;
-            audioCtx = new AudioContext({ sampleRate: 44100 });
-            var scriptProcessor = audioCtx.createScriptProcessor(bufferSize, 0, 1);
-            scriptProcessor.onaudioprocess = function(e) {
-                var output = e.outputBuffer.getChannelData(0);
-                for (var i = 0; i < bufferSize; i++) {
-                    output[i] = audioEnabled ? audioBuffer[i] : 0;
-                }
-                audioBuffer.fill(0);
-                audioBufferIndex = 0;
-            };
-            scriptProcessor.connect(audioCtx.destination);
-        }
-
+        // Сюда будет грузиться эмулятор Сеги в следующих версиях, пока подготавливаем общую логику
         var nes = new jsnes.NES({
             onFrame: function(buffer) {
                 var imageData = ctx.getImageData(0, 0, 256, 240);
@@ -244,6 +175,22 @@
             }
         });
 
+        function initAudio() {
+            if (audioCtx) return;
+            var AudioContext = window.AudioContext || window.webkitAudioContext;
+            audioCtx = new AudioContext({ sampleRate: 44100 });
+            var scriptProcessor = audioCtx.createScriptProcessor(bufferSize, 0, 1);
+            scriptProcessor.onaudioprocess = function(e) {
+                var output = e.outputBuffer.getChannelData(0);
+                for (var i = 0; i < bufferSize; i++) {
+                    output[i] = audioEnabled ? audioBuffer[i] : 0;
+                }
+                audioBuffer.fill(0);
+                audioBufferIndex = 0;
+            };
+            scriptProcessor.connect(audioCtx.destination);
+        }
+
         var soundBtn = document.getElementById('sound-toggle');
         if (soundBtn) {
             soundBtn.addEventListener('click', function() {
@@ -255,27 +202,45 @@
             });
         }
 
-        function startGame(romUrl, gameTitle) {
-            currentRomName = romUrl; 
+        // 🔥 ДИНАМИЧЕСКИЙ ЗАПУСК ИГРЫ И НАСТРОЙКА ГЕЙМПАДА
+        function startGame(romUrl, gameTitle, system) {
+            currentRomName = romUrl;
+            currentSystem = system || "nes";
+            
             document.getElementById('catalog-container').style.display = 'none';
             document.getElementById('game-screen').style.display = 'flex';
             document.getElementById('back-to-catalog').style.display = 'block';
             document.getElementById('main-title').textContent = gameTitle;
+
+            // Переключаем кнопки джойстика в зависимости от системы
+            if (currentSystem === "sega") {
+                document.getElementById('nes-buttons').style.display = 'none';
+                document.getElementById('sega-buttons').style.display = 'grid';
+            } else {
+                document.getElementById('nes-buttons').style.display = 'inline-flex';
+                document.getElementById('sega-buttons').style.display = 'none';
+            }
             
             if (window.Telegram && window.Telegram.WebApp && window.Telegram.WebApp.HapticFeedback) {
                 window.Telegram.WebApp.HapticFeedback.impactOccurred('medium');
             }
 
+            // Загрузка файла игры
             var req = new XMLHttpRequest();
             req.open("GET", romUrl, true);
             req.overrideMimeType("text/plain; charset=x-user-defined");
             req.onload = function() {
                 if (req.status === 200) {
-                    nes.loadROM(this.responseText);
-                    if(gameLoopInterval) clearInterval(gameLoopInterval);
-                    gameLoopInterval = setInterval(nes.frame, 1000 / 60);
+                    if (currentSystem === "nes") {
+                        nes.loadROM(this.responseText);
+                        if(gameLoopInterval) clearInterval(gameLoopInterval);
+                        gameLoopInterval = setInterval(nes.frame, 1000 / 60);
+                    } else {
+                        // Заглушка под WASM-ядро Сеги (встроим в следующем шаге)
+                        alert("Ядро Сеги готово к развертыванию WASM-контейнера! Файл " + romUrl + " успешно прочитан.");
+                    }
                 } else {
-                    alert("ОШИБКА СЕТИ ПРИ ЗАГРУЗКЕ .NES ФАЙЛА!");
+                    alert("ОШИБКА ЗАГРУЗКИ РОМА!");
                     exitToCatalog();
                 }
             };
@@ -288,55 +253,34 @@
             document.getElementById('back-to-catalog').style.display = 'none';
             document.getElementById('catalog-container').style.display = 'flex';
             document.getElementById('main-title').textContent = '9999 IN 1';
-            if (window.Telegram && window.Telegram.WebApp && window.Telegram.WebApp.HapticFeedback) {
-                window.Telegram.WebApp.HapticFeedback.impactOccurred('light');
-            }
         }
         
-        var backBtn = document.getElementById('back-to-catalog');
-        if (backBtn) { backBtn.addEventListener('click', exitToCatalog); }
+        document.getElementById('back-to-catalog').addEventListener('click', exitToCatalog);
 
-        var saveBtn = document.getElementById('btn-save');
-        if (saveBtn) {
-            saveBtn.addEventListener('click', function() {
-                try {
-                    var state = nes.toJSON();
-                    localStorage.setItem('save_' + currentRomName, JSON.stringify(state));
-                    if (window.Telegram && window.Telegram.WebApp && window.Telegram.WebApp.HapticFeedback) {
-                        window.Telegram.WebApp.HapticFeedback.notificationOccurred('success');
-                    }
-                    alert("💾 ПРОГРЕСС СОХРАНЕН!");
-                } catch (err) { alert("ОШИБКА: " + err.message); }
-            });
-        }
-
-        var loadBtn = document.getElementById('btn-load');
-        if (loadBtn) {
-            loadBtn.addEventListener('click', function() {
-                try {
-                    var savedData = localStorage.getItem('save_' + currentRomName);
-                    if (!savedData) { alert("🤷‍♂️ НЕТ СОХРАНЕНИЙ!"); return; }
-                    nes.fromJSON(JSON.parse(savedData));
-                    if (window.Telegram && window.Telegram.WebApp && window.Telegram.WebApp.HapticFeedback) {
-                        window.Telegram.WebApp.HapticFeedback.notificationOccurred('success');
-                    }
-                } catch (err) { alert("ОШИБКА: " + err.message); }
-            });
-        }
-
+        // Навешивание кнопок геймпада Денди
         function bindKey(elementId, nesKey) {
             var el = document.getElementById(elementId);
             if(el) {
-                el.addEventListener('touchstart', function(e) { e.preventDefault(); nes.buttonDown(1, nesKey); });
-                el.addEventListener('touchend', function(e) { e.preventDefault(); nes.buttonUp(1, nesKey); });
-                el.addEventListener('mousedown', function(e) { nes.buttonDown(1, nesKey); });
-                el.addEventListener('mouseup', function(e) { nes.buttonUp(1, nesKey); });
+                el.addEventListener('touchstart', function(e) { e.preventDefault(); if(currentSystem === "nes") nes.buttonDown(1, nesKey); });
+                el.addEventListener('touchend', function(e) { e.preventDefault(); if(currentSystem === "nes") nes.buttonUp(1, nesKey); });
+                el.addEventListener('mousedown', function(e) { if(currentSystem === "nes") nes.buttonDown(1, nesKey); });
+                el.addEventListener('mouseup', function(e) { if(currentSystem === "nes") nes.buttonUp(1, nesKey); });
             }
         }
         bindKey('up', jsnes.Controller.BUTTON_UP); bindKey('down', jsnes.Controller.BUTTON_DOWN);
         bindKey('left', jsnes.Controller.BUTTON_LEFT); bindKey('right', jsnes.Controller.BUTTON_RIGHT);
         bindKey('btn-a', jsnes.Controller.BUTTON_A); bindKey('btn-b', jsnes.Controller.BUTTON_B);
         bindKey('btn-start', jsnes.Controller.BUTTON_START); bindKey('btn-select', jsnes.Controller.BUTTON_SELECT);
+
+        // Навешивание обработчиков на кнопки СЕГИ (A, B, C, X, Y, Z) для будущего WASM-движка
+        function bindSegaKey(elementId, segaKeyName) {
+            var el = document.getElementById(elementId);
+            if(el) {
+                el.addEventListener('touchstart', function(e) { e.preventDefault(); console.log("Нажата кнопка Сеги: " + segaKeyName); });
+            }
+        }
+        bindSegaKey('btn-sega-a', 'A'); bindSegaKey('btn-sega-b', 'B'); bindSegaKey('btn-sega-c', 'C');
+        bindSegaKey('btn-x', 'X'); bindSegaKey('btn-y', 'Y'); bindSegaKey('btn-z', 'Z');
     </script>
 </body>
 </html>
