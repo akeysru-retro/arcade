@@ -21,6 +21,43 @@
             overflow: hidden;
             user-select: none;
         }
+        
+        /* Шапка с кнопкой звука */
+        .header-panel {
+            display: flex;
+            width: 100%;
+            max-width: 400px;
+            justify-content: space-between;
+            align-items: center;
+            padding: 6px 15px;
+            box-sizing: border-box;
+        }
+        .header-title {
+            margin: 0;
+            font-size: 15px;
+            letter-spacing: 1px;
+            font-weight: bold;
+        }
+        /* Стильная кнопка звука */
+        #sound-toggle {
+            background: #222;
+            border: 1px solid #444;
+            color: #fff;
+            font-size: 16px;
+            padding: 4px 10px;
+            border-radius: 20px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+        }
+        #sound-toggle.muted {
+            background: #442222;
+            border-color: #663333;
+            color: #ffaa00;
+        }
+
         #game-container {
             width: 100%;
             max-width: 400px;
@@ -33,7 +70,6 @@
             image-rendering: pixelated;
         }
         
-        /* Главная панель управления */
         #gamepad {
             display: flex;
             flex-direction: column;
@@ -45,8 +81,6 @@
             box-sizing: border-box;
             justify-content: space-between;
         }
-
-        /* Верхняя часть: Крестовина и Кнопки А/В */
         .main-controls {
             display: table;
             width: 100%;
@@ -63,8 +97,6 @@
             vertical-align: middle;
             text-align: right;
         }
-
-        /* Стили крестовины */
         .dpad {
             display: grid;
             grid-template-columns: repeat(3, 1fr);
@@ -86,7 +118,6 @@
         }
         .btn:active { background: #555; }
         
-        /* Стили кнопок действий */
         .action-buttons {
             display: inline-flex;
             gap: 15px;
@@ -108,7 +139,6 @@
         }
         .round-btn:active { background: #b3261e; }
         
-        /* 🔥 Нижняя скрытая панель для Старт/Селект */
         .system-buttons {
             display: flex;
             justify-content: center;
@@ -133,24 +163,23 @@
             justify-content: center;
             box-shadow: inset 0 2px 3px rgba(0,0,0,0.5);
         }
-        .sys-btn:active { 
-            background: #222; 
-            color: #fff;
-        }
+        .sys-btn:active { background: #222; color: #fff; }
     </style>
 </head>
 <body>
 
-    <h3 style="margin: 6px 0; font-size: 15px; letter-spacing: 1px;">🕹️ AKEYS RETRO 🕹️</h3>
+    <!-- 🔥 Новая панелька сверху: Заголовок + Аккуратная кнопка звука -->
+    <div class="header-panel">
+        <div style="width: 50px;"></div> <!-- Отступ для центровки текста -->
+        <h3 class="header-title">🕹️ AKEYS RETRO 🕹️</h3>
+        <button id="sound-toggle" class="muted">🔇 Звук</button>
+    </div>
     
     <div id="game-container">
         <canvas id="nes-canvas" width="256" height="240"></canvas>
     </div>
 
-    <!-- Общий пульт управления -->
     <div id="gamepad">
-        
-        <!-- Верхний ярус: Игровые кнопки -->
         <div class="main-controls">
             <div class="dpad-cell">
                 <div class="dpad">
@@ -168,12 +197,10 @@
             </div>
         </div>
         
-        <!-- 🔥 Нижний ярус: Узкие системные кнопки, защищенные от случайных кликов -->
         <div class="system-buttons">
             <div class="sys-btn" id="btn-select">Select</div>
             <div class="sys-btn" id="btn-start">Start</div>
         </div>
-        
     </div>
 
     <script>
@@ -183,6 +210,32 @@
         var canvas = document.getElementById('nes-canvas');
         var ctx = canvas.getContext('2d');
         
+        // --- 📻 НАСТРОЙКА ЗВУКОВОГО ДВИЖКА (Web Audio API) ---
+        var audioCtx = null;
+        var audioEnabled = false;
+        var bufferSize = 4096;
+        var audioBuffer = new Float32Array(bufferSize);
+        var audioBufferIndex = 0;
+
+        function initAudio() {
+            if (audioCtx) return;
+            // Создаем аудио-контекст под частоту Денди
+            var AudioContext = window.AudioContext || window.webkitAudioContext;
+            audioCtx = new AudioContext({ sampleRate: 44100 });
+            
+            var scriptProcessor = audioCtx.createScriptProcessor(bufferSize, 0, 1);
+            scriptProcessor.onaudioprocess = function(e) {
+                var output = e.outputBuffer.getChannelData(0);
+                for (var i = 0; i < bufferSize; i++) {
+                    output[i] = audioEnabled ? audioBuffer[i] : 0;
+                }
+                // Очищаем буфер после воспроизведения
+                audioBuffer.fill(0);
+                audioBufferIndex = 0;
+            };
+            scriptProcessor.connect(audioCtx.destination);
+        }
+
         var nes = new jsnes.NES({
             onFrame: function(buffer) {
                 var imageData = ctx.getImageData(0, 0, 256, 240);
@@ -199,6 +252,33 @@
                     data[index+3] = 255;
                 }
                 ctx.putImageData(imageData, 0, 0);
+            },
+            // Запись звуковых сэмплов от чипа Денди в наш буфер
+            onAudioSample: function(left, right) {
+                if (!audioEnabled) return;
+                if (audioBufferIndex < bufferSize) {
+                    audioBuffer[audioBufferIndex++] = left;
+                }
+            }
+        });
+
+        // 🔥 Кнопка ВКЛ/ВЫКЛ звук
+        var soundBtn = document.getElementById('sound-toggle');
+        soundBtn.addEventListener('click', function() {
+            initAudio(); // Активируем контекст по первому ручному клику
+            
+            if (audioCtx.state === 'suspended') {
+                audioCtx.resume();
+            }
+
+            audioEnabled = !audioEnabled;
+            
+            if (audioEnabled) {
+                soundBtn.textContent = "🔊 Звук: ВКЛ";
+                soundBtn.classList.remove('muted');
+            } else {
+                soundBtn.textContent = "🔇 Звук: ВЫКЛ";
+                soundBtn.classList.add('muted');
             }
         });
 
