@@ -48,21 +48,14 @@
         #sound-toggle.muted { color: #ffaa00; border-color: #663333; }
         #back-to-catalog { display: none; background: #224; border-color: #448; }
 
-        /* 🔥 ЛЕГЕНДАРНЫЙ ЗАДНИЙ ФОН ИЗ ВИДЕО */
+        /* 🔥 ЛЕГЕНДАРНЫЙ ЗАДНИЙ ФОН «9999 IN 1» С ЧАЙКАМИ И ПАЛЬМАМИ */
         #catalog-container {
             width: 100%;
             max-width: 400px;
             flex-grow: 1;
             overflow-y: auto;
             position: relative;
-            /* Градиент неба и заката */
-            background: linear-gradient(to bottom, 
-                #1b75bb 0%, 
-                #27aae1 40%, 
-                #ff6600 65%, 
-                #ffcc00 75%, 
-                #003366 75%, 
-                #001f3f 100%); 
+            background-color: #1a5276;
             display: flex;
             flex-direction: column;
             align-items: center;
@@ -70,41 +63,22 @@
             box-sizing: border-box;
         }
 
-        /* Слои пиксельного пейзажа: Океан, Остров и Пальмы */
-        .retro-landscape {
+        /* Отрисовка графики из 90-х прямо внутри кода */
+        .retro-background-svg {
             position: absolute;
-            bottom: 0;
+            top: 0;
             left: 0;
             width: 100%;
-            height: 120px;
-            pointer-events: none;
+            height: 100%;
             z-index: 1;
-            background: 
-                /* Пальма слева */
-                
-                /* Остров/Пляж на горизонте */
-                linear-gradient(to right, #e67e22 0%, #d35400 30%, transparent 60%),
-                /* Силуэты деревьев */
-                linear-gradient(to top, #001122 20px, transparent 20px);
-        }
-
-        /* Облака на небе */
-        .retro-clouds {
-            position: absolute;
-            top: 20px;
-            width: 100%;
-            height: 40px;
-            background: radial-gradient(circle, #fff 10%, transparent 11%);
-            background-size: 80px 40px;
-            opacity: 0.2;
             pointer-events: none;
         }
 
         .menu-title {
-            font-size: 18px;
-            color: #ffff00; /* Желтый заголовок картриджа */
+            font-size: 20px;
+            color: #ffff00;
             text-shadow: 3px 3px #000;
-            margin-bottom: 30px;
+            margin-bottom: 25px;
             text-align: center;
             letter-spacing: 2px;
             z-index: 5;
@@ -115,6 +89,7 @@
             padding: 0 25px;
             box-sizing: border-box;
             z-index: 5;
+            position: relative;
         }
 
         .retro-item {
@@ -127,8 +102,8 @@
             align-items: center;
             text-transform: uppercase;
         }
-        .retro-item:active, .retro-item:hover {
-            color: #ffff00; /* Подсветка желтым как в оригинале */
+        .retro-item:active {
+            color: #ffff00;
         }
         .retro-item::before {
             content: "▶ ";
@@ -192,14 +167,51 @@
     
     <!-- НАШЕ МЕНЮ ИЗ ВИНТАЖНОГО ВИДЕО -->
     <div id="catalog-container">
+        
+        <!-- Векторный бэкграунд, полностью копирующий многоигровку с чайками -->
+        <svg class="retro-background-svg" viewBox="0 0 400 500" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
+            <defs>
+                <!-- Небо: переход от синего к голубому и оранжевому закату -->
+                <linearGradient id="skyGrad" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stop-color="#2471a3"/>
+                    <stop offset="45%" stop-color="#5dade2"/>
+                    <stop offset="65%" stop-color="#ff7f50"/>
+                    <stop offset="74%" stop-color="#f4d03f"/>
+                    <stop offset="75%" stop-color="#1b4f72"/>
+                    <stop offset="100%" stop-color="#0b2240"/>
+                </linearGradient>
+            </defs>
+            
+            <!-- Фон неба и моря -->
+            <rect width="400" height="500" fill="url(#skyGrad)"/>
+            
+            <!-- Солнце на горизонте -->
+            <circle cx="200" cy="375" r="35" fill="#f5b041" opacity="0.8"/>
+            
+            <!-- Пиксельные облака -->
+            <path d="M30 60 h40 v10 h-40 z M50 50 h30 v10 h-30 z M280 80 h60 v10 h-60 z M300 70 h30 v10 h-30 z" fill="#ffffff" opacity="0.3"/>
+            
+            <!-- Тот самый летящий пиксельный кораблик -->
+            <path d="M280 368 h15 l-5 7 h-15 z M288 360 l4 8 h-4 z" fill="#000000" opacity="0.6"/>
+            
+            <!-- Легендарные Чайки -->
+            <path d="M40 120 l8 4 l8 -4 M48 124 v4 M120 90 l6 3 l6 -3 M220 110 l10 5 l10 -5" stroke="#000" stroke-width="2" fill="none" opacity="0.7"/>
+            
+            <!-- Песчаный берег/Остров снизу -->
+            <path d="M0 460 Q 100 440, 200 465 T 400 450 L 400 500 L 0 500 Z" fill="#d35400"/>
+            <path d="M0 465 Q 120 450, 230 472 T 400 460 L 400 500 L 0 500 Z" fill="#e67e22"/>
+            
+            <!-- Пальмы слева -->
+            <path d="M20 500 Q 25 430, 40 390 Q 30 395, 15 400 M40 390 Q 55 385, 70 390 M40 390 Q 45 370, 40 355 M40 390 Q 35 410, 45 430" stroke="#145a32" stroke-width="4" fill="none"/>
+            <path d="M20 500 Q 25 430, 40 390" stroke="#6e2c00" stroke-width="5" fill="none"/>
+            
+            <!-- Пальмы справа -->
+            <path d="M370 500 Q 360 440, 340 400 Q 320 405, 310 415 M340 400 Q 355 390, 365 380 M340 400 Q 335 380, 330 360" stroke="#145a32" stroke-width="4" fill="none"/>
+            <path d="M370 500 Q 360 440, 340 400" stroke="#6e2c00" stroke-width="5" fill="none"/>
+        </svg>
+
         <div class="menu-title">9999 IN 1</div>
-        
-        <!-- Список игр -->
         <div class="game-list" id="retro-game-list"></div>
-        
-        <!-- Генерация слоев пейзажа (небо, закат, море, берег) -->
-        <div class="retro-clouds"></div>
-        <div class="retro-landscape"></div>
     </div>
 
     <!-- ЭКРАН С ЭМУЛЯТОРОМ -->
@@ -245,7 +257,7 @@
             { file: "mario.nes", title: "SUPER MARIO BROS" },
             { file: "tanks.nes", title: "TANK 1990 (BATTLE CITY)" },
             { file: "chip.nes", title: "CHIP N DALE" },
-            { file: "contra.nes", title: "CONTRA (RAMBO)" }
+            { file: "contra.nes", title: "CONTRA" }
         ];
 
         var listContainer = document.getElementById('retro-game-list');
