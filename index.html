@@ -27,7 +27,6 @@
         #sound-toggle.muted { color: #ffaa00; border-color: #663333; }
         #back-to-catalog { display: none; background: #224; border-color: #448; }
 
-        /* ВОССТАНАВЛИВАЕМ GIF-ЗАСТАВКУ ДЛЯ КАТАЛОГА */
         #catalog-container {
             width: 100%; max-width: 400px; flex-grow: 1; overflow-y: auto; position: relative;
             background: url('background.gif') no-repeat center center; background-size: cover;
@@ -45,7 +44,7 @@
         #game-container { width: 100%; max-width: 400px; height: 240px; background: #000; position: relative; display: flex; justify-content: center; align-items: center; }
         canvas { width: 100%; height: 100%; display: block; image-rendering: pixelated; }
         
-        /* КОНТЕЙНЕР ДЛЯ EMULATOR JS С ЖЕСТКИМИ РАЗМЕРАМИ */
+        /* КОНТЕЙНЕР ДЛЯ EMULATOR JS С АБСОЛЮТНЫМ ИСПРАВЛЕНИЕМ ВЫСОТЫ */
         #emulator_container { display: none; width: 100%; height: 100%; position: absolute; top: 0; left: 0; z-index: 5; }
 
         /* РОДНОЙ ГЕЙМПАД ДЛЯ NES */
@@ -192,12 +191,13 @@
             });
         }
 
-        function launchSega(romUrl) {
+        function launch16Bit(romUrl, systemType) {
             var container = document.getElementById('emulator_container');
-            container.innerHTML = ""; // Очищаем контейнер
+            container.innerHTML = ""; 
 
+            // Передаем параметры конфигурации СТРОГО до инжекта скрипта loaders
             window.EJS_player = "#emulator_container";
-            window.EJS_core = "segaMD";
+            window.EJS_core = (systemType === "sega") ? "segaMD" : "snes";
             window.EJS_pathtodata = "https://cdn.emulatorjs.org/stable/data/"; 
             window.EJS_gameUrl = window.location.origin + window.location.pathname.replace("index.html", "") + romUrl;
             window.EJS_startOnLoaded = true;
@@ -218,11 +218,11 @@
             document.getElementById('back-to-catalog').style.display = 'block';
             document.getElementById('main-title').textContent = gameTitle;
 
-            if (currentSystem === "sega") {
+            if (currentSystem === "sega" || currentSystem === "snes") {
                 document.getElementById('nes-canvas').style.display = 'none';
                 document.getElementById('gamepad').style.display = 'none'; 
                 document.getElementById('emulator_container').style.display = 'block';
-                launchSega(romUrl);
+                launch16Bit(romUrl, currentSystem);
             } else {
                 document.getElementById('nes-canvas').style.display = 'block';
                 document.getElementById('gamepad').style.display = 'flex';
@@ -251,7 +251,7 @@
 
         function exitToCatalog() {
             if(gameLoopInterval) clearInterval(gameLoopInterval);
-            if(currentSystem === "sega") {
+            if(currentSystem === "sega" || currentSystem === "snes") {
                 document.getElementById('emulator_container').innerHTML = "";
             }
             document.getElementById('game-screen').style.display = 'none';
