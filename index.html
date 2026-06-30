@@ -20,7 +20,8 @@
         }
         .header-panel {
             display: flex; width: 100%; max-width: 400px; justify-content: space-between; align-items: center;
-            padding: 8px 15px; box-sizing: border-box; background: #000; border-bottom: 2px solid #333; z-index: 100;
+            padding: 8px 15px; box-sizing: border-box; background: #000; border-bottom: 2px solid #333; 
+            position: relative; z-index: 10000; /* Панель навигации ВСЕГДА поверх эмулятора */
         }
         .head-btn {
             background: #222; border: 2px solid #555; color: #fff;
@@ -29,7 +30,7 @@
         #sound-toggle.muted { color: #ffaa00; border-color: #663333; }
         #back-to-catalog { display: none; background: #224; border-color: #448; }
 
-        /* НАСТРОЙКА КАТАЛОГА ПОД ВИДЕО-ФОН */
+        /* ИГРОВОЙ КАТАЛОГ С ВИДЕО-ФОНОМ */
         #catalog-container {
             width: 100%; max-width: 400px; flex-grow: 1; overflow-y: auto; position: relative;
             background-color: #000;
@@ -56,16 +57,20 @@
         #game-container { width: 100%; height: 280px; background: #000; position: relative; display: flex; justify-content: center; align-items: center; overflow: hidden; }
         #nes-canvas { width: 100%; display: block; image-rendering: pixelated; }
 
-        /* ЖЁСТКИЙ ФИКС КОНТЕЙНЕРА СЕГИ/SNES С ВЫСОТОЙ (ЧТОБЫ КАРТИНКА НЕ СХЛОПЫВАЛАСЬ) */
+        /* ИЗОЛИРОВАННЫЙ ФРЕЙМ ПОД КОД КОНФИГУРАТОРА EMULATOR JS */
         #sega-display-container { 
             display: none; 
             width: 100%; 
-            height: calc(100vh - 44px); /* Чистая высота рабочей зоны под шапкой */
+            max-width: 400px;
+            height: calc(100vh - 44px); /* Занимает всё пространство от шапки до низа */
             position: absolute; 
             top: 44px; 
             left: 0; 
             z-index: 999; 
             background: #000; 
+        }
+        #sega-display-container iframe {
+            width: 100%; height: 100%; border: none; display: block;
         }
 
         /* РОДНОЙ ГЕЙМПАД ДЛЯ NES */
@@ -169,10 +174,9 @@
         var currentSystem = "nes";
         var videoEl = document.getElementById('menu-bg-video');
 
-        // Автозапуск видео без звука для прохождения политик мобильного Web App
         if(videoEl) {
             videoEl.muted = true;
-            videoEl.play().catch(function(e){ console.log("Видео ждет взаимодействия"); });
+            videoEl.play().catch(function(e){});
         }
 
         var nes = new jsnes.NES({
@@ -220,40 +224,61 @@
                 if (audioCtx && audioCtx.state === 'suspended') audioCtx.resume();
                 audioEnabled = !audioEnabled;
                 this.textContent = audioEnabled ? "🔊 ЗВУК: ВКЛ" : "🔇 ЗВУК";
-                
-                // Включаем/выключаем звук у видео-фона при клике юзера
                 if(videoEl) videoEl.muted = !audioEnabled;
-                
                 if(audioEnabled) this.classList.remove('muted'); else this.classList.add('muted');
             });
         }
 
-        function launchEmulatorJS(romUrl, systemType) {
+        // ГЕНЕРАЦИЯ ИЗОЛИРОВАННОГО ФРЕЙМА С ПАРАМЕТРАМИ КОНФИГУРАТОРА
+        function launchIsolatedEmulatorJS(romUrl, systemType, gameTitle) {
             var container = document.getElementById('sega-display-container');
-            container.innerHTML = ""; 
+            container.innerHTML = ""; // Тотальная очистка старых объектов перед стартом
 
-            window.EJS_player = "#sega-display-container";
-            window.EJS_core = (systemType === "sega") ? "segaMD" : "snes";
-            window.EJS_gameName = "Game";
-            window.EJS_color = "#0064ff";
-            window.EJS_pathtodata = "https://cdn.emulatorjs.org/stable/data/"; 
-            window.EJS_gameUrl = window.location.origin + window.location.pathname.replace("index.html", "") + romUrl;
-            window.EJS_startOnLoaded = true;
-            window.EJS_Volume = audioEnabled ? 1 : 0;
-            window.EJS_Header = false; 
-            window.EJS_mouse = false;
+            var coreType = (systemType === "sega") ? "segaMD" : "snes";
+            // Вычисляем абсолютную прямую ссылку на РОМ для лоадера
+            var absoluteRomUrl = window.location.origin + window.location.pathname.replace("index.html", "") + romUrl;
+            var initialVolume = audioEnabled ? 1 : 0;
 
-            var script = document.createElement("script");
-            script.id = "emulator-js-loader-script"; 
-            script.src = "https://cdn.emulatorjs.org/stable/data/loader.js";
-            document.head.appendChild(script);
+            // Формируем чистый HTML-шаблон по спецификации сгенерированного тобой кода
+            var iframeHtml = `
+            <!DOCTYPE html>
+            <html>
+            <head>
+                <meta charset="UTF-8">
+                <style>
+                    body, html { margin: 0; padding: 0; width: 100%; height: 100%; background: #000; overflow: hidden; }
+                    #game { width: 100%; height: 100%; max-width: 100%; }
+                </style>
+            </head>
+            <body>
+                <div id="game"></div>
+                <script>
+                    EJS_player = "#game";
+                    EJS_core = "${coreType}";
+                    EJS_gameName = "${gameTitle}";
+                    EJS_color = "#0064ff";
+                    EJS_pathtodata = "https://cdn.emulatorjs.org/stable/data/";
+                    EJS_gameUrl = "${absoluteRomUrl}";
+                    EJS_startOnLoaded = true;
+                    EJS_Volume = ${initialVolume};
+                    EJS_Header = false;
+                    EJS_mouse = false;
+                <\/script>
+                <script src="https://cdn.emulatorjs.org/stable/data/loader.js"></script>
+            </body>
+            </html>
+            `;
+
+            // Создаем нативный элемент iframe
+            var iframe = document.createElement('iframe');
+            iframe.srcdoc = iframeHtml;
+            container.appendChild(iframe);
         }
 
         function startGame(romUrl, gameTitle, system) {
             currentRomName = romUrl;
             currentSystem = system || "nes";
             
-            // Ставим видео на паузу при игре, чтобы не грузить процессор
             if(videoEl) videoEl.pause();
 
             document.getElementById('catalog-container').style.display = 'none';
@@ -265,7 +290,9 @@
                 document.getElementById('game-container').style.display = 'none';
                 document.getElementById('gamepad').style.display = 'none'; 
                 document.getElementById('sega-display-container').style.display = 'block';
-                launchEmulatorJS(romUrl, currentSystem);
+                
+                // Запуск изолированной песочницы
+                launchIsolatedEmulatorJS(romUrl, currentSystem, gameTitle);
             } else {
                 document.getElementById('game-container').style.display = 'flex';
                 document.getElementById('gamepad').style.display = 'flex';
@@ -295,18 +322,13 @@
         function exitToCatalog() {
             if(gameLoopInterval) clearInterval(gameLoopInterval);
             
-            // Запускаем видео-фон заново при возврате в каталог
             if(videoEl) videoEl.play().catch(function(e){});
 
+            // МГНОВЕННОЕ УНИЧТОЖЕНИЕ ФРЕЙМА СЕГИ ПРИ ВЫХОДЕ В МЕНЮ
             if(currentSystem === "sega" || currentSystem === "snes") {
                 var container = document.getElementById('sega-display-container');
-                container.innerHTML = ""; 
+                container.innerHTML = ""; // Удаление iframe полностью стирает аудио-контекст и поток игры
                 container.style.display = "none";
-                
-                var oldScript = document.getElementById("emulator-js-loader-script");
-                if(oldScript) oldScript.remove();
-                
-                window.EJS_player = null;
             }
 
             document.getElementById('game-screen').style.display = 'none';
