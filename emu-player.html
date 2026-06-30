@@ -24,17 +24,13 @@
                 EJS_core = arcadeData.core; 
                 EJS_gameName = arcadeData.title;
                 EJS_color = '#0064ff';
-                
-                // 🔥 МЕНЯЕМ СЕРВЕР НА НАДЕЖНЫЙ СЛУЖЕБНЫЙ CDN JSDELIVR
                 EJS_pathtodata = 'https://cdn.jsdelivr.net/gh/EmulatorJS/EmulatorJS@latest/data/';
-                
                 EJS_gameUrl = arcadeData.romArray; 
                 EJS_startOnLoaded = true;
                 EJS_Header = false; 
                 EJS_mouse = false;
-                EJS_Volume = arcadeData.volume;
+                EJS_Volume = arcadeData.volume; // Стартовый звук (0 или 1)
 
-                // Подгружаем лоадер с того же стабильного зеркала
                 const script = document.createElement('script');
                 script.src = "https://cdn.jsdelivr.net/gh/EmulatorJS/EmulatorJS@latest/data/loader.js";
                 document.head.appendChild(script);
@@ -42,6 +38,16 @@
         } catch(e) {
             console.log("Sandbox wait...");
         }
+
+        // 🔥 СЛУШАЕМ КОМАНДЫ ИЗ INDEX.HTML ДЛЯ ВКЛЮЧЕНИЯ/ВЫКЛЮЧЕНИЯ ЗВУКА НА ЛЕТУ
+        window.addEventListener('message', function(event) {
+            if (event.data && typeof event.data.volume !== 'undefined') {
+                if (typeof EJS_setVolume === 'function') {
+                    // Официальный метод EmulatorJS для изменения громкости во время игры
+                    EJS_setVolume(event.data.volume); 
+                }
+            }
+        });
     </script>
 </body>
 </html>
