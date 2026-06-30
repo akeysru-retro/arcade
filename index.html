@@ -30,18 +30,20 @@
         #sound-toggle.muted { color: #ffaa00; border-color: #663333; }
         #back-to-catalog { display: none; background: #224; border-color: #448; }
 
-        /* ИГРОВОЙ КАТАЛОГ С ВИДЕО-ФОНОМ */
+        /* ОБЩИЙ КОНТЕЙНЕР ДЛЯ ВСЕХ ВКЛАДОК С ВИДЕО-ФОНОМ */
         #catalog-container {
             width: 100%; max-width: 400px; flex-grow: 1; overflow-y: auto; position: relative;
-            background-color: #000;
-            display: flex; flex-direction: column; align-items: center; padding-top: 25px; box-sizing: border-box;
-            z-index: 10;
+            background-color: #000; padding-top: 25px; padding-bottom: 70px; box-sizing: border-box;
+            z-index: 10; display: flex; flex-direction: column; align-items: center;
         }
         .bg-video {
             position: absolute; top: 0; left: 0; width: 100%; height: 100%;
             object-fit: cover; z-index: 1; pointer-events: none;
         }
-        .menu-title, .game-list { z-index: 5; position: relative; }
+        
+        /* СЛОИ ДЛЯ КОРРЕКТНОГО ПЕРЕКЛЮЧЕНИЯ СЕКЦИЙ */
+        .app-section { width: 100%; z-index: 5; position: relative; display: none; }
+        #section-games { display: block; } /* По умолчанию открыты игры */
 
         .menu-title { font-size: 20px; color: #ffff00; text-shadow: 3px 3px #000; margin-bottom: 25px; text-align: center; letter-spacing: 2px; }
         .game-list { width: 100%; padding: 0 25px; box-sizing: border-box; }
@@ -50,60 +52,64 @@
         .retro-item::before { content: "▶ "; opacity: 0; margin-right: 8px; color: #ffff00; }
         .retro-item:active::before { opacity: 1; }
 
+        /* СТИЛИ ДЛЯ СЕКЦИИ СЕКРЕТОВ */
+        .secret-card { background: rgba(17, 17, 17, 0.85); border: 2px solid #444; margin: 0 20px 15px 20px; padding: 15px; border-radius: 4px; }
+        .secret-game { font-size: 10px; color: #ffff00; margin-bottom: 6px; }
+        .secret-title { font-size: 8px; color: #00ff00; margin-bottom: 10px; line-height: 1.4; }
+        .secret-code { font-size: 8px; color: #fff; line-height: 1.6; background: #000; padding: 8px; border: 1px dashed #555; word-wrap: break-word; }
+
+        /* СТИЛИ ДЛЯ ФОРМЫ ЗАКАЗА */
+        .order-container { padding: 0 25px; box-sizing: border-box; width: 100%; }
+        .order-text { font-size: 8px; line-height: 1.6; color: #aaa; margin-bottom: 20px; text-align: center; }
+        .form-group { display: flex; flex-direction: column; gap: 8px; margin-bottom: 15px; }
+        .form-label { font-size: 8px; color: #ffff00; }
+        .form-input { 
+            background: #111; border: 2px solid #555; padding: 10px; color: #fff; 
+            font-family: 'Press Start 2P', monospace; font-size: 9px; border-radius: 4px;
+        }
+        .form-input:focus { border-color: #00ff00; outline: none; }
+        .order-submit-btn {
+            width: 100%; background: #0064ff; border: 3px solid #0040aa; color: #fff;
+            font-family: 'Press Start 2P', monospace; font-size: 10px; padding: 12px;
+            cursor: pointer; border-radius: 4px; box-shadow: 0 4px 0 #002266; margin-top: 10px;
+        }
+        .order-submit-btn:active { transform: translateY(4px); box-shadow: none; }
+
+        /* НИЖНИЙ ТАБ-БАР (МЕНЮ ВКЛАДОК) */
+        .tab-bar {
+            position: absolute; bottom: 0; left: 0; right: 0; height: 55px;
+            background: #111; border-top: 3px solid #333; display: flex;
+            justify-content: space-around; align-items: center; z-index: 100; box-sizing: border-box;
+        }
+        .tab-item {
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            flex-grow: 1; height: 100%; color: #888; cursor: pointer; background: none; border: none;
+            font-family: 'Press Start 2P', monospace; font-size: 7px; gap: 6px;
+        }
+        .tab-item.active { color: #ffff00; background: #1a1a1a; }
+        .tab-icon { font-size: 14px; }
+
         /* ЭКРАН ИГРЫ */
         #game-screen { display: none; width: 100%; max-width: 400px; flex-direction: column; align-items: center; flex-grow: 1; background: #000; position: relative; z-index: 20; }
         
-        /* КОНТЕЙНЕР ДЛЯ РЕНДЕРА ДЕНДИ */
         #game-container { 
-            width: 100%; 
-            flex-grow: 1; 
-            max-height: calc(100vh - 250px); 
-            background: #000; 
-            position: relative; 
-            display: flex; 
-            justify-content: center; 
-            align-items: center; 
-            overflow: hidden;
-            padding-top: 15px; 
-            box-sizing: border-box;
+            width: 100%; flex-grow: 1; max-height: calc(100vh - 250px); background: #000; 
+            position: relative; display: flex; justify-content: center; align-items: center; overflow: hidden; padding-top: 15px; box-sizing: border-box;
         }
-        #nes-canvas { 
-            width: 100%; 
-            max-height: 100%;
-            object-fit: contain; 
-            display: block; 
-            image-rendering: pixelated; 
-        }
+        #nes-canvas { width: 100%; max-height: 100%; object-fit: contain; display: block; image-rendering: pixelated; }
 
-        /* ИЗОЛИРОВАННЫЙ ФРЕЙМ ПОД EMULATOR JS */
-        #sega-display-container { 
-            display: none; 
-            width: 100%; 
-            max-width: 400px;
-            height: calc(100vh - 44px); 
-            position: absolute; 
-            top: 44px; 
-            left: 0; 
-            z-index: 999; 
-            background: #000; 
-        }
-        #sega-display-container iframe {
-            width: 100%; height: 100%; border: none; display: block;
-        }
+        #sega-display-container { display: none; width: 100%; max-width: 400px; height: calc(100vh - 44px); position: absolute; top: 44px; left: 0; z-index: 999; background: #000; }
+        #sega-display-container iframe { width: 100%; height: 100%; border: none; display: block; }
 
-        /* РОДНОЙ ГЕЙМПАД ДЛЯ NES */
-        #gamepad {
-            display: flex; flex-direction: column; width: 100%; padding: 15px; box-sizing: border-box; justify-content: space-between; border-top: 4px solid #222; background: #111; position: absolute; bottom: 0; left: 0; right: 0; z-index: 30;
-        }
+        /* ГЕЙМПАД ДЛЯ NES */
+        #gamepad { position: absolute; bottom: 0; left: 0; right: 0; z-index: 30; display: flex; flex-direction: column; width: 100%; padding: 15px; box-sizing: border-box; justify-content: space-between; border-top: 4px solid #222; background: #111; }
         .main-controls { display: flex; width: 100%; justify-content: space-between; align-items: center; }
         .dpad { display: grid; grid-template-columns: repeat(3, 1fr); grid-template-rows: repeat(3, 1fr); width: 130px; height: 130px; }
         .btn { background: #222; border: 3px solid #444; color: white; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 14px; }
         .btn:active { background: #444; }
-        
         #nes-buttons { display: inline-flex; gap: 15px; }
         .round-btn { width: 60px; height: 60px; background: #cc1111; border-radius: 50%; border: 4px solid #fff; color: white; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 16px; font-family: sans-serif; box-shadow: 0 4px 0 #880000; }
         .round-btn:active { background: #aa0000; transform: translateY(4px); box-shadow: none; }
-        
         .system-buttons { display: flex; flex-direction: column; gap: 10px; width: 100%; margin-top: 15px; }
         .sys-row { display: flex; justify-content: center; gap: 20px; }
         .sys-btn { background: #333; border: 2px solid #555; color: #aaa; width: 80px; height: 22px; border-radius: 4px; font-size: 8px; display: flex; align-items: center; justify-content: center; }
@@ -121,21 +127,63 @@
     </div>
     
     <div id="catalog-container">
+        <!-- Единое живое видео на фоне для всех вкладок меню -->
         <video id="menu-bg-video" class="bg-video" loop playsinline webkit-playsinline>
             <source src="background-video.mp4" type="video/mp4">
         </video>
 
-        <div class="menu-title">9999 IN 1</div>
-        <div class="game-list" id="retro-game-list"></div>
+        <!-- ВКЛАДКА 1: СПИСОК ИГР -->
+        <div id="section-games" class="app-section">
+            <div class="menu-title">9999 IN 1</div>
+            <div class="game-list" id="retro-game-list"></div>
+        </div>
+
+        <!-- ВКЛАДКА 2: СЕКРЕТЫ И ЧИТЫ -->
+        <div id="section-secrets" class="app-section">
+            <div class="menu-title">СЕКРЕТЫ</div>
+            <div id="secrets-container"></div>
+        </div>
+
+        <!-- ВКЛАДКА 3: ЗАКАЗ ИГРЫ -->
+        <div id="section-order" class="app-section">
+            <div class="menu-title">ЗАКАЗ ИГР</div>
+            <div class="order-container">
+                <div class="order-text">НЕ НАШЛИ СВОЮ ЛЮБИМУЮ ИГРУ? НАПИШИТЕ НАЗВАНИЕ, И МЫ ДОБАВИМ ЕЁ В СЛЕДУЮЩЕМ ОБНОВЛЕНИИ!</div>
+                
+                <div class="form-group">
+                    <label class="form-label">НАЗВАНИЕ ИГРЫ:</label>
+                    <input type="text" id="order-game-title" class="form-input" placeholder="НАПРИМЕР: ТАНЧИКИ">
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">ПЛАТФОРМА (КОНСОЛЬ):</label>
+                    <input type="text" id="order-game-system" class="form-input" placeholder="DENDY / SEGA / GBA">
+                </div>
+
+                <button class="order-submit-btn" onclick="sendOrderRequest()">ОТПРАВИТЬ ЗАЯВКУ</button>
+            </div>
+        </div>
+
+        <!-- НИЖНЕЕ МЕНЮ ПЕРЕКЛЮЧЕНИЯ ВКЛАДОК -->
+        <div class="tab-bar" id="app-tab-bar">
+            <button class="tab-item active" onclick="switchTab('games', this)">
+                <span class="tab-icon">🎮</span><span>ИГРЫ</span>
+            </button>
+            <button class="tab-item" onclick="switchTab('secrets', this)">
+                <span class="tab-icon">🔑</span><span>СЕКРЕТЫ</span>
+            </button>
+            <button class="tab-item" onclick="switchTab('order', this)">
+                <span class="tab-icon">📥</span><span>ЗАКАЗ</span>
+            </button>
+        </div>
     </div>
 
     <div id="game-screen">
         <div id="game-container">
             <canvas id="nes-canvas" width="256" height="240"></canvas>
         </div>
-        
         <div id="sega-display-container"></div>
-
+        <!-- Геймпад Денди -->
         <div id="gamepad">
             <div class="main-controls">
                 <div class="dpad">
@@ -163,9 +211,9 @@
         window.Telegram.WebApp.ready();
         window.Telegram.WebApp.expand();
 
+        // 1. РЕНДЕР ИГР ИЗ GAMES.JS
         var gamesToLoad = window.MY_GAMES || [];
         var listContainer = document.getElementById('retro-game-list');
-        
         if (listContainer) {
             listContainer.innerHTML = "";
             gamesToLoad.forEach(function(game, index) {
@@ -178,6 +226,65 @@
                 });
                 listContainer.appendChild(item);
             });
+        }
+
+        // 2. ДИНАМИЧЕСКИЙ РЕНДЕР СЕКРЕТОВ ИЗ GAMES.JS
+        var secretsToLoad = window.GAME_SECRETS || [];
+        var secretsContainer = document.getElementById('secrets-container');
+        if (secretsContainer) {
+            secretsContainer.innerHTML = "";
+            secretsToLoad.forEach(function(item) {
+                var card = document.createElement('div');
+                card.className = 'secret-card';
+                card.innerHTML = `
+                    <div class="secret-game">[${item.type}] ${item.game}</div>
+                    <div class="secret-title">${item.title}</div>
+                    <div class="secret-code">${item.code}</div>
+                `;
+                secretsContainer.appendChild(card);
+            });
+        }
+
+        // 3. ЛОГИКА ПЕРЕКЛЮЧЕНИЯ ВКЛАДОК КАТАЛОГА
+        function switchTab(tabId, buttonElement) {
+            // Скрываем все вкладки
+            var sections = document.getElementsByClassName('app-section');
+            for(var i=0; i<sections.length; i++) { sections[i].style.display = 'none'; }
+            
+            // Снимаем подсветку со всех кнопок в меню
+            var tabs = document.getElementsByClassName('tab-item');
+            for(var i=0; i<tabs.length; i++) { tabs[i].classList.remove('active'); }
+
+            // Показываем нужный блок и подсвечиваем кнопку
+            document.getElementById('section-' + tabId).style.display = 'block';
+            buttonElement.classList.add('active');
+
+            // Легкая вибрация при переключении меню
+            if (window.Telegram?.WebApp?.HapticFeedback) {
+                window.Telegram.WebApp.HapticFeedback.impactOccurred('light');
+            }
+        }
+
+        // 4. ФУНКЦИЯ ОТПРАВКИ ЗАКАЗА ИГРЫ В БОТА ТЕЛЕГРАМ
+        function sendOrderRequest() {
+            var titleInput = document.getElementById('order-game-title').value.trim();
+            var systemInput = document.getElementById('order-game-system').value.trim();
+
+            if (!titleInput) { alert("ВВЕДИТЕ НАЗВАНИЕ ИГРЫ!"); return; }
+
+            // Формируем JSON-пакет данных для твоего Telegram-сервера
+            var orderData = {
+                action: "order_game",
+                game_title: titleInput,
+                platform: systemInput || "Не указана"
+            };
+
+            // Отправляем данные в бота и закрываем Web App по стандарту Telegram
+            window.Telegram.WebApp.sendData(JSON.stringify(orderData));
+            
+            alert("ЗАЯВКА ОТПРАВЛЕНА БОТУ!");
+            document.getElementById('order-game-title').value = "";
+            document.getElementById('order-game-system').value = "";
         }
 
         var canvas = document.getElementById('nes-canvas');
@@ -245,7 +352,6 @@
                 if(videoEl) videoEl.muted = !audioEnabled;
                 if(audioEnabled) this.classList.remove('muted'); else this.classList.add('muted');
 
-                // Передаем сигнал изменения звука на лету внутрь фрейма Сеги
                 if (currentSystem === "sega" || currentSystem === "snes") {
                     var iframe = document.getElementById('active-emulator-iframe');
                     if (iframe && iframe.contentWindow) {
@@ -317,7 +423,10 @@
             
             if(videoEl) videoEl.pause();
 
+            // Скрываем весь каталог вместе с нижним меню вкладок на время игры
             document.getElementById('catalog-container').style.display = 'none';
+            document.getElementById('app-tab-bar').style.display = 'none';
+            
             document.getElementById('game-screen').style.display = 'flex';
             document.getElementById('back-to-catalog').style.display = 'block';
             document.getElementById('main-title').textContent = gameTitle;
@@ -348,7 +457,7 @@
                 req.send();
             }
             
-            if (window.Telegram && window.Telegram.WebApp && window.Telegram.WebApp.HapticFeedback) {
+            if (window.Telegram?.WebApp?.HapticFeedback) {
                 window.Telegram.WebApp.HapticFeedback.impactOccurred('medium');
             }
         }
@@ -371,16 +480,42 @@
 
             document.getElementById('game-screen').style.display = 'none';
             document.getElementById('back-to-catalog').style.display = 'none';
+            
+            // Показываем каталог и возвращаем таб-бар на место
             document.getElementById('catalog-container').style.display = 'flex';
+            document.getElementById('app-tab-bar').style.display = 'flex';
+            
             document.getElementById('main-title').textContent = '9999 IN 1';
         }
         
         document.getElementById('back-to-catalog').addEventListener('click', exitToCatalog);
 
-        // 🔥 ЛОВИМ КОМАНДУ ЗАКРЫТИЯ ИЗНУТРИ ИЗОЛИРОВАННОГО ФРЕЙМА СЕГИ
-        window.addEventListener('message', function(event) {
-            if (event.data && event.data.command === 'close_arcade') {
-                exitToCatalog();
+        function bindKey(elementId, nesKey) {
+            var el = document.getElementById(elementId);
+            if(el) {
+                el.addEventListener('touchstart', function(e) { e.preventDefault(); if(currentSystem === "nes") nes.buttonDown(1, nesKey); });
+                el.addEventListener('touchend', function(e) { e.preventDefault(); if(currentSystem === "nes") nes.buttonUp(1, nesKey); });
+                el.addEventListener('mousedown', function(e) { if(currentSystem === "nes") nes.buttonDown(1, nesKey); });
+                el.addEventListener('mouseup', function(e) { if(currentSystem === "nes") nes.buttonUp(1, nesKey); });
+            }
+        }
+        bindKey('up', jsnes.Controller.BUTTON_UP); bindKey('down', jsnes.Controller.BUTTON_DOWN);
+        bindKey('left', jsnes.Controller.BUTTON_LEFT); bindKey('right', jsnes.Controller.BUTTON_RIGHT);
+        bindKey('btn-a', jsnes.Controller.BUTTON_A); bindKey('btn-b', jsnes.Controller.BUTTON_B);
+        bindKey('btn-start', jsnes.Controller.BUTTON_START); bindKey('btn-select', jsnes.Controller.BUTTON_SELECT);
+
+        document.getElementById('btn-save').addEventListener('click', function() {
+            if (currentSystem === "nes" && currentRomName) {
+                localStorage.setItem("save_" + currentRomName, JSON.stringify(nes.toJSON()));
+                alert("ИГРА NES СОХРАНЕНА!");
+            }
+        });
+
+        document.getElementById('btn-load').addEventListener('click', function() {
+            if (currentSystem === "nes" && currentRomName) {
+                var data = localStorage.getItem("save_" + currentRomName);
+                if (data) { nes.fromJSON(JSON.parse(data)); alert("ЗАГРУЗКА УСПЕШНА!"); }
+                else { alert("НЕТ СОХРАНЕНИЙ"); }
             }
         });
     </script>
