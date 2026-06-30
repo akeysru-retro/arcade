@@ -20,7 +20,7 @@
         }
         .header-panel {
             display: flex; width: 100%; max-width: 400px; justify-content: space-between; align-items: center;
-            padding: 8px 15px; box-sizing: border-box; background: #000; border-bottom: 2px solid #333; z-index: 10;
+            padding: 8px 15px; box-sizing: border-box; background: #000; border-bottom: 2px solid #333; z-index: 100;
         }
         .head-btn {
             background: #222; border: 2px solid #555; color: #fff;
@@ -33,6 +33,7 @@
             width: 100%; max-width: 400px; flex-grow: 1; overflow-y: auto; position: relative;
             background: url('background.gif') no-repeat center center; background-size: cover;
             display: flex; flex-direction: column; align-items: center; padding-top: 25px; box-sizing: border-box;
+            z-index: 10;
         }
         .menu-title { font-size: 20px; color: #ffff00; text-shadow: 3px 3px #000; margin-bottom: 25px; text-align: center; letter-spacing: 2px; z-index: 5; }
         .game-list { width: 100%; padding: 0 25px; box-sizing: border-box; z-index: 5; position: relative; }
@@ -42,19 +43,27 @@
         .retro-item:active::before { opacity: 1; }
 
         /* ЭКРАН ИГРЫ */
-        #game-screen { display: none; width: 100%; max-width: 400px; flex-direction: column; align-items: center; flex-grow: 1; background: #000; position: relative; }
+        #game-screen { display: none; width: 100%; max-width: 400px; flex-direction: column; align-items: center; flex-grow: 1; background: #000; position: relative; z-index: 20; }
         
-        /* ЗОНА ИГРЫ (Ограничиваем высоту, чтобы ничего не уползало за экран) */
+        /* КОНТЕЙНЕР ДЛЯ РЕНДЕРА */
         #game-container { width: 100%; height: 280px; background: #000; position: relative; display: flex; justify-content: center; align-items: center; overflow: hidden; }
         #nes-canvas { width: 100%; display: block; image-rendering: pixelated; }
 
-        /* КОНТЕЙНЕР ДЛЯ СЕГИ (Зажимаем под мобильный размер) */
-        #emulator-js-box { display: none; width: 100%; height: 100%; background: #000; position: relative; }
-        #game-player-el { width: 100%; height: 100%; }
+        /* ИЗОЛИРОВАННЫЙ БЛОК ДЛЯ EMULATOR JS (Перекрывает всё поле во время Сеги) */
+        #sega-display-container { 
+            display: none; 
+            width: 100%; 
+            height: calc(100vh - 40px); /* Занимает всё пространство от шапки до низа экрана */
+            position: absolute; 
+            top: 40px; 
+            left: 0; 
+            z-index: 999; 
+            background: #000; 
+        }
 
         /* РОДНОЙ ГЕЙМПАД ДЛЯ NES */
         #gamepad {
-            display: flex; flex-direction: column; width: 100%; padding: 15px; box-sizing: border-box; justify-content: space-between; border-top: 4px solid #222; background: #111; position: absolute; bottom: 0; left: 0; right: 0;
+            display: flex; flex-direction: column; width: 100%; padding: 15px; box-sizing: border-box; justify-content: space-between; border-top: 4px solid #222; background: #111; position: absolute; bottom: 0; left: 0; right: 0; z-index: 30;
         }
         .main-controls { display: flex; width: 100%; justify-content: space-between; align-items: center; }
         .dpad { display: grid; grid-template-columns: repeat(3, 1fr); grid-template-rows: repeat(3, 1fr); width: 130px; height: 130px; }
@@ -89,11 +98,9 @@
     <div id="game-screen">
         <div id="game-container">
             <canvas id="nes-canvas" width="256" height="240"></canvas>
-            
-            <div id="emulator-js-box">
-                <div id="game-player-el"></div>
-            </div>
         </div>
+        
+        <div id="sega-display-container"></div>
 
         <div id="gamepad">
             <div class="main-controls">
@@ -200,23 +207,24 @@
         }
 
         function launchEmulatorJS(romUrl, systemType) {
-            document.getElementById('game-player-el').innerHTML = "";
+            var container = document.getElementById('sega-display-container');
+            container.innerHTML = ""; // Полная очистка перед стартом
 
-            // Настройка конфигурации под мобильные размеры
-            window.EJS_player = "#game-player-el";
-            window.EJS_core = "segaMD";
-            window.EJS_gameName = "Sonic";
+            // Инициализация глобальных переменных EmulatorJS
+            window.EJS_player = "#sega-display-container";
+            window.EJS_core = (systemType === "sega") ? "segaMD" : "snes";
+            window.EJS_gameName = "Game";
             window.EJS_color = "#0064ff";
             window.EJS_pathtodata = "https://cdn.emulatorjs.org/stable/data/"; 
             window.EJS_gameUrl = window.location.origin + window.location.pathname.replace("index.html", "") + romUrl;
             window.EJS_startOnLoaded = true;
             window.EJS_Volume = audioEnabled ? 1 : 0;
-            
-            // 🔥 ОТКЛЮЧАЕМ ЛИШНИЕ ДЕСКТОПНЫЕ БАРЫ, ЧТОБЫ ЭКРАН НЕ УЕЗЖАЛ
-            window.EJS_Header = false; 
-            window.EJS_Cacherom = true;
+            window.EJS_Header = false; // Отключаем десктопный заголовок
+            window.EJS_mouse = false;
 
+            // Инжектим лоадер EmulatorJS
             var script = document.createElement("script");
+            script.id = "emulator-js-loader-script"; // ID для последующего удаления
             script.src = "https://cdn.emulatorjs.org/stable/data/loader.js";
             document.head.appendChild(script);
         }
@@ -230,15 +238,15 @@
             document.getElementById('back-to-catalog').style.display = 'block';
             document.getElementById('main-title').textContent = gameTitle;
 
-            if (currentSystem === "sega") {
-                document.getElementById('nes-container').style.display = 'none';
+            if (currentSystem === "sega" || currentSystem === "snes") {
+                document.getElementById('game-container').style.display = 'none';
                 document.getElementById('gamepad').style.display = 'none'; 
-                document.getElementById('emulator-js-box').style.display = 'block';
+                document.getElementById('sega-display-container').style.display = 'block';
                 launchEmulatorJS(romUrl, currentSystem);
             } else {
-                document.getElementById('nes-container').style.display = 'flex';
+                document.getElementById('game-container').style.display = 'flex';
                 document.getElementById('gamepad').style.display = 'flex';
-                document.getElementById('emulator-js-box').style.display = 'none';
+                document.getElementById('sega-display-container').style.display = 'none';
                 
                 var req = new XMLHttpRequest();
                 req.open("GET", romUrl, true);
@@ -263,9 +271,21 @@
 
         function exitToCatalog() {
             if(gameLoopInterval) clearInterval(gameLoopInterval);
-            if(currentSystem === "sega") {
-                document.getElementById('game-player-el').innerHTML = "";
+            
+            // 🔥 ЖЕСТКОЕ УНИЧТОЖЕНИЕ ПРОЦЕССА СЕГИ ПРИ ВЫХОДЕ В МЕНЮ
+            if(currentSystem === "sega" || currentSystem === "snes") {
+                var container = document.getElementById('sega-display-container');
+                container.innerHTML = ""; // Очищаем iframe и canvas эмулятора Сеги
+                container.style.display = "none";
+                
+                // Удаляем инжектированный скрипт загрузчика из DOM, чтобы он не висел в фоне
+                var oldScript = document.getElementById("emulator-js-loader-script");
+                if(oldScript) oldScript.remove();
+                
+                // Сбрасываем глобальные объекты
+                window.EJS_player = null;
             }
+
             document.getElementById('game-screen').style.display = 'none';
             document.getElementById('back-to-catalog').style.display = 'none';
             document.getElementById('catalog-container').style.display = 'flex';
