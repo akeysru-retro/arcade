@@ -250,7 +250,7 @@
             }
         }
 
-        // 3. ОТПРАВКА ЗАКАЗА НА НОВОГО БОТА ЧЕРЕЗ ФЕТЧ С ПРАВИЛЬНЫМ ДИНАМИЧЕСКИМ URL
+       // 3. ОТПРАВКА ЗАКАЗА НА НОВОГО БОТА С ДВУМЯ КНОПКАМИ НАВИГАЦИИ (БОТ И АДМИН)
 function sendOrderRequest() {
     var titleInput = document.getElementById('order-game-title').value.trim();
     var systemInput = document.getElementById('order-game-system').value.trim();
@@ -274,20 +274,22 @@ function sendOrderRequest() {
 
     fetch(requestUrl, { mode: 'no-cors' })
         .then(function() {
-            // 🔥 КРАСИВАЯ КЛИКАБЕЛЬНАЯ ССЫЛКА НА БОТА И ПЕРЕХОД ЧЕРЕЗ РОДНОЙ ИНТЕРФЕЙС TELEGRAM
+            // 🔥 ДВЕ КНОПКИ В POPUP: ДЛЯ ПЕРЕХОДА К БОТУ ИЛИ НАПРЯМУЮ К АДМИНУ ПРИ ВОЗНИКНОВЕНИИ ТРУДНОСТЕЙ
             window.Telegram.WebApp.showPopup({
-                title: "ЗАЯВКА ПРИНЯТА!",
-                message: "Для подтверждения платного заказа и получения счета перейдите в диалог с нашим ботом.",
+                title: "ЗАЯВКА СФОРМИРОВАНА!",
+                message: "Счет отправлен в диалог с ботом. Если что-то пошло не так или возникли трудности при отправке — напишите админу напрямую!",
                 buttons: [
-                    { id: "link", type: "default", text: "ОТКРЫТЬ БОТА" },
+                    { id: "bot", type: "default", text: "🤖 К БОТУ ЗА СЧЕТОМ" },
+                    { id: "admin", type: "default", text: "👨‍💻 НАПИСАТЬ АДМИНУ" },
                     { id: "close", type: "cancel", text: "ЗАКРЫТЬ" }
                 ]
             }, function(buttonId) {
-                if (buttonId === "link") {
-                    // Родной метод Telegram Web App для безопасного перехода по внешним ссылкам
+                if (buttonId === "bot") {
                     window.Telegram.WebApp.openTelegramLink("https://t.me/gameMAN888_bot");
+                } else if (buttonId === "admin") {
+                    window.Telegram.WebApp.openTelegramLink("https://t.me/Den888ak");
                 }
-                window.Telegram.WebApp.close(); // Закрываем Web App
+                window.Telegram.WebApp.close(); // Закрываем Web App сессию
             });
         })
         .catch(function() {
