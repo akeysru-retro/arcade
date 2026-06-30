@@ -205,6 +205,9 @@
         window.Telegram.WebApp.ready();
         window.Telegram.WebApp.expand();
 
+        // 🔥 НАСТРОЙКА URL ТВОЕГО НОВОГО БЭКЕНДА ДЛЯ АРКАДЫ (ПРОПИШИ СВОЮ ССЫЛКУ ИЗ GOOGLE ПОСЛЕ ПУБЛИКАЦИИ)
+        var gasRetroUrl = "https://script.google.com/macros/s/AKfycbwBjulaVnjKN-Af3oDFFFaG4Us8n6Jgcz3BTJRL1HThFxlgMuxv_D4x1yK4Khy-BsVL/exec";
+
         // 1. РЕНДЕР ИГР ИЗ GAMES.JS
         var gamesToLoad = window.MY_GAMES || [];
         var listContainer = document.getElementById('retro-game-list');
@@ -222,26 +225,66 @@
             });
         }
 
-        // 2. ДИНАМИЧЕСКИЙ РЕНДЕР СЕКРЕТОВ ИЗ GAMES.JS
-        var secretsToLoad = window.GAME_SECRETS || [];
-        var secretsContainer = document.getElementById('secrets-container');
-        if (secretsContainer && secretsToLoad.length > 0) {
-            secretsContainer.innerHTML = "";
-            secretsToLoad.forEach(function(item) {
-                var card = document.createElement('div');
-                card.className = 'secret-card';
-                card.innerHTML = `
-                    <div class="secret-game">[${item.type}] ${item.game}</div>
-                    <div class="secret-title">${item.title}</div>
-                    <div class="secret-code">${item.code}</div>
-                `;
-                secretsContainer.appendChild(card);
-            });
-        } else if (secretsContainer) {
-            secretsContainer.innerHTML = "<div style='text-align:center; font-size:8px; padding-top:20px;'>СЕКРЕТЫ СКОРО БУДУТ ДОБАВЛЕНЫ!</div>";
+        // 2. АВТОМАТИЧЕСКАЯ ПОДГРУЗКА СЕКРЕТОВ ИЗ ТАБЛИЦЫ ЧЕРЕЗ JSONP
+        (function loadRetroSecrets() {
+            var script = document.createElement('script');
+            script.src = gasRetroUrl + "?action=get_secrets&callback=renderSecrets";
+            document.head.appendChild(script);
+        })();
+
+        // Колбэк-функция, которая отрисует читы на экране
+        function renderSecrets(data) {
+            var secretsContainer = document.getElementById('secrets-container');
+            if (secretsContainer && data && data.length > 0) {
+                secretsContainer.innerHTML = "";
+                data.forEach(function(item) {
+                    var card = document.createElement('div');
+                    card.className = 'secret-card';
+                    card.innerHTML = `
+                        <div class="secret-game">[${item.type}] ${item.game}</div>
+                        <div class="secret-title">${item.title}</div>
+                        <div class="secret-code">${item.code}</div>
+                    `;
+                    secretsContainer.appendChild(card);
+                });
+            }
         }
 
-        // 3. ЛОГИКА ПЕРЕКЛЮЧЕНИЯ ВКЛАДОК КАТАЛОГА
+        // 3. ОТПРАВКА ЗАКАЗА НА НОВОГО БОТА ЧЕРЕЗ ФЕТЧ С ПРАВИЛЬНЫМ ДИНАМИЧЕСКИМ URL
+        function sendOrderRequest() {
+            var titleInput = document.getElementById('order-game-title').value.trim();
+            var systemInput = document.getElementById('order-game-system').value.trim();
+
+            if (!titleInput) { alert("ВВЕДИТЕ НАЗВАНИЕ ИГРЫ!"); return; }
+
+            var initData = window.Telegram.WebApp.initDataUnsafe;
+            var userId = initData.user ? initData.user.id : "";
+            var username = initData.user ? initData.user.username : "no_name";
+
+            if (!userId) { alert("ОШИБКА TELEGRAM ID!"); return; }
+
+            var btnSubmit = document.getElementById('order-btn-submit');
+            btnSubmit.disabled = true;
+            btnSubmit.textContent = "ОТПРАВКА...";
+
+            var requestUrl = gasRetroUrl + "?action=submit_order&title=" + encodeURIComponent(titleInput) + 
+                             "&system=" + encodeURIComponent(systemInput || "Dendy") + 
+                             "&user_id=" + userId + 
+                             "&username=" + encodeURIComponent(username);
+
+            fetch(requestUrl, { mode: 'no-cors' })
+                .then(function() {
+                    alert("ЗАЯВКА ПРИНЯТА! ОТКРОЙТЕ ДИАЛОГ С НОВЫМ БОТОМ ДЛЯ ОПЛАТЫ.");
+                    window.Telegram.WebApp.close();
+                })
+                .catch(function() {
+                    alert("ОШИБКА СЕРВЕРА!");
+                    btnSubmit.disabled = false;
+                    btnSubmit.textContent = "ОТПРАВИТЬ ЗАЯВКУ";
+                });
+        }
+
+        // 4. ЛОГИКА ПЕРЕКЛЮЧЕНИЯ ВКЛАДОК КАТАЛОГА
         function switchTab(tabId, buttonElement) {
             var sections = document.getElementsByClassName('app-section');
             for(var i=0; i<sections.length; i++) { sections[i].style.display = 'none'; }
@@ -255,47 +298,6 @@
             if (window.Telegram && window.Telegram.WebApp && window.Telegram.WebApp.HapticFeedback) {
                 window.Telegram.WebApp.HapticFeedback.impactOccurred('light');
             }
-        }
-
-        // 4. ФУНКЦИЯ ОТПРАВКИ ЗАКАЗА ИГРЫ ЧЕРЕЗ БЕЗОПАСНЫЙ GET-ЗАПРОС К БОТУ НА GAS
-        function sendOrderRequest() {
-            var titleInput = document.getElementById('order-game-title').value.trim();
-            var systemInput = document.getElementById('order-game-system').value.trim();
-
-            if (!titleInput) { alert("ВВЕДИТЕ НАЗВАНИЕ ИГРЫ!"); return; }
-
-            // Вытаскиваем технические данные геймера из Telegram Web App
-            var initData = window.Telegram.WebApp.initDataUnsafe;
-            var userId = initData.user ? initData.user.id : "";
-            var username = initData.user ? initData.user.username : "no_name";
-
-            if (!userId) {
-                alert("ОШИБКА: НЕ УДАЛОСЬ ОПРЕДЕЛИТЬ ВАШ TELEGRAM ID!");
-                return;
-            }
-
-            var btnSubmit = document.getElementById('order-btn-submit');
-            btnSubmit.disabled = true;
-            btnSubmit.textContent = "ОТПРАВКА...";
-
-            // Наш рабочий URL веб-интерфейса Google Apps Script
-            var gasUrl = "https://script.google.com/macros/s/AKfycbxQc8LMlUjMMUpywKuWpnV7mgpGhWXO9KOWENzbGh9C9CMGBrzX6xpVOQ2rTnsOD0Zs/exec";
-            var requestUrl = gasUrl + "?action=submit_order&title=" + encodeURIComponent(titleInput) + 
-                             "&system=" + encodeURIComponent(systemInput || "Dendy") + 
-                             "&user_id=" + userId + 
-                             "&username=" + encodeURIComponent(username);
-
-            // Отправляем асинхронный фоновый запрос в Google Таблицу бота
-            fetch(requestUrl, { mode: 'no-cors' })
-                .then(function() {
-                    alert("ЗАЯВКА ПРИНЯТА! ПЕРЕЙДИТЕ В ДИАЛОГ С БОТОМ ДЛЯ ПОДТВЕРЖДЕНИЯ ОПЛАТЫ.");
-                    window.Telegram.WebApp.close(); // Закрываем Web App, переводя юзера в чат
-                })
-                .catch(function(err) {
-                    alert("ОШИБКА СВЯЗИ С СЕРВЕРОМ!");
-                    btnSubmit.disabled = false;
-                    btnSubmit.textContent = "ОТПРАВИТЬ ЗАЯВКУ";
-                });
         }
 
         var canvas = document.getElementById('nes-canvas');
