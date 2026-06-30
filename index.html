@@ -132,20 +132,44 @@
             document.getElementById('back-to-catalog').style.display = 'block';
             document.getElementById('main-title').textContent = gameTitle;
 
-            // Маппинг систем под официальные ядра EmulatorJS
+            // Маппинг под официальные ядра EmulatorJS
             let coreParam = 'segaMD';
             if (system === 'nes') coreParam = 'nes';
             if (system === 'snes') coreParam = 'snes';
             if (system === 'gba') coreParam = 'gba';
 
-            // Пересоздаем чистый iframe
             var screenContainer = document.getElementById('game-screen');
             screenContainer.innerHTML = "";
 
+            // Создаем чистый iframe плеера
             var iframe = document.createElement('iframe');
             iframe.id = "active-arcade-frame";
-            iframe.src = `emu-player.html?core=${coreParam}&game=${romUrl}`;
+            iframe.src = `emu-player.html`;
             screenContainer.appendChild(iframe);
+
+            // Скачиваем РОМ-файл напрямую как бинарный массив данных
+            var req = new XMLHttpRequest();
+            req.open("GET", romUrl, true);
+            req.responseType = "arraybuffer"; // Ключевой параметр стабильности!
+            req.onload = function() {
+                if (req.status === 200) {
+                    var arrayBuffer = req.response;
+                    var romUint8Array = new Uint8Array(arrayBuffer);
+
+                    // Ждем микросекунду, пока iframe создастся, и передаем ему готовые байты игры
+                    iframe.onload = function() {
+                        iframe.contentWindow.postMessage({
+                            romArray: romUint8Array,
+                            core: coreParam,
+                            title: gameTitle
+                        }, '*');
+                    };
+                } else {
+                    alert("ОШИБКА СКАЧИВАНИЯ ИГРЫ!");
+                    exitToCatalog();
+                }
+            };
+            req.send();
             
             if (window.Telegram && window.Telegram.WebApp && window.Telegram.WebApp.HapticFeedback) {
                 window.Telegram.WebApp.HapticFeedback.impactOccurred('medium');
@@ -155,7 +179,6 @@
         function exitToCatalog() {
             if(videoEl) videoEl.play().catch(function(e){});
 
-            // Тотальная выгрузка фрейма: полностью глушит звук любой консоли
             var screenContainer = document.getElementById('game-screen');
             var iframe = document.getElementById('active-arcade-frame');
             if(iframe) {
