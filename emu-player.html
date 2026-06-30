@@ -18,38 +18,38 @@
     <div id="game"></div>
 
     <script>
-        // Эмуляция тач-скрина для принудительного включения джойстика на ПК (для тестов)
+        // Имитация тач-скрина для принудительного включения джойстика на ПК
         if (!('ontouchstart' in window)) { window.ontouchstart = function(){}; }
         if (!navigator.maxTouchPoints || navigator.maxTouchPoints === 0) {
             Object.defineProperty(navigator, 'maxTouchPoints', {get: function(){return 5;}});
         }
 
-        // Ждем, пока родительское окно передаст нам файл игры
-        window.addEventListener('message', function(event) {
-            if (event.data && event.data.romArray) {
-                const coreType = event.data.core;
-                const gameTitle = event.data.title;
-                const romUint8Array = event.data.romArray;
+        // Безопасно забираем подготовленные бинарные данные прямо из родительского окна index.html
+        try {
+            const arcadeData = window.parent.SHARED_ROM_DATA;
 
+            if (arcadeData && arcadeData.romArray) {
                 EJS_player = '#game';
-                EJS_core = coreType; 
-                EJS_gameName = gameTitle;
+                EJS_core = arcadeData.core; 
+                EJS_gameName = arcadeData.title;
                 EJS_color = '#0064ff';
                 EJS_pathtodata = 'https://cdn.emulatorjs.org/stable/data/';
-                
-                // Передаем массив байт напрямую в эмулятор вместо ссылки!
-                EJS_gameUrl = romUint8Array; 
-                
+                EJS_gameUrl = arcadeData.romArray; // Прямой массив байт
                 EJS_startOnLoaded = true;
                 EJS_Header = false; 
                 EJS_mouse = false;
+                EJS_Volume = arcadeData.volume;
 
-                // Динамически подгружаем лоадер, когда данные уже на месте
+                // Запускаем лоадер движка
                 const script = document.createElement('script');
                 script.src = "https://cdn.emulatorjs.org/stable/data/loader.js";
                 document.head.appendChild(script);
+            } else {
+                document.body.innerHTML = "<div style='color:white; padding:20px;'>Ожидание данных игры...</div>";
             }
-        });
+        } catch(e) {
+            alert("Ошибка песочницы: " + e.message);
+        }
     </script>
 </body>
 </html>
