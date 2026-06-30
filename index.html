@@ -29,14 +29,21 @@
         #sound-toggle.muted { color: #ffaa00; border-color: #663333; }
         #back-to-catalog { display: none; background: #224; border-color: #448; }
 
+        /* НАСТРОЙКА КАТАЛОГА ПОД ВИДЕО-ФОН */
         #catalog-container {
             width: 100%; max-width: 400px; flex-grow: 1; overflow-y: auto; position: relative;
-            background: url('background.gif') no-repeat center center; background-size: cover;
+            background-color: #000;
             display: flex; flex-direction: column; align-items: center; padding-top: 25px; box-sizing: border-box;
             z-index: 10;
         }
-        .menu-title { font-size: 20px; color: #ffff00; text-shadow: 3px 3px #000; margin-bottom: 25px; text-align: center; letter-spacing: 2px; z-index: 5; }
-        .game-list { width: 100%; padding: 0 25px; box-sizing: border-box; z-index: 5; position: relative; }
+        .bg-video {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            object-fit: cover; z-index: 1; pointer-events: none;
+        }
+        .menu-title, .game-list { z-index: 5; position: relative; }
+
+        .menu-title { font-size: 20px; color: #ffff00; text-shadow: 3px 3px #000; margin-bottom: 25px; text-align: center; letter-spacing: 2px; }
+        .game-list { width: 100%; padding: 0 25px; box-sizing: border-box; }
         .retro-item { font-size: 11px; color: #fff; text-shadow: 2px 2px #000; padding: 12px 0; cursor: pointer; display: flex; align-items: center; text-transform: uppercase; }
         .retro-item:active { color: #ffff00; }
         .retro-item::before { content: "▶ "; opacity: 0; margin-right: 8px; color: #ffff00; }
@@ -45,17 +52,17 @@
         /* ЭКРАН ИГРЫ */
         #game-screen { display: none; width: 100%; max-width: 400px; flex-direction: column; align-items: center; flex-grow: 1; background: #000; position: relative; z-index: 20; }
         
-        /* КОНТЕЙНЕР ДЛЯ РЕНДЕРА */
+        /* КОНТЕЙНЕР ДЛЯ РЕНДЕРА ДЕНДИ */
         #game-container { width: 100%; height: 280px; background: #000; position: relative; display: flex; justify-content: center; align-items: center; overflow: hidden; }
         #nes-canvas { width: 100%; display: block; image-rendering: pixelated; }
 
-        /* ИЗОЛИРОВАННЫЙ БЛОК ДЛЯ EMULATOR JS (Перекрывает всё поле во время Сеги) */
+        /* ЖЁСТКИЙ ФИКС КОНТЕЙНЕРА СЕГИ/SNES С ВЫСОТОЙ (ЧТОБЫ КАРТИНКА НЕ СХЛОПЫВАЛАСЬ) */
         #sega-display-container { 
             display: none; 
             width: 100%; 
-            height: calc(100vh - 40px); /* Занимает всё пространство от шапки до низа экрана */
+            height: calc(100vh - 44px); /* Чистая высота рабочей зоны под шапкой */
             position: absolute; 
-            top: 40px; 
+            top: 44px; 
             left: 0; 
             z-index: 999; 
             background: #000; 
@@ -91,6 +98,10 @@
     </div>
     
     <div id="catalog-container">
+        <video id="menu-bg-video" class="bg-video" loop playsinline webkit-playsinline>
+            <source src="background-video.mp4" type="video/mp4">
+        </video>
+
         <div class="menu-title">9999 IN 1</div>
         <div class="game-list" id="retro-game-list"></div>
     </div>
@@ -156,6 +167,13 @@
         var gameLoopInterval = null;
         var currentRomName = ""; 
         var currentSystem = "nes";
+        var videoEl = document.getElementById('menu-bg-video');
+
+        // Автозапуск видео без звука для прохождения политик мобильного Web App
+        if(videoEl) {
+            videoEl.muted = true;
+            videoEl.play().catch(function(e){ console.log("Видео ждет взаимодействия"); });
+        }
 
         var nes = new jsnes.NES({
             onFrame: function(buffer) {
@@ -202,15 +220,18 @@
                 if (audioCtx && audioCtx.state === 'suspended') audioCtx.resume();
                 audioEnabled = !audioEnabled;
                 this.textContent = audioEnabled ? "🔊 ЗВУК: ВКЛ" : "🔇 ЗВУК";
+                
+                // Включаем/выключаем звук у видео-фона при клике юзера
+                if(videoEl) videoEl.muted = !audioEnabled;
+                
                 if(audioEnabled) this.classList.remove('muted'); else this.classList.add('muted');
             });
         }
 
         function launchEmulatorJS(romUrl, systemType) {
             var container = document.getElementById('sega-display-container');
-            container.innerHTML = ""; // Полная очистка перед стартом
+            container.innerHTML = ""; 
 
-            // Инициализация глобальных переменных EmulatorJS
             window.EJS_player = "#sega-display-container";
             window.EJS_core = (systemType === "sega") ? "segaMD" : "snes";
             window.EJS_gameName = "Game";
@@ -219,12 +240,11 @@
             window.EJS_gameUrl = window.location.origin + window.location.pathname.replace("index.html", "") + romUrl;
             window.EJS_startOnLoaded = true;
             window.EJS_Volume = audioEnabled ? 1 : 0;
-            window.EJS_Header = false; // Отключаем десктопный заголовок
+            window.EJS_Header = false; 
             window.EJS_mouse = false;
 
-            // Инжектим лоадер EmulatorJS
             var script = document.createElement("script");
-            script.id = "emulator-js-loader-script"; // ID для последующего удаления
+            script.id = "emulator-js-loader-script"; 
             script.src = "https://cdn.emulatorjs.org/stable/data/loader.js";
             document.head.appendChild(script);
         }
@@ -233,6 +253,9 @@
             currentRomName = romUrl;
             currentSystem = system || "nes";
             
+            // Ставим видео на паузу при игре, чтобы не грузить процессор
+            if(videoEl) videoEl.pause();
+
             document.getElementById('catalog-container').style.display = 'none';
             document.getElementById('game-screen').style.display = 'flex';
             document.getElementById('back-to-catalog').style.display = 'block';
@@ -272,17 +295,17 @@
         function exitToCatalog() {
             if(gameLoopInterval) clearInterval(gameLoopInterval);
             
-            // 🔥 ЖЕСТКОЕ УНИЧТОЖЕНИЕ ПРОЦЕССА СЕГИ ПРИ ВЫХОДЕ В МЕНЮ
+            // Запускаем видео-фон заново при возврате в каталог
+            if(videoEl) videoEl.play().catch(function(e){});
+
             if(currentSystem === "sega" || currentSystem === "snes") {
                 var container = document.getElementById('sega-display-container');
-                container.innerHTML = ""; // Очищаем iframe и canvas эмулятора Сеги
+                container.innerHTML = ""; 
                 container.style.display = "none";
                 
-                // Удаляем инжектированный скрипт загрузчика из DOM, чтобы он не висел в фоне
                 var oldScript = document.getElementById("emulator-js-loader-script");
                 if(oldScript) oldScript.remove();
                 
-                // Сбрасываем глобальные объекты
                 window.EJS_player = null;
             }
 
