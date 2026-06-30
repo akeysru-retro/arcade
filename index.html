@@ -90,11 +90,13 @@
         <div class="game-list" id="retro-game-list"></div>
     </div>
 
+    <!-- Окно загрузки бинарника -->
     <div id="loading-overlay">
         <div>ПОДОЖДИТЕ...</div>
         <div style="font-size: 9px; color: #fff; margin-top: 10px;">СКАЧИВАНИЕ ЧИПА ИГРЫ</div>
     </div>
 
+    <!-- Контейнер фрейма эмулятора -->
     <div id="game-screen"></div>
 
     <script>
@@ -141,16 +143,19 @@
         function startGame(romUrl, gameTitle, system) {
             if(videoEl) videoEl.pause();
 
+            // Включаем индикатор загрузки ром-файла
             document.getElementById('catalog-container').style.display = 'none';
             document.getElementById('loading-overlay').style.display = 'flex';
             document.getElementById('back-to-catalog').style.display = 'block';
             document.getElementById('main-title').textContent = gameTitle;
 
+            // Определяем ядро эмулятора
             let coreParam = 'segaMD';
             if (system === 'nes') coreParam = 'nes';
             if (system === 'snes') coreParam = 'snes';
             if (system === 'gba') coreParam = 'gba';
 
+            // Сначала скачиваем РОМ-файл в память устройства
             var req = new XMLHttpRequest();
             req.open("GET", romUrl, true);
             req.responseType = "arraybuffer"; 
@@ -159,6 +164,7 @@
                     var arrayBuffer = req.response;
                     var romUint8Array = new Uint8Array(arrayBuffer);
 
+                    // Сохраняем данные в глобальное поле окна ПЕРЕД запуском iframe
                     window.SHARED_ROM_DATA = {
                         romArray: romUint8Array,
                         core: coreParam,
@@ -166,12 +172,14 @@
                         volume: audioEnabled ? 1 : 0
                     };
 
+                    // 🔥 ИСПРАВЛЕНО: Убрана синтаксическая опечатка style.style и поднят флаг отображения экрана игры
                     document.getElementById('loading-overlay').style.display = 'none';
                     
                     var screenContainer = document.getElementById('game-screen');
                     screenContainer.innerHTML = "";
                     screenContainer.style.display = 'block';
 
+                    // Создаем iframe только когда массив байт на 100% готов в оперативной памяти!
                     var iframe = document.createElement('iframe');
                     iframe.id = "active-arcade-frame";
                     iframe.src = `emu-player.html`;
