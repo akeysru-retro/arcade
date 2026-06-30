@@ -49,6 +49,13 @@
         .retro-item::before { content: "▶ "; opacity: 0; margin-right: 8px; color: #ffff00; }
         .retro-item:active::before { opacity: 1; }
 
+        /* ИНДИКАТОР ЗАГРУЗКИ ТЯЖЕЛЫХ РОМОВ */
+        #loading-overlay {
+            display: none; position: absolute; top: 44px; bottom: 0; width: 100%; max-width: 400px;
+            background: #000; z-index: 500; flex-direction: column; align-items: center; justify-content: center;
+            color: #ffff00; font-size: 12px; text-align: center; line-height: 2;
+        }
+
         /* УНИВЕРСАЛЬНЫЙ ИЗОЛИРОВАННЫЙ ЭКРАН ИГРЫ */
         #game-screen { 
             display: none; 
@@ -81,6 +88,11 @@
 
         <div class="menu-title">9999 IN 1</div>
         <div class="game-list" id="retro-game-list"></div>
+    </div>
+
+    <div id="loading-overlay">
+        <div>ПОДОЖДИТЕ...</div>
+        <div style="font-size: 9px; color: #fff; margin-top: 10px;">СКАЧИВАНИЕ ЧИПА ИГРЫ</div>
     </div>
 
     <div id="game-screen"></div>
@@ -124,48 +136,55 @@
             });
         }
 
+        // Глобальный объект для обмена данными с фреймом через оперативку
+        window.SHARED_ROM_DATA = null;
+
         function startGame(romUrl, gameTitle, system) {
             if(videoEl) videoEl.pause();
 
+            // Включаем индикатор загрузки ром-файла
             document.getElementById('catalog-container').style.display = 'none';
-            document.getElementById('game-screen').style.display = 'block';
+            document.getElementById('loading-overlay').style.display = 'flex';
             document.getElementById('back-to-catalog').style.display = 'block';
             document.getElementById('main-title').textContent = gameTitle;
 
-            // Маппинг под официальные ядра EmulatorJS
+            // Определяем ядро эмулятора
             let coreParam = 'segaMD';
             if (system === 'nes') coreParam = 'nes';
             if (system === 'snes') coreParam = 'snes';
             if (system === 'gba') coreParam = 'gba';
 
-            var screenContainer = document.getElementById('game-screen');
-            screenContainer.innerHTML = "";
-
-            // Создаем чистый iframe плеера
-            var iframe = document.createElement('iframe');
-            iframe.id = "active-arcade-frame";
-            iframe.src = `emu-player.html`;
-            screenContainer.appendChild(iframe);
-
-            // Скачиваем РОМ-файл напрямую как бинарный массив данных
+            // Сначала скачиваем РОМ-файл в память устройства
             var req = new XMLHttpRequest();
             req.open("GET", romUrl, true);
-            req.responseType = "arraybuffer"; // Ключевой параметр стабильности!
+            req.responseType = "arraybuffer"; 
             req.onload = function() {
                 if (req.status === 200) {
                     var arrayBuffer = req.response;
                     var romUint8Array = new Uint8Array(arrayBuffer);
 
-                    // Ждем микросекунду, пока iframe создастся, и передаем ему готовые байты игры
-                    iframe.onload = function() {
-                        iframe.contentWindow.postMessage({
-                            romArray: romUint8Array,
-                            core: coreParam,
-                            title: gameTitle
-                        }, '*');
+                    // Сохраняем данные в глобальное поле окна перед запуском iframe
+                    window.SHARED_ROM_DATA = {
+                        romArray: romUint8Array,
+                        core: coreParam,
+                        title: gameTitle,
+                        volume: audioEnabled ? 1 : 0
                     };
+
+                    // Скрываем загрузку, открываем игровой экран
+                    document.getElementById('loading-overlay').style.style.display = 'none';
+                    var screenContainer = document.getElementById('game-screen');
+                    screenContainer.innerHTML = "";
+                    screenContainer.style.display = 'block';
+
+                    // Создаем и инжектим iframe плеера, который СРАЗУ считает готовые байты из window.parent
+                    var iframe = document.createElement('iframe');
+                    iframe.id = "active-arcade-frame";
+                    iframe.src = `emu-player.html`;
+                    screenContainer.appendChild(iframe);
+
                 } else {
-                    alert("ОШИБКА СКАЧИВАНИЯ ИГРЫ!");
+                    alert("ОШИБКА ЗАГРУЗКИ КАРТРИДЖА ИГРЫ!");
                     exitToCatalog();
                 }
             };
@@ -177,16 +196,22 @@
         }
 
         function exitToCatalog() {
+            // Прячем экран игры и индикатор загрузки
+            document.getElementById('loading-overlay').style.display = 'none';
+            
             if(videoEl) videoEl.play().catch(function(e){});
 
             var screenContainer = document.getElementById('game-screen');
             var iframe = document.getElementById('active-arcade-frame');
             if(iframe) {
-                iframe.src = "about:blank";
+                iframe.src = "about:blank"; // Глушим звук внутри фрейма
                 iframe.remove();
             }
             screenContainer.innerHTML = "";
             screenContainer.style.display = 'none';
+
+            // Очищаем данные из оперативки
+            window.SHARED_ROM_DATA = null;
 
             document.getElementById('back-to-catalog').style.display = 'none';
             document.getElementById('catalog-container').style.display = 'flex';
