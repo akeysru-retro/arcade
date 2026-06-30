@@ -24,15 +24,19 @@
                 EJS_core = arcadeData.core; 
                 EJS_gameName = arcadeData.title;
                 EJS_color = '#0064ff';
-                EJS_pathtodata = 'https://cdn.emulatorjs.org/stable/data/';
+                
+                // 🔥 МЕНЯЕМ СЕРВЕР НА НАДЕЖНЫЙ СЛУЖЕБНЫЙ CDN JSDELIVR
+                EJS_pathtodata = 'https://cdn.jsdelivr.net/gh/EmulatorJS/EmulatorJS@latest/data/';
+                
                 EJS_gameUrl = arcadeData.romArray; 
                 EJS_startOnLoaded = true;
                 EJS_Header = false; 
                 EJS_mouse = false;
                 EJS_Volume = arcadeData.volume;
 
+                // Подгружаем лоадер с того же стабильного зеркала
                 const script = document.createElement('script');
-                script.src = "https://cdn.emulatorjs.org/stable/data/loader.js";
+                script.src = "https://cdn.jsdelivr.net/gh/EmulatorJS/EmulatorJS@latest/data/loader.js";
                 document.head.appendChild(script);
             }
         } catch(e) {
