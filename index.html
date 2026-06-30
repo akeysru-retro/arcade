@@ -44,12 +44,12 @@
         /* ЭКРАН ИГРЫ */
         #game-screen { display: none; width: 100%; max-width: 400px; flex-direction: column; align-items: center; flex-grow: 1; background: #000; position: relative; }
         
-        /* КОНТЕЙНЕР ДЛЯ NES (Денди) */
-        #nes-container { width: 100%; display: flex; justify-content: center; align-items: center; background: #000; }
+        /* ЗОНА ИГРЫ (Ограничиваем высоту, чтобы ничего не уползало за экран) */
+        #game-container { width: 100%; height: 280px; background: #000; position: relative; display: flex; justify-content: center; align-items: center; overflow: hidden; }
         #nes-canvas { width: 100%; display: block; image-rendering: pixelated; }
 
-        /* КОНТЕЙНЕР ДЛЯ СЕГИ / SNES (По структуре конфигуратора EmulatorJS) */
-        #emulator-js-box { display: none; width: 100%; flex-grow: 1; position: relative; background: #000; }
+        /* КОНТЕЙНЕР ДЛЯ СЕГИ (Зажимаем под мобильный размер) */
+        #emulator-js-box { display: none; width: 100%; height: 100%; background: #000; position: relative; }
         #game-player-el { width: 100%; height: 100%; }
 
         /* РОДНОЙ ГЕЙМПАД ДЛЯ NES */
@@ -87,12 +87,12 @@
     </div>
 
     <div id="game-screen">
-        <div id="nes-container">
+        <div id="game-container">
             <canvas id="nes-canvas" width="256" height="240"></canvas>
-        </div>
-        
-        <div id="emulator-js-box">
-            <div id="game-player-el"></div>
+            
+            <div id="emulator-js-box">
+                <div id="game-player-el"></div>
+            </div>
         </div>
 
         <div id="gamepad">
@@ -200,20 +200,22 @@
         }
 
         function launchEmulatorJS(romUrl, systemType) {
-            // Чистим внутренности тега перед пересозданием фрейма
             document.getElementById('game-player-el').innerHTML = "";
 
-            // Передаем параметры конфигуратора строго по спецификации EmulatorJS
+            // Настройка конфигурации под мобильные размеры
             window.EJS_player = "#game-player-el";
-            window.EJS_core = (systemType === "sega") ? "segaMD" : "snes";
-            window.EJS_gameName = "Game";
+            window.EJS_core = "segaMD";
+            window.EJS_gameName = "Sonic";
             window.EJS_color = "#0064ff";
             window.EJS_pathtodata = "https://cdn.emulatorjs.org/stable/data/"; 
             window.EJS_gameUrl = window.location.origin + window.location.pathname.replace("index.html", "") + romUrl;
             window.EJS_startOnLoaded = true;
             window.EJS_Volume = audioEnabled ? 1 : 0;
+            
+            // 🔥 ОТКЛЮЧАЕМ ЛИШНИЕ ДЕСКТОПНЫЕ БАРЫ, ЧТОБЫ ЭКРАН НЕ УЕЗЖАЛ
+            window.EJS_Header = false; 
+            window.EJS_Cacherom = true;
 
-            // Загружаем скрипт лоадера
             var script = document.createElement("script");
             script.src = "https://cdn.emulatorjs.org/stable/data/loader.js";
             document.head.appendChild(script);
@@ -228,7 +230,7 @@
             document.getElementById('back-to-catalog').style.display = 'block';
             document.getElementById('main-title').textContent = gameTitle;
 
-            if (currentSystem === "sega" || currentSystem === "snes") {
+            if (currentSystem === "sega") {
                 document.getElementById('nes-container').style.display = 'none';
                 document.getElementById('gamepad').style.display = 'none'; 
                 document.getElementById('emulator-js-box').style.display = 'block';
@@ -261,7 +263,7 @@
 
         function exitToCatalog() {
             if(gameLoopInterval) clearInterval(gameLoopInterval);
-            if(currentSystem === "sega" || currentSystem === "snes") {
+            if(currentSystem === "sega") {
                 document.getElementById('game-player-el').innerHTML = "";
             }
             document.getElementById('game-screen').style.display = 'none';
