@@ -43,7 +43,7 @@
         
         /* СЛОИ ДЛЯ КОРРЕКТНОГО ПЕРЕКЛЮЧЕНИЯ СЕКЦИЙ */
         .app-section { width: 100%; z-index: 5; position: relative; display: none; }
-        #section-games { display: block; } /* По умолчанию открыты игры */
+        #section-games { display: block; }
 
         .menu-title { font-size: 20px; color: #ffff00; text-shadow: 3px 3px #000; margin-bottom: 25px; text-align: center; letter-spacing: 2px; }
         .game-list { width: 100%; padding: 0 25px; box-sizing: border-box; }
@@ -53,10 +53,10 @@
         .retro-item:active::before { opacity: 1; }
 
         /* СТИЛИ ДЛЯ СЕКЦИИ СЕКРЕТОВ */
-        .secret-card { background: rgba(17, 17, 17, 0.85); border: 2px solid #444; margin: 0 20px 15px 20px; padding: 15px; border-radius: 4px; }
+        .secret-card { background: rgba(17, 17, 17, 0.9); border: 2px solid #444; margin: 0 20px 15px 20px; padding: 15px; border-radius: 4px; }
         .secret-game { font-size: 10px; color: #ffff00; margin-bottom: 6px; }
         .secret-title { font-size: 8px; color: #00ff00; margin-bottom: 10px; line-height: 1.4; }
-        .secret-code { font-size: 8px; color: #fff; line-height: 1.6; background: #000; padding: 8px; border: 1px dashed #555; word-wrap: break-word; }
+        .secret-code { font-size: 8px; color: #fff; line-height: 1.6; background: #000; padding: 8px; border: 1px dashed #555; word-wrap: break-word; user-select: text; }
 
         /* СТИЛИ ДЛЯ ФОРМЫ ЗАКАЗА */
         .order-container { padding: 0 25px; box-sizing: border-box; width: 100%; }
@@ -127,32 +127,28 @@
     </div>
     
     <div id="catalog-container">
-        <!-- Единое живое видео на фоне для всех вкладок меню -->
         <video id="menu-bg-video" class="bg-video" loop playsinline webkit-playsinline>
             <source src="background-video.mp4" type="video/mp4">
         </video>
 
-        <!-- ВКЛАДКА 1: СПИСОК ИГР -->
         <div id="section-games" class="app-section">
             <div class="menu-title">9999 IN 1</div>
             <div class="game-list" id="retro-game-list"></div>
         </div>
 
-        <!-- ВКЛАДКА 2: СЕКРЕТЫ И ЧИТЫ -->
         <div id="section-secrets" class="app-section">
             <div class="menu-title">СЕКРЕТЫ</div>
             <div id="secrets-container"></div>
         </div>
 
-        <!-- ВКЛАДКА 3: ЗАКАЗ ИГРЫ -->
         <div id="section-order" class="app-section">
             <div class="menu-title">ЗАКАЗ ИГР</div>
             <div class="order-container">
-                <div class="order-text">НЕ НАШЛИ СВОЮ ЛЮБИМУЮ ИГРУ? НАПИШИТЕ НАЗВАНИЕ, И МЫ ДОБАВИМ ЕЁ В СЛЕДУЮЩЕМ ОБНОВЛЕНИИ!</div>
+                <div class="order-text">ЗАКАЗ НОВОЙ ИГРЫ ПЛАТНЫЙ (100 РУБЛЕЙ). НАПИШИТЕ НАЗВАНИЕ, И МЫ ДОБАВИМ ЕЁ НА ПОЛКУ БОТА!</div>
                 
                 <div class="form-group">
                     <label class="form-label">НАЗВАНИЕ ИГРЫ:</label>
-                    <input type="text" id="order-game-title" class="form-input" placeholder="НАПРИМЕР: ТАНЧИКИ">
+                    <input type="text" id="order-game-title" class="form-input" placeholder="НАПРИМЕР: TEENAGE MUTANT TURTLES">
                 </div>
 
                 <div class="form-group">
@@ -160,11 +156,10 @@
                     <input type="text" id="order-game-system" class="form-input" placeholder="DENDY / SEGA / GBA">
                 </div>
 
-                <button class="order-submit-btn" onclick="sendOrderRequest()">ОТПРАВИТЬ ЗАЯВКУ</button>
+                <button id="order-btn-submit" class="order-submit-btn" onclick="sendOrderRequest()">ОТПРАВИТЬ ЗАЯВКУ</button>
             </div>
         </div>
 
-        <!-- НИЖНЕЕ МЕНЮ ПЕРЕКЛЮЧЕНИЯ ВКЛАДОК -->
         <div class="tab-bar" id="app-tab-bar">
             <button class="tab-item active" onclick="switchTab('games', this)">
                 <span class="tab-icon">🎮</span><span>ИГРЫ</span>
@@ -183,7 +178,6 @@
             <canvas id="nes-canvas" width="256" height="240"></canvas>
         </div>
         <div id="sega-display-container"></div>
-        <!-- Геймпад Денди -->
         <div id="gamepad">
             <div class="main-controls">
                 <div class="dpad">
@@ -231,7 +225,7 @@
         // 2. ДИНАМИЧЕСКИЙ РЕНДЕР СЕКРЕТОВ ИЗ GAMES.JS
         var secretsToLoad = window.GAME_SECRETS || [];
         var secretsContainer = document.getElementById('secrets-container');
-        if (secretsContainer) {
+        if (secretsContainer && secretsToLoad.length > 0) {
             secretsContainer.innerHTML = "";
             secretsToLoad.forEach(function(item) {
                 var card = document.createElement('div');
@@ -243,48 +237,65 @@
                 `;
                 secretsContainer.appendChild(card);
             });
+        } else if (secretsContainer) {
+            secretsContainer.innerHTML = "<div style='text-align:center; font-size:8px; padding-top:20px;'>СЕКРЕТЫ СКОРО БУДУТ ДОБАВЛЕНЫ!</div>";
         }
 
         // 3. ЛОГИКА ПЕРЕКЛЮЧЕНИЯ ВКЛАДОК КАТАЛОГА
         function switchTab(tabId, buttonElement) {
-            // Скрываем все вкладки
             var sections = document.getElementsByClassName('app-section');
             for(var i=0; i<sections.length; i++) { sections[i].style.display = 'none'; }
             
-            // Снимаем подсветку со всех кнопок в меню
             var tabs = document.getElementsByClassName('tab-item');
             for(var i=0; i<tabs.length; i++) { tabs[i].classList.remove('active'); }
 
-            // Показываем нужный блок и подсвечиваем кнопку
             document.getElementById('section-' + tabId).style.display = 'block';
             buttonElement.classList.add('active');
 
-            // Легкая вибрация при переключении меню
-            if (window.Telegram?.WebApp?.HapticFeedback) {
+            if (window.Telegram && window.Telegram.WebApp && window.Telegram.WebApp.HapticFeedback) {
                 window.Telegram.WebApp.HapticFeedback.impactOccurred('light');
             }
         }
 
-        // 4. ФУНКЦИЯ ОТПРАВКИ ЗАКАЗА ИГРЫ В БОТА ТЕЛЕГРАМ
+        // 4. ФУНКЦИЯ ОТПРАВКИ ЗАКАЗА ИГРЫ ЧЕРЕЗ БЕЗОПАСНЫЙ GET-ЗАПРОС К БОТУ НА GAS
         function sendOrderRequest() {
             var titleInput = document.getElementById('order-game-title').value.trim();
             var systemInput = document.getElementById('order-game-system').value.trim();
 
             if (!titleInput) { alert("ВВЕДИТЕ НАЗВАНИЕ ИГРЫ!"); return; }
 
-            // Формируем JSON-пакет данных для твоего Telegram-сервера
-            var orderData = {
-                action: "order_game",
-                game_title: titleInput,
-                platform: systemInput || "Не указана"
-            };
+            // Вытаскиваем технические данные геймера из Telegram Web App
+            var initData = window.Telegram.WebApp.initDataUnsafe;
+            var userId = initData.user ? initData.user.id : "";
+            var username = initData.user ? initData.user.username : "no_name";
 
-            // Отправляем данные в бота и закрываем Web App по стандарту Telegram
-            window.Telegram.WebApp.sendData(JSON.stringify(orderData));
-            
-            alert("ЗАЯВКА ОТПРАВЛЕНА БОТУ!");
-            document.getElementById('order-game-title').value = "";
-            document.getElementById('order-game-system').value = "";
+            if (!userId) {
+                alert("ОШИБКА: НЕ УДАЛОСЬ ОПРЕДЕЛИТЬ ВАШ TELEGRAM ID!");
+                return;
+            }
+
+            var btnSubmit = document.getElementById('order-btn-submit');
+            btnSubmit.disabled = true;
+            btnSubmit.textContent = "ОТПРАВКА...";
+
+            // Наш рабочий URL веб-интерфейса Google Apps Script
+            var gasUrl = "https://script.google.com/macros/s/AKfycbxQc8LMlUjMMUpywKuWpnV7mgpGhWXO9KOWENzbGh9C9CMGBrzX6xpVOQ2rTnsOD0Zs/exec";
+            var requestUrl = gasUrl + "?action=submit_order&title=" + encodeURIComponent(titleInput) + 
+                             "&system=" + encodeURIComponent(systemInput || "Dendy") + 
+                             "&user_id=" + userId + 
+                             "&username=" + encodeURIComponent(username);
+
+            // Отправляем асинхронный фоновый запрос в Google Таблицу бота
+            fetch(requestUrl, { mode: 'no-cors' })
+                .then(function() {
+                    alert("ЗАЯВКА ПРИНЯТА! ПЕРЕЙДИТЕ В ДИАЛОГ С БОТОМ ДЛЯ ПОДТВЕРЖДЕНИЯ ОПЛАТЫ.");
+                    window.Telegram.WebApp.close(); // Закрываем Web App, переводя юзера в чат
+                })
+                .catch(function(err) {
+                    alert("ОШИБКА СВЯЗИ С СЕРВЕРОМ!");
+                    btnSubmit.disabled = false;
+                    btnSubmit.textContent = "ОТПРАВИТЬ ЗАЯВКУ";
+                });
         }
 
         var canvas = document.getElementById('nes-canvas');
@@ -423,10 +434,8 @@
             
             if(videoEl) videoEl.pause();
 
-            // Скрываем весь каталог вместе с нижним меню вкладок на время игры
             document.getElementById('catalog-container').style.display = 'none';
             document.getElementById('app-tab-bar').style.display = 'none';
-            
             document.getElementById('game-screen').style.display = 'flex';
             document.getElementById('back-to-catalog').style.display = 'block';
             document.getElementById('main-title').textContent = gameTitle;
@@ -457,7 +466,7 @@
                 req.send();
             }
             
-            if (window.Telegram?.WebApp?.HapticFeedback) {
+            if (window.Telegram && window.Telegram.WebApp && window.Telegram.WebApp.HapticFeedback) {
                 window.Telegram.WebApp.HapticFeedback.impactOccurred('medium');
             }
         }
@@ -480,11 +489,8 @@
 
             document.getElementById('game-screen').style.display = 'none';
             document.getElementById('back-to-catalog').style.display = 'none';
-            
-            // Показываем каталог и возвращаем таб-бар на место
             document.getElementById('catalog-container').style.display = 'flex';
             document.getElementById('app-tab-bar').style.display = 'flex';
-            
             document.getElementById('main-title').textContent = '9999 IN 1';
         }
         
