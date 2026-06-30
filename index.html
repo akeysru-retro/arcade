@@ -49,7 +49,7 @@
         .retro-item::before { content: "▶ "; opacity: 0; margin-right: 8px; color: #ffff00; }
         .retro-item:active::before { opacity: 1; }
 
-        /* ИНДИКАТОР ЗАГРУЗКИ ТЯЖЕЛЫХ РОМОВ */
+        /* ИНДИКАТОР ЗАГРУЗКИ РОМОВ */
         #loading-overlay {
             display: none; position: absolute; top: 44px; bottom: 0; width: 100%; max-width: 400px;
             background: #000; z-index: 500; flex-direction: column; align-items: center; justify-content: center;
@@ -163,7 +163,7 @@
                     var arrayBuffer = req.response;
                     var romUint8Array = new Uint8Array(arrayBuffer);
 
-                    // Сохраняем данные в глобальное поле окна перед запуском iframe
+                    // Сохраняем данные в глобальное поле окна ПЕРЕД запуском iframe
                     window.SHARED_ROM_DATA = {
                         romArray: romUint8Array,
                         core: coreParam,
@@ -171,13 +171,14 @@
                         volume: audioEnabled ? 1 : 0
                     };
 
-                    // Скрываем загрузку, открываем игровой экран
-                    document.getElementById('loading-overlay').style.style.display = 'none';
+                    // Скрываем плашку ожидания загрузки
+                    document.getElementById('loading-overlay').style.display = 'none';
+                    
                     var screenContainer = document.getElementById('game-screen');
                     screenContainer.innerHTML = "";
                     screenContainer.style.display = 'block';
 
-                    // Создаем и инжектим iframe плеера, который СРАЗУ считает готовые байты из window.parent
+                    // Создаем iframe только когда массив байт на 100% готов в оперативной памяти!
                     var iframe = document.createElement('iframe');
                     iframe.id = "active-arcade-frame";
                     iframe.src = `emu-player.html`;
@@ -196,7 +197,6 @@
         }
 
         function exitToCatalog() {
-            // Прячем экран игры и индикатор загрузки
             document.getElementById('loading-overlay').style.display = 'none';
             
             if(videoEl) videoEl.play().catch(function(e){});
@@ -204,13 +204,12 @@
             var screenContainer = document.getElementById('game-screen');
             var iframe = document.getElementById('active-arcade-frame');
             if(iframe) {
-                iframe.src = "about:blank"; // Глушим звук внутри фрейма
+                iframe.src = "about:blank"; 
                 iframe.remove();
             }
             screenContainer.innerHTML = "";
             screenContainer.style.display = 'none';
 
-            // Очищаем данные из оперативки
             window.SHARED_ROM_DATA = null;
 
             document.getElementById('back-to-catalog').style.display = 'none';
