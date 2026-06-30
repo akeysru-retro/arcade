@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Retro Arcade Player</title>
+    <style>
+        body, html {
+            margin: 0; padding: 0; width: 100%; height: 100%; background: #000; overflow: hidden;
+        }
+        #game {
+            width: 100vw; height: 100vh;
+        }
+    </style>
+</head>
+<body>
+
+    <div id="game"></div>
+
+    <script>
+        // Читаем параметры из адресной строки плеера
+        const urlParams = new URLSearchParams(window.location.search);
+        const coreType = urlParams.get('core') || 'segaMD';
+        const gameFile = urlParams.get('game') || '';
+
+        // Динамически собираем абсолютный URL к файлу РОМа на твоем GitHub Pages
+        const absoluteRomUrl = window.location.origin + '/' + gameFile;
+
+        // Эмуляция тач-скрина для принудительного включения джойстика на ПК (для тестов)
+        if (!('ontouchstart' in window)) { window.ontouchstart = function(){}; }
+        if (!navigator.maxTouchPoints || navigator.maxTouchPoints === 0) {
+            Object.defineProperty(navigator, 'maxTouchPoints', {get: function(){return 5;}});
+        }
+
+        EJS_player = '#game';
+        EJS_core = coreType; 
+        EJS_color = '#0064ff';
+        EJS_pathtodata = 'https://cdn.emulatorjs.org/stable/data/';
+        EJS_gameUrl = absoluteRomUrl;
+        EJS_startOnLoaded = true;
+        EJS_Header = false; 
+        EJS_mouse = false;
+    </script>
+    <script src="https://cdn.emulatorjs.org/stable/data/loader.js"></script>
+
+</body>
+</html>
