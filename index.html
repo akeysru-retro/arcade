@@ -53,29 +53,29 @@
         /* ЭКРАН ИГРЫ */
         #game-screen { display: none; width: 100%; max-width: 400px; flex-direction: column; align-items: center; flex-grow: 1; background: #000; position: relative; z-index: 20; }
         
-        /* ИСПРАВЛЕННЫЙ КОНТЕЙНЕР ДЛЯ РЕНДЕРА ДЕНДИ */
+        /* КОНТЕЙНЕР ДЛЯ РЕНДЕРА ДЕНДИ */
         #game-container { 
             width: 100%; 
             flex-grow: 1; 
-            max-height: calc(100vh - 250px); /* Оставляем чёткое место под геймпад снизу */
+            max-height: calc(100vh - 250px); 
             background: #000; 
             position: relative; 
             display: flex; 
             justify-content: center; 
             align-items: center; 
             overflow: hidden;
-            padding-top: 15px; /* Аккуратный отступ, чтобы игра не липла к шапке */
+            padding-top: 15px; 
             box-sizing: border-box;
         }
         #nes-canvas { 
             width: 100%; 
             max-height: 100%;
-            object-fit: contain; /* Пропорционально вписывает игру в экран */
+            object-fit: contain; 
             display: block; 
             image-rendering: pixelated; 
         }
 
-        /* ИЗОЛИРОВАННЫЙ ФРЕЙМ ПОД КОД КОНФИГУРАТОРА EMULATOR JS */
+        /* ИЗОЛИРОВАННЫЙ ФРЕЙМ ПОД EMULATOR JS */
         #sega-display-container { 
             display: none; 
             width: 100%; 
@@ -244,6 +244,14 @@
                 this.textContent = audioEnabled ? "🔊 ЗВУК: ВКЛ" : "🔇 ЗВУК";
                 if(videoEl) videoEl.muted = !audioEnabled;
                 if(audioEnabled) this.classList.remove('muted'); else this.classList.add('muted');
+
+                // 🔥 ПЕРЕДАЕМ СИГНАЛ ИЗМЕНЕНИЯ ЗВУКА НА ЛЕТУ ВНУТРЬ ФРЕЙМА СЕГИ
+                if (currentSystem === "sega" || currentSystem === "snes") {
+                    var iframe = document.getElementById('active-emulator-iframe');
+                    if (iframe && iframe.contentWindow) {
+                        iframe.contentWindow.postMessage({ volume: audioEnabled ? 1 : 0 }, '*');
+                    }
+                }
             });
         }
 
@@ -253,6 +261,8 @@
 
             var coreType = (systemType === "sega") ? "segaMD" : "snes";
             var absoluteRomUrl = window.location.origin + window.location.pathname.replace("index.html", "") + romUrl;
+            
+            // Задаём стартовую громкость на основе глобального флага звука приложения
             var initialVolume = audioEnabled ? 1 : 0;
 
             var iframeHtml = `
@@ -286,6 +296,14 @@
                     EJS_mouse = false;
                 <\/script>
                 <script src="https://cdn.emulatorjs.org/stable/data/loader.js"><\/script>
+                <script>
+                    // Принимаем летящие на лету команды регулировки звука из родительского окна
+                    window.addEventListener('message', function(e) {
+                        if (e.data && typeof e.data.volume !== 'undefined') {
+                            if (typeof EJS_setVolume === 'function') { EJS_setVolume(e.data.volume); }
+                        }
+                    });
+                <\/script>
             </body>
             </html>
             `;
