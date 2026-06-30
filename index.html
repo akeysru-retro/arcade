@@ -251,38 +251,51 @@
         }
 
         // 3. ОТПРАВКА ЗАКАЗА НА НОВОГО БОТА ЧЕРЕЗ ФЕТЧ С ПРАВИЛЬНЫМ ДИНАМИЧЕСКИМ URL
-        function sendOrderRequest() {
-            var titleInput = document.getElementById('order-game-title').value.trim();
-            var systemInput = document.getElementById('order-game-system').value.trim();
+function sendOrderRequest() {
+    var titleInput = document.getElementById('order-game-title').value.trim();
+    var systemInput = document.getElementById('order-game-system').value.trim();
 
-            if (!titleInput) { alert("ВВЕДИТЕ НАЗВАНИЕ ИГРЫ!"); return; }
+    if (!titleInput) { alert("ВВЕДИТЕ НАЗВАНИЕ ИГРЫ!"); return; }
 
-            var initData = window.Telegram.WebApp.initDataUnsafe;
-            var userId = initData.user ? initData.user.id : "";
-            var username = initData.user ? initData.user.username : "no_name";
+    var initData = window.Telegram.WebApp.initDataUnsafe;
+    var userId = initData.user ? initData.user.id : "";
+    var username = initData.user ? initData.user.username : "no_name";
 
-            if (!userId) { alert("ОШИБКА TELEGRAM ID!"); return; }
+    if (!userId) { alert("ОШИБКА TELEGRAM ID!"); return; }
 
-            var btnSubmit = document.getElementById('order-btn-submit');
-            btnSubmit.disabled = true;
-            btnSubmit.textContent = "ОТПРАВКА...";
+    var btnSubmit = document.getElementById('order-btn-submit');
+    btnSubmit.disabled = true;
+    btnSubmit.textContent = "ОТПРАВКА...";
 
-            var requestUrl = gasRetroUrl + "?action=submit_order&title=" + encodeURIComponent(titleInput) + 
-                             "&system=" + encodeURIComponent(systemInput || "Dendy") + 
-                             "&user_id=" + userId + 
-                             "&username=" + encodeURIComponent(username);
+    var requestUrl = gasRetroUrl + "?action=submit_order&title=" + encodeURIComponent(titleInput) + 
+                     "&system=" + encodeURIComponent(systemInput || "Dendy") + 
+                     "&user_id=" + userId + 
+                     "&username=" + encodeURIComponent(username);
 
-            fetch(requestUrl, { mode: 'no-cors' })
-                .then(function() {
-                    alert("ЗАЯВКА ПРИНЯТА! ОТКРОЙТЕ ДИАЛОГ С НОВЫМ БОТОМ ДЛЯ ОПЛАТЫ.");
-                    window.Telegram.WebApp.close();
-                })
-                .catch(function() {
-                    alert("ОШИБКА СЕРВЕРА!");
-                    btnSubmit.disabled = false;
-                    btnSubmit.textContent = "ОТПРАВИТЬ ЗАЯВКУ";
-                });
-        }
+    fetch(requestUrl, { mode: 'no-cors' })
+        .then(function() {
+            // 🔥 КРАСИВАЯ КЛИКАБЕЛЬНАЯ ССЫЛКА НА БОТА И ПЕРЕХОД ЧЕРЕЗ РОДНОЙ ИНТЕРФЕЙС TELEGRAM
+            window.Telegram.WebApp.showPopup({
+                title: "ЗАЯВКА ПРИНЯТА!",
+                message: "Для подтверждения платного заказа и получения счета перейдите в диалог с нашим ботом.",
+                buttons: [
+                    { id: "link", type: "default", text: "ОТКРЫТЬ БОТА" },
+                    { id: "close", type: "cancel", text: "ЗАКРЫТЬ" }
+                ]
+            }, function(buttonId) {
+                if (buttonId === "link") {
+                    // Родной метод Telegram Web App для безопасного перехода по внешним ссылкам
+                    window.Telegram.WebApp.openTelegramLink("https://t.me/gameMAN888_bot");
+                }
+                window.Telegram.WebApp.close(); // Закрываем Web App
+            });
+        })
+        .catch(function() {
+            alert("ОШИБКА СВЯЗИ С СЕРВЕРОМ!");
+            btnSubmit.disabled = false;
+            btnSubmit.textContent = "ОТПРАВИТЬ ЗАЯВКУ";
+        });
+}
 
         // 4. ЛОГИКА ПЕРЕКЛЮЧЕНИЯ ВКЛАДОК КАТАЛОГА
         function switchTab(tabId, buttonElement) {
