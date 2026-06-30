@@ -20,7 +20,7 @@
         }
         .header-panel {
             display: flex; width: 100%; max-width: 400px; justify-content: space-between; align-items: center;
-            padding: 8px 15px; box-sizing: border-box; background: #000; border-bottom: 2px solid #333;
+            padding: 8px 15px; box-sizing: border-box; background: #000; border-bottom: 2px solid #333; 
             position: relative; z-index: 10000;
         }
         .head-btn {
@@ -57,7 +57,7 @@
         #game-container { width: 100%; height: 280px; background: #000; position: relative; display: flex; justify-content: center; align-items: center; overflow: hidden; }
         #nes-canvas { width: 100%; display: block; image-rendering: pixelated; }
 
-        /* ИЗОЛИРОВАННЫЙ ФРЕЙМ ПОД КОД КОНФИГУРАТОРА EMULATOR JS */
+        /* ИЗОЛИРОВАННЫЙ ФРЕЙМ ПОД EMULATOR JS */
         #sega-display-container { 
             display: none; 
             width: 100%; 
@@ -237,6 +237,7 @@
             var absoluteRomUrl = window.location.origin + window.location.pathname.replace("index.html", "") + romUrl;
             var initialVolume = audioEnabled ? 1 : 0;
 
+            // Формируем полностью изолированный HTML код для iframe, разрывая закрывающие теги script
             var iframeHtml = `
             <!DOCTYPE html>
             <html>
@@ -247,11 +248,12 @@
                     #game { width: 100%; height: 100%; }
                 </style>
                 <script>
+                    // 🔥 ТРЮК: Имитируем мобильный тач-скрин, чтобы EmulatorJS вывел виртуальный джойстик на ПК
                     if (!('ontouchstart' in window)) { window.ontouchstart = function(){}; }
                     if (!navigator.maxTouchPoints || navigator.maxTouchPoints === 0) {
                         Object.defineProperty(navigator, 'maxTouchPoints', {get: function(){return 5;}});
                     }
-                <\/script>
+                ${'<\/sc' + 'ript>'}
             </head>
             <body>
                 <div id="game"></div>
@@ -260,17 +262,14 @@
                     EJS_core = "${coreType}";
                     EJS_gameName = "${gameTitle}";
                     EJS_color = "#0064ff";
-                    
-                    // По спецификации твоей находки: используем официальный стабильный источник данных
-                    EJS_pathtodata = "https://cdn.jsdelivr.net/gh/EmulatorJS/EmulatorJS@latest/data/";
+                    EJS_pathtodata = "https://cdn.emulatorjs.org/stable/data/";
                     EJS_gameUrl = "${absoluteRomUrl}";
-                    
                     EJS_startOnLoaded = true;
                     EJS_Volume = ${initialVolume};
                     EJS_Header = false;
                     EJS_mouse = false;
-                <\/script>
-                <script src="https://cdn.jsdelivr.net/gh/EmulatorJS/EmulatorJS@latest/data/loader.js"><\/script>
+                ${'<\/sc' + 'ript>'}
+                <script src="https://cdn.emulatorjs.org/stable/data/loader.js">${'<\/sc' + 'ript>'}
             </body>
             </html>
             `;
@@ -328,11 +327,12 @@
             
             if(videoEl) videoEl.play().catch(function(e){});
 
+            // МГНОВЕННОЕ УНИЧТОЖЕНИЕ ПРОЦЕССА И ЗВУКА СЕГИ
             if(currentSystem === "sega" || currentSystem === "snes") {
                 var container = document.getElementById('sega-display-container');
                 var iframe = document.getElementById('active-emulator-iframe');
                 if(iframe) {
-                    iframe.src = "about:blank"; 
+                    iframe.src = "about:blank"; // Глушим Web Audio API внутри фрейма
                     iframe.remove();
                 }
                 container.innerHTML = ""; 
