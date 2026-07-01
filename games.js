@@ -5,6 +5,7 @@ window.MY_GAMES = [
     { file: "felix.nes", title: "FELIX THE CAT" , system: "nes" },
     { file: "contra.nes", title: "CONTRA", system: "nes" },
     { file: "sonic.gen", title: "SONIC THE HEDGEHOG", system: "sega" },
+    { file: "sor.gen", title: "STREETS OF RAGE", system: "sega" },
     { file: "mk3.gen", title: "MORTAL KOMBAT 3 ULTIMATE", system: "sega" }
 ];
 
