@@ -251,6 +251,7 @@
         }
 
         // 🔥 2. ФУНКЦИЯ ОТРИСОВКИ КОНКРЕТНОЙ СТРАНИЦЫ
+        // 🔥 ОБНОВЛЕННАЯ ОТРИСОВКА БЕЙДЖЕЙ ДЛЯ ТРЁХ ПЛАТФОРМ
         function renderGamesPage(page) {
             var listContainer = document.getElementById('retro-game-list');
             if (!listContainer) return;
@@ -262,16 +263,23 @@
             var pageItems = sortedGames.slice(startIndex, endIndex);
 
             pageItems.forEach(function(game, index) {
-                // Вычисляем реальный сквозной номер в общем списке
                 var globalIndex = startIndex + index + 1;
                 var num = globalIndex.toString().padStart(4, '0'); 
                 
                 var item = document.createElement('div');
                 item.className = 'retro-item';
                 
-                // Бейдж платформы: NES/Dendy или SEGA
-                var badgeClass = (game.system === 'sega') ? 'badge-sega' : 'badge-nes';
-                var sysLabel = (game.system === 'sega') ? 'SEGA' : 'NES';
+                // Умное распределение бейджей
+                var badgeClass = 'badge-nes';
+                var sysLabel = 'NES';
+                
+                if (game.system === 'sega') {
+                    badgeClass = 'badge-sega';
+                    sysLabel = 'SEGA';
+                } else if (game.system === 'snes') {
+                    badgeClass = 'badge-snes';
+                    sysLabel = 'SNES';
+                }
 
                 item.innerHTML = `
                     <div class="game-title-text">${num}. ${game.title}</div>
