@@ -6,8 +6,7 @@ window.MY_GAMES = [
     { file: "contra.nes", title: "CONTRA", system: "nes" },
     { file: "sonic.gen", title: "SONIC THE HEDGEHOG", system: "sega" },
     { file: "sor.gen", title: "STREETS OF RAGE", system: "sega" },
-    { file: "mk3.gen", title: "MORTAL KOMBAT 3 ULTIMATE", system: "sega" },
-    { file: "mktr.bin", title: "MORTAL KOMBAT 3 TRILOGY", system: "sega" }
+    { file: "mk3.gen", title: "MORTAL KOMBAT 3 ULTIMATE", system: "sega" }
 ];
 
 // --- ВЫДЕЛЕННЫЙ МАССИВ ДЛЯ СЕКРЕТОВ И ЧИТ-КОДОВ ---
