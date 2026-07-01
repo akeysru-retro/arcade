@@ -48,7 +48,7 @@
         .menu-title { font-size: 20px; color: #ffff00; text-shadow: 3px 3px #000; margin-bottom: 25px; text-align: center; letter-spacing: 2px; }
         .game-list { width: 100%; padding: 0 25px; box-sizing: border-box; }
         
-        /* 🔥 ОБНОВЛЕННЫЙ СТИЛЬ КАРТОЧКИ С ПЛАТФОРМОЙ */
+        /* ОБНОВЛЕННЫЙ СТИЛЬ КАРТОЧКИ С ПЛАТФОРМОЙ */
         .retro-item { 
             font-size: 10px; color: #fff; text-shadow: 2px 2px #000; padding: 12px 0; 
             cursor: pointer; display: flex; align-items: center; text-transform: uppercase;
@@ -63,7 +63,7 @@
         .badge-sega { background: #1e3a8a; }
         .badge-snes { background: #4c1d95; } /* Фиолетовый бейдж для SNES */
 
-        /* 🔥 СТИЛИ ДЛЯ КНОПОК ПАГИНАЦИИ */
+        /* СТИЛИ ДЛЯ КНОПОК ПАГИНАЦИИ */
         .pagination-container {
             display: flex; justify-content: space-between; align-items: center;
             width: 100%; padding: 20px 25px 10px 25px; box-sizing: border-box;
@@ -239,15 +239,15 @@
 
         var gasRetroUrl = "https://script.google.com/macros/s/AKfycbwBjulaVnjKN-Af3oDFFFaG4Us8n6Jgcz3BTJRL1HThFxlgMuxv_D4x1yK4Khy-BsVL/exec";
 
-        // 🔥 ПЕРЕМЕННЫЕ УМНОЙ ПАГИНАЦИИ И АЛФАВИТНОЙ СОРТИРОВКИ
+        // ПЕРЕМЕННЫЕ УМНОЙ ПАГИНАЦИИ И АЛФАВИТНОЙ СОРТИРОВКИ
         var sortedGames = [];      
         var currentPage = 1;     
-        var itemsPerPage = 5; // По сколько игр выводить на один экран (можешь поставить 7, 10 или сколько влезет в высоту)
+        var itemsPerPage = 5; 
 
-        // 🔥 ПЕРЕМЕННЫЕ ДЛЯ ХРАНЕНИЯ И ФИЛЬТРАЦИИ СЕКРЕТОВ
+        // ПЕРЕМЕННЫЕ ДЛЯ ХРАНЕНИЯ И ФИЛЬТРАЦИИ СЕКРЕТОВ
         var allSecrets = [];
 
-        // 🔥 1. СОРТИРОВКА ПО АЛФАВИТУ И ИНИЦИАЛИЗАЦИЯ СПИСКА
+        // 1. СОРТИРОВКА ПО АЛФАВИТУ И ИНИЦИАЛИЗАЦИЯ СПИСКА
         var rawGamesList = window.MY_GAMES || [];
         if (rawGamesList.length > 0) {
             sortedGames = rawGamesList.sort(function(a, b) {
@@ -258,8 +258,7 @@
             renderGamesPage(currentPage);
         }
 
-        // 🔥 2. ФУНКЦИЯ ОТРИСОВКИ КОНКРЕТНОЙ СТРАНИЦЫ
-        // 🔥 ОБНОВЛЕННАЯ ОТРИСОВКА БЕЙДЖЕЙ ДЛЯ ТРЁХ ПЛАТФОРМ
+        // 2. ФУНКЦИЯ ОТРИСОВКИ КОНКРЕТНОЙ СТРАНИЦЫ И БЕЙДЖЕЙ
         function renderGamesPage(page) {
             var listContainer = document.getElementById('retro-game-list');
             if (!listContainer) return;
@@ -277,7 +276,6 @@
                 var item = document.createElement('div');
                 item.className = 'retro-item';
                 
-                // Умное распределение бейджей
                 var badgeClass = 'badge-nes';
                 var sysLabel = 'NES';
                 
@@ -303,7 +301,7 @@
             renderPaginationButtons();
         }
 
-        // 🔥 3. ГЕНЕРАЦИЯ КНОПОК НАВИГАЦИИ (НАЗАД / ВПЕРЕД)
+        // 3. ГЕНЕРАЦИЯ КНОПОК НАВИГАЦИИ (НАЗАД / ВПЕРЕД)
         function renderPaginationButtons() {
             var controlsContainer = document.getElementById('pagination-controls');
             if (!controlsContainer) return;
@@ -312,7 +310,6 @@
             var totalPages = Math.ceil(sortedGames.length / itemsPerPage);
             if (totalPages <= 1) return;
 
-            var prevDisabled = (currentPage === 1) ? "disabled" : "";
             var prevBtn = document.createElement('button');
             prevBtn.className = 'page-btn';
             prevBtn.disabled = (currentPage === 1);
@@ -334,12 +331,11 @@
             controlsContainer.appendChild(nextBtn);
         }
 
-        // 🔥 4. ПЕРЕКЛЮЧЕНИЕ СТРАНИЦЫ И СКРОЛЛ НАВЕРХ ВНУТРИ КАТАЛОГА
+        // 4. ПЕРЕКЛЮЧЕНИЕ СТРАНИЦЫ И СКРОЛЛ НАВЕРХ
         function changeGamesPage(newPage) {
             currentPage = newPage;
             renderGamesPage(currentPage);
             
-            // Скроллим строго контейнер каталога наверх, чтобы фон не улетал
             var catalog = document.getElementById('catalog-container');
             if (catalog) catalog.scrollTop = 0;
 
@@ -355,13 +351,11 @@
             document.head.appendChild(script);
         })();
 
-        // 🔥 ХРАНИМ И ОТРИСОВЫВАЕМ СЕКРЕТЫ С ПОДДЕРЖКОЙ ФИЛЬТРАЦИИ
         function renderSecrets(data) {
-            allSecrets = data || []; // Сохраняем полученные данные в глобальный кэш
-            displaySecretsList(allSecrets); // Передаем на отрисовку
+            allSecrets = data || []; 
+            displaySecretsList(allSecrets); 
         }
 
-        // Вспомогательная функция для чистой отрисовки карточек читов
         function displaySecretsList(secretsArray) {
             var secretsContainer = document.getElementById('secrets-container');
             if (!secretsContainer) return;
@@ -385,28 +379,22 @@
             });
         }
 
-        // 🔥 ФУНКЦИЯ ДИНАМИЧЕСКОГО РЕАКТИВНОГО ПОИСКА СЕКРЕТОВ
         function filterSecrets() {
             var query = document.getElementById('search-secrets-input').value.toLowerCase().trim();
-            
-            // Если поле поиска очищено — выводим всю базу
             if (!query) {
                 displaySecretsList(allSecrets);
                 return;
             }
-
-            // Фильтруем кэш по названию игры, типу платформы или тексту чита
             var filtered = allSecrets.filter(function(item) {
                 var gameMatch = item.game.toLowerCase().includes(query);
                 var titleMatch = item.title.toLowerCase().includes(query);
                 var typeMatch = item.type.toLowerCase().includes(query);
                 return gameMatch || titleMatch || typeMatch;
             });
-
             displaySecretsList(filtered);
         }
 
-        // 3. ОТПРАВКА ЗАКАЗА НА НОВОГО БОТА
+        // 3. ОТПРАВКА ЗАКАЗА НА БОТА
         function sendOrderRequest() {
             var titleInput = document.getElementById('order-game-title').value.trim();
             var systemInput = document.getElementById('order-game-system').value.trim();
@@ -543,6 +531,7 @@
             });
         }
 
+        // 🔥 СЮДА ВЕРНУЛСЯ НАШ РОДНОЙ И ЖИВОЙ СТАБИЛЬНЫЙ CDN
         function launchIsolatedEmulatorJS(romUrl, systemType, gameTitle) {
             var container = document.getElementById('sega-display-container');
             container.innerHTML = ""; 
@@ -574,15 +563,12 @@
                     EJS_core = "${coreType}";
                     EJS_gameName = "${gameTitle}";
                     EJS_color = "#0064ff";
-                    // Переключаем на стабильный альтернативный cdn, который лучше переваривает тяжелые zip-хаки
-                    EJS_pathtodata = "https://cdn.jsdelivr.net/gh/linuxserver/emulatorjs@latest/data/";
+                    EJS_pathtodata = "https://cdn.emulatorjs.org/stable/data/";
                     EJS_gameUrl = "${absoluteRomUrl}";
                     EJS_startOnLoaded = true;
                     EJS_Volume = ${initialVolume};
                     EJS_Header = false;
                     EJS_mouse = false;
-                    // 🔥 ДОБАВЛЯЕМ ФОРСИРОВАННЫЙ СТАРТ ДЛЯ ТЯЖЕЛЫХ ХАКОВ
-                    EJS_LoadAllChars = true; 
                 <\/script>
                 <script src="https://cdn.emulatorjs.org/stable/data/loader.js"><\/script>
                 <script>
