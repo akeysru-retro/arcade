@@ -164,15 +164,14 @@
         </div>
 
         <div id="section-secrets" class="app-section">
-    <div class="menu-title">СЕКРЕТЫ</div>
-    
-    <!-- 🔥 НОВАЯ СТРОКА ПОИСКА ЧИТОВ -->
-    <div style="padding: 0 20px 15px 20px;">
-        <input type="text" id="search-secrets-input" class="form-input" style="width: 100%; box-sizing: border-box;" placeholder="ПОИСК ИГРЫ ИЛИ ЧИТА..." oninput="filterSecrets()">
-    </div>
+            <div class="menu-title">СЕКРЕТЫ</div>
+            
+            <div style="padding: 0 20px 15px 20px;">
+                <input type="text" id="search-secrets-input" class="form-input" style="width: 100%; box-sizing: border-box;" placeholder="ПОИСК ИГРЫ ИЛИ ЧИТА..." oninput="filterSecrets()">
+            </div>
 
-    <div id="secrets-container"></div>
-</div>
+            <div id="secrets-container"></div>
+        </div>
 
         <div id="section-order" class="app-section">
             <div class="menu-title">ЗАКАЗ ИГР</div>
@@ -244,6 +243,9 @@
         var sortedGames = [];      
         var currentPage = 1;     
         var itemsPerPage = 5; // По сколько игр выводить на один экран (можешь поставить 7, 10 или сколько влезет в высоту)
+
+        // 🔥 ПЕРЕМЕННЫЕ ДЛЯ ХРАНЕНИЯ И ФИЛЬТРАЦИИ СЕКРЕТОВ
+        var allSecrets = [];
 
         // 🔥 1. СОРТИРОВКА ПО АЛФАВИТУ И ИНИЦИАЛИЗАЦИЯ СПИСКА
         var rawGamesList = window.MY_GAMES || [];
@@ -353,21 +355,55 @@
             document.head.appendChild(script);
         })();
 
+        // 🔥 ХРАНИМ И ОТРИСОВЫВАЕМ СЕКРЕТЫ С ПОДДЕРЖКОЙ ФИЛЬТРАЦИИ
         function renderSecrets(data) {
+            allSecrets = data || []; // Сохраняем полученные данные в глобальный кэш
+            displaySecretsList(allSecrets); // Передаем на отрисовку
+        }
+
+        // Вспомогательная функция для чистой отрисовки карточек читов
+        function displaySecretsList(secretsArray) {
             var secretsContainer = document.getElementById('secrets-container');
-            if (secretsContainer && data && data.length > 0) {
-                secretsContainer.innerHTML = "";
-                data.forEach(function(item) {
-                    var card = document.createElement('div');
-                    card.className = 'secret-card';
-                    card.innerHTML = `
-                        <div class="secret-game">[${item.type}] ${item.game}</div>
-                        <div class="secret-title">${item.title}</div>
-                        <div class="secret-code">${item.code}</div>
-                    `;
-                    secretsContainer.appendChild(card);
-                });
+            if (!secretsContainer) return;
+            
+            secretsContainer.innerHTML = "";
+            
+            if (secretsArray.length === 0) {
+                secretsContainer.innerHTML = '<div style="text-align:center; font-size:8px; color:#555; padding-top:20px;">НИЧЕГО НЕ НАЙДЕНО</div>';
+                return;
             }
+
+            secretsArray.forEach(function(item) {
+                var card = document.createElement('div');
+                card.className = 'secret-card';
+                card.innerHTML = `
+                    <div class="secret-game">[${item.type}] ${item.game}</div>
+                    <div class="secret-title">${item.title}</div>
+                    <div class="secret-code">${item.code}</div>
+                `;
+                secretsContainer.appendChild(card);
+            });
+        }
+
+        // 🔥 ФУНКЦИЯ ДИНАМИЧЕСКОГО РЕАКТИВНОГО ПОИСКА СЕКРЕТОВ
+        function filterSecrets() {
+            var query = document.getElementById('search-secrets-input').value.toLowerCase().trim();
+            
+            // Если поле поиска очищено — выводим всю базу
+            if (!query) {
+                displaySecretsList(allSecrets);
+                return;
+            }
+
+            // Фильтруем кэш по названию игры, типу платформы или тексту чита
+            var filtered = allSecrets.filter(function(item) {
+                var gameMatch = item.game.toLowerCase().includes(query);
+                var titleMatch = item.title.toLowerCase().includes(query);
+                var typeMatch = item.type.toLowerCase().includes(query);
+                return gameMatch || titleMatch || typeMatch;
+            });
+
+            displaySecretsList(filtered);
         }
 
         // 3. ОТПРАВКА ЗАКАЗА НА НОВОГО БОТА
