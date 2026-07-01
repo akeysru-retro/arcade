@@ -8,7 +8,6 @@ window.MY_GAMES = [
     { file: "sor.gen", title: "STREETS OF RAGE", system: "sega" },
     { file: "smw.sfc", title: "SUPER MARIO WORLD", system: "snes" },
     { file: "all.sfc", title: "ALADDIN", system: "snes" },
-    { file: "umk3_kabal2.zip", title: "MORTAL KOMBAT TRILOGY", system: "sega" },
     { file: "mk3.gen", title: "MORTAL KOMBAT 3 ULTIMATE", system: "sega" }
 ];
 
