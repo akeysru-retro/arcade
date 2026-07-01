@@ -574,12 +574,15 @@
                     EJS_core = "${coreType}";
                     EJS_gameName = "${gameTitle}";
                     EJS_color = "#0064ff";
-                    EJS_pathtodata = "https://cdn.emulatorjs.org/stable/data/";
+                    // Переключаем на стабильный альтернативный cdn, который лучше переваривает тяжелые zip-хаки
+                    EJS_pathtodata = "https://cdn.jsdelivr.net/gh/linuxserver/emulatorjs@latest/data/";
                     EJS_gameUrl = "${absoluteRomUrl}";
                     EJS_startOnLoaded = true;
                     EJS_Volume = ${initialVolume};
                     EJS_Header = false;
                     EJS_mouse = false;
+                    // 🔥 ДОБАВЛЯЕМ ФОРСИРОВАННЫЙ СТАРТ ДЛЯ ТЯЖЕЛЫХ ХАКОВ
+                    EJS_LoadAllChars = true; 
                 <\/script>
                 <script src="https://cdn.emulatorjs.org/stable/data/loader.js"><\/script>
                 <script>
