@@ -164,9 +164,15 @@
         </div>
 
         <div id="section-secrets" class="app-section">
-            <div class="menu-title">СЕКРЕТЫ</div>
-            <div id="secrets-container"></div>
-        </div>
+    <div class="menu-title">СЕКРЕТЫ</div>
+    
+    <!-- 🔥 НОВАЯ СТРОКА ПОИСКА ЧИТОВ -->
+    <div style="padding: 0 20px 15px 20px;">
+        <input type="text" id="search-secrets-input" class="form-input" style="width: 100%; box-sizing: border-box;" placeholder="ПОИСК ИГРЫ ИЛИ ЧИТА..." oninput="filterSecrets()">
+    </div>
+
+    <div id="secrets-container"></div>
+</div>
 
         <div id="section-order" class="app-section">
             <div class="menu-title">ЗАКАЗ ИГР</div>
