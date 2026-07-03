@@ -714,6 +714,22 @@
             }
         }
 
+        // 🔥 УЛУЧШЕННАЯ ФУНКЦИЯ ОТПРАВКИ КОМАНД ГЕЙМПАДА ВНУТРЬ IFRAME ДЛЯ МОБИЛОК
+        function sendSegaKeyEvent(type, virtualKeyId) {
+            var iframe = document.getElementById('active-emulator-iframe');
+            if (!iframe || !iframe.contentWindow) return;
+            
+            var keyCode = globalKeyMap[virtualKeyId];
+            if (!keyCode) return;
+
+            // Теперь мы передаем не просто keydown/keyup, а четкую команду для мобильного ядра
+            iframe.contentWindow.postMessage({
+                action: 'gamepad_event',
+                type: type, // 'keydown' или 'keyup'
+                keyCode: keyCode
+            }, '*');
+        }
+
         function launchIsolatedEmulatorJS(romUrl, systemType, gameTitle) {
             var container = document.getElementById('sega-display-container');
             container.innerHTML = ""; 
@@ -730,12 +746,18 @@
                 <style>
                     body, html { margin: 0; padding: 0; width: 100%; height: 100%; background: #000; overflow: hidden; }
                     #game { width: 100%; height: 100%; }
+                    /* 🔥 ЖЕСТКО СКРЫВАЕМ ЛЮБЫЕ МОБИЛЬНЫЕ КНОПКИ И МЕНЮ EMULATORJS НА СМАРТФОНЕ ЧЕРЕЗ CSS */
+                    .virtual-gamepad, #controls, .ejs-controls, #menu, .menu, [id*="player"] div[class*="control"] { 
+                        display: none !important; 
+                        visibility: hidden !important; 
+                        pointer-events: none !important; 
+                    }
                 </style>
                 <script>
-                    if (!('ontouchstart' in window)) { window.ontouchstart = function(){}; }
-                    if (!navigator.maxTouchPoints || navigator.maxTouchPoints === 0) {
-                        Object.defineProperty(navigator, 'maxTouchPoints', {get: function(){return 5;}});
-                    }
+                    // 🔥 ОБМАНЫВАЕМ СМАРТФОН: Говорим эмулятору, что это ПК и никакого тач-экрана тут нет!
+                    delete window.ontouchstart;
+                    Object.defineProperty(navigator, 'maxTouchPoints', { get: function() { return 0; } });
+                    Object.defineProperty(navigator, 'msMaxTouchPoints', { get: function() { return 0; } });
                 <\/script>
             </head>
             <body>
@@ -751,19 +773,45 @@
                     EJS_Volume = ${initialVolume};
                     EJS_Header = false;
                     EJS_mouse = false; 
+                    EJS_gamepad = false; // Отключаем внутренний геймпад полностью
                 <\/script>
                 <script src="https://cdn.emulatorjs.org/stable/data/loader.js"><\/script>
                 <script>
+                    // Принимаем команды и бьем напрямую в ядро эмулятора, обходя блокировки смартфона
                     window.addEventListener('message', function(e) {
-                        if (e.data && typeof e.data.volume !== 'undefined') {
+                        if (!e.data) return;
+
+                        if (typeof e.data.volume !== 'undefined') {
                             if (typeof EJS_setVolume === 'function') { EJS_setVolume(e.data.volume); }
                         }
-                        if (e.data && (e.data.type === 'keydown' || e.data.type === 'keyup')) {
-                            var evt = new KeyboardEvent(e.data.type, { keyCode: e.data.keyCode, bubbles: true });
-                            document.dispatchEvent(evt);
+                        
+                        // Прямая эмуляция нажатий для мобильного WASM ядра
+                        if (e.data.action === 'gamepad_event') {
+                            var eventType = e.data.type;
+                            var ejsEvt = new KeyboardEvent(eventType, { 
+                                keyCode: e.data.keyCode, 
+                                key: String.fromCharCode(e.data.keyCode),
+                                which: e.data.keyCode,
+                                bubbles: true,
+                                cancelable: true,
+                                view: window
+                            });
+                            document.dispatchEvent(ejsEvt);
+                            if (window.EJS_Emulator && window.EJS_Emulator.arguments) {
+                                // Дополнительный пинок для некоторых типов ядер
+                                try { window.EJS_instance.components.canvas.dispatchEvent(ejsEvt); } catch(err){}
+                            }
                         }
-                        if (e.data && e.data.action === 'save') { if(typeof EJS_EmulatorSave === 'function') { EJS_EmulatorSave(); } }
-                        if (e.data && e.data.action === 'load') { if(typeof EJS_EmulatorLoad === 'function') { EJS_EmulatorLoad(); } }
+                        
+                        // 🔥 ГАРАНТИРОВАННОЕ ЖЕСТКОЕ СОХРАНЕНИЕ/ЗАГРУЗКА ДЛЯ 16-БИТ
+                        if (e.data.action === 'save') { 
+                            if (typeof window.EJS_EmulatorSave === 'function') { window.EJS_EmulatorSave(); }
+                            else if (window.EJS_instance && typeof window.EJS_instance.saveState === 'function') { window.EJS_instance.saveState(); }
+                        }
+                        if (e.data.action === 'load') { 
+                            if (typeof window.EJS_EmulatorLoad === 'function') { window.EJS_EmulatorLoad(); }
+                            else if (window.EJS_instance && typeof window.EJS_instance.loadState === 'function') { window.EJS_instance.loadState(); }
+                        }
                     });
                 <\/script>
             </body>
@@ -774,52 +822,6 @@
             iframe.id = "active-emulator-iframe";
             iframe.srcdoc = iframeHtml;
             container.appendChild(iframe);
-        }
-
-        function startGame(romUrl, gameTitle, system) {
-            currentRomName = romUrl;
-            currentSystem = system || "nes";
-            
-            if(videoEl) videoEl.pause();
-
-            document.getElementById('catalog-container').style.display = 'none';
-            document.getElementById('app-tab-bar').style.display = 'none';
-            document.getElementById('game-screen').style.display = 'flex';
-            document.getElementById('back-to-catalog').style.display = 'block';
-            document.getElementById('main-title').textContent = gameTitle;
-
-            document.getElementById('gamepad').style.display = 'flex';
-            
-            // 🔥 Собираем нужный джойстик под выбранную систему
-            setupDynamicGamepadLayout(currentSystem);
-
-            if (currentSystem === "sega" || currentSystem === "snes") {
-                document.getElementById('game-container').style.display = 'none';
-                document.getElementById('sega-display-container').style.display = 'block';
-                launchIsolatedEmulatorJS(romUrl, currentSystem, gameTitle);
-            } else {
-                document.getElementById('game-container').style.display = 'flex';
-                document.getElementById('sega-display-container').style.display = 'none';
-                
-                var req = new XMLHttpRequest();
-                req.open("GET", romUrl, true);
-                req.overrideMimeType("text/plain; charset=x-user-defined");
-                req.onload = function() {
-                    if (req.status === 200) {
-                        nes.loadROM(this.responseText);
-                        if(gameLoopInterval) clearInterval(gameLoopInterval);
-                        gameLoopInterval = setInterval(nes.frame, 1000 / 60);
-                    } else {
-                        alert("ОШИБКА ЗАГРУЗКИ РОМА!");
-                        exitToCatalog();
-                    }
-                };
-                req.send();
-            }
-            
-            if (window.Telegram && window.Telegram.WebApp && window.Telegram.WebApp.HapticFeedback) {
-                window.Telegram.WebApp.HapticFeedback.impactOccurred('medium');
-            }
         }
 
         function exitToCatalog() {
