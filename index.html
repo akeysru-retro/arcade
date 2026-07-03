@@ -604,7 +604,7 @@
             });
         }
 
-        // 🔥 Возвращаем оригинальную, стабильную загрузку 16-бит БЕЗ блокировок мобильного оверлея
+       // 🔥 УЛЬТИМАТИВНАЯ НАСТРОЙКА РОДНОГО МЕНЮ И КНОПОК ДЛЯ 16-БИТ
         function launchIsolatedEmulatorJS(romUrl, systemType, gameTitle) {
             var container = document.getElementById('sega-display-container');
             container.innerHTML = ""; 
@@ -621,6 +621,13 @@
                 <style>
                     body, html { margin: 0; padding: 0; width: 100%; height: 100%; background: #000; overflow: hidden; }
                     #game { width: 100%; height: 100%; }
+                    
+                    /* Стилизуем родную верхнюю шапку эмулятора под наш ретро-стиль */
+                    .ejs-header { 
+                        background: #000 !important; 
+                        border-bottom: 2px solid #333 !important;
+                        font-family: monospace !important;
+                    }
                 </style>
             </head>
             <body>
@@ -628,14 +635,41 @@
                 <script>
                     EJS_player = "#game";
                     EJS_core = "${coreType}";
-                    EJS_gameName = "${gameTitle}";
+                    EJS_gameName = "${gameTitle.toUpperCase()}";
                     EJS_color = "#0064ff";
                     EJS_pathtodata = "https://cdn.emulatorjs.org/stable/data/";
                     EJS_gameUrl = "${absoluteRomUrl}";
                     EJS_startOnLoaded = true;
                     EJS_Volume = ${initialVolume};
-                    EJS_Header = false;
-                    EJS_mouse = true; // Родные тач-кнопки будут активны на мобилках!
+                    EJS_mouse = true; 
+                    
+                    // 🔥 В К Л Ю Ч А Е М  родную верхнюю панель эмулятора
+                    EJS_Header = true; 
+                    
+                    // 🔥 ВЫВОДИМ ТОЛЬКО НУЖНЫЕ КНОПКИ УПРАВЛЕНИЯ В ШАПКУ
+                    EJS_Buttons = {
+                        playPause: true,
+                        restart: true,
+                        volume: true,
+                        saveState: true,  // Выведет иконку дискеты для сохранения
+                        loadState: true,  // Выведет иконку папки для загрузки
+                        fullscreen: false,
+                        cache: false,
+                        cheats: false,
+                        settings: false,
+                        quickSave: false,
+                        quickLoad: false,
+                        screenshot: false,
+                        coreSettings: false,
+                        // 🔥 Самая важная кнопка - крестик выхода, который вернет нас в бота!
+                        exit: true 
+                    };
+
+                    // Перехватываем команду выхода из встроенного меню
+                    window.onEJS_Exit = function() {
+                        // Передаем сигнал родителю (в наш index.html), что игру закрыли
+                        window.parent.postMessage({ action: 'back_to_menu' }, '*');
+                    };
                 <\/script>
                 <script src="https://cdn.emulatorjs.org/stable/data/loader.js"><\/script>
                 <script>
@@ -724,6 +758,12 @@
         }
         
         document.getElementById('back-to-catalog').addEventListener('click', exitToCatalog);
+        // 🔥 Слушаем сигнал закрытия игры от встроенного меню Сеги/SNES
+        window.addEventListener('message', function(e) {
+            if (e.data && e.data.action === 'back_to_menu') {
+                exitToCatalog(); // Вызываем нашу стандартную функцию очистки экрана
+            }
+        });
 
         function bindKey(elementId, nesKey) {
             var el = document.getElementById(elementId);
