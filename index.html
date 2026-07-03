@@ -133,65 +133,27 @@
         /* ЭКРАН ИГРЫ */
         #game-screen { display: none; width: 100%; max-width: 400px; flex-grow: 1; background: #000; position: relative; z-index: 20; height: 100vh; }
         
+        /* Возвращаем оригинальные стили на весь экран */
         #game-container { 
-            width: 100%; height: 50vh; background: #000; 
+            width: 100%; flex-grow: 1; max-height: calc(100vh - 250px); background: #000; 
             position: relative; display: flex; justify-content: center; align-items: center; overflow: hidden; padding-top: 15px; box-sizing: border-box;
         }
         #nes-canvas { width: 100%; max-height: 100%; object-fit: contain; display: block; image-rendering: pixelated; }
 
-        #sega-display-container { display: none; width: 100%; max-width: 400px; height: 50vh; background: #000; }
+        /* 16-битные фреймы теперь снова разворачиваются во всю высоту экрана под шапкой меню */
+        #sega-display-container { display: none; width: 100%; max-width: 400px; height: calc(100vh - 44px); position: absolute; top: 44px; left: 0; z-index: 999; background: #000; }
         #sega-display-container iframe { width: 100%; height: 100%; border: none; display: block; }
 
-        /* ГЕЙМПАД ТЕПЕРЬ С АДАПТИВНОЙ ВЫСОТОЙ */
-        #gamepad { position: absolute; bottom: 0; left: 0; right: 0; z-index: 30; display: flex; flex-direction: column; width: 100%; padding: 12px; box-sizing: border-box; justify-content: space-between; border-top: 4px solid #222; background: #111; height: 50vh; }
+        /* ГЕЙМПАД ОСТАЁТСЯ ТОЛЬКО ДЛЯ NES (ДЕНДИ) */
+        #gamepad { position: absolute; bottom: 0; left: 0; right: 0; z-index: 30; display: flex; flex-direction: column; width: 100%; padding: 15px; box-sizing: border-box; justify-content: space-between; border-top: 4px solid #222; background: #111; }
         .main-controls { display: flex; width: 100%; justify-content: space-between; align-items: center; }
-        .dpad { display: grid; grid-template-columns: repeat(3, 1fr); grid-template-rows: repeat(3, 1fr); width: 120px; height: 120px; flex-shrink: 0; }
+        .dpad { display: grid; grid-template-columns: repeat(3, 1fr); grid-template-rows: repeat(3, 1fr); width: 130px; height: 130px; }
         .btn { background: #222; border: 3px solid #444; color: white; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 14px; }
         .btn:active { background: #444; }
-
-        /* 🔥 МОЩНАЯ СЕТКА ДЛЯ ДИНАМИЧЕСКИХ КНОПОК ДЖОЙСТИКА */
-        #action-buttons-container { 
-            display: grid; 
-            gap: 8px; 
-            width: 200px; 
-            height: 120px; 
-            justify-content: center; 
-            align-content: center;
-        }
-        
-        /* Стили для разных раскладок кнопок действия */
-        .layout-nes { grid-template-columns: repeat(2, 1fr); }
-        .layout-sega { grid-template-columns: repeat(3, 1fr); }
-        .layout-snes { grid-template-columns: repeat(3, 1fr); }
-
-        .action-btn { 
-            width: 46px; 
-            height: 46px; 
-            border-radius: 50%; 
-            border: 3px solid #fff; 
-            color: white; 
-            display: flex; 
-            align-items: center; 
-            justify-content: center; 
-            font-weight: bold; 
-            font-size: 11px; 
-            font-family: sans-serif; 
-            box-shadow: 0 3px 0 #660000;
-            cursor: pointer;
-            background: #cc1111;
-        }
-        .action-btn:active { transform: translateY(3px); box-shadow: none; }
-        
-        /* Цвета неоновых ретро-кнопок для 16-биток */
-        .btn-color-x { background: #00aaee; box-shadow: 0 3px 0 #0055aa; }
-        .btn-color-y { background: #eedd00; box-shrink: 0; color: #000; box-shadow: 0 3px 0 #aa8800; }
-        .btn-color-z { background: #00cc55; box-shadow: 0 3px 0 #006622; }
-        .btn-color-c { background: #ff5500; box-shadow: 0 3px 0 #aa2200; }
-
-        /* Невидимые заглушки, чтобы выстроить ромб SNES */
-        .btn-empty { opacity: 0; pointer-events: none; width: 46px; height: 46px; }
-
-        .system-buttons { display: flex; flex-direction: column; gap: 8px; width: 100%; margin-top: 5px; }
+        #nes-buttons { display: inline-flex; gap: 15px; }
+        .round-btn { width: 60px; height: 60px; background: #cc1111; border-radius: 50%; border: 4px solid #fff; color: white; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 16px; font-family: sans-serif; box-shadow: 0 4px 0 #880000; }
+        .round-btn:active { background: #aa0000; transform: translateY(4px); box-shadow: none; }
+        .system-buttons { display: flex; flex-direction: column; gap: 10px; width: 100%; margin-top: 15px; }
         .sys-row { display: flex; justify-content: center; gap: 20px; }
         .sys-btn { background: #333; border: 2px solid #555; color: #aaa; width: 80px; height: 22px; border-radius: 4px; font-size: 8px; display: flex; align-items: center; justify-content: center; }
         .sys-btn:active { background: #111; color: #fff; }
@@ -275,7 +237,8 @@
             <canvas id="nes-canvas" width="256" height="240"></canvas>
         </div>
         <div id="sega-display-container"></div>
-
+        
+        <!-- Родной нижний геймпад теперь активируется ТОЛЬКО для NES (Денди) -->
         <div id="gamepad">
             <div class="main-controls">
                 <div class="dpad">
@@ -283,9 +246,10 @@
                     <div class="btn" id="left">◀</div><div></div><div class="btn" id="right">▶</div>
                     <div></div><div class="btn" id="down">▼</div><div></div>
                 </div>
-                
-                <!-- 🔥 ДИНАМИЧЕСКИЙ ДИСПЕТЧЕР КНОПОК ДЕЙСТВИЯ -->
-                <div id="action-buttons-container"></div>
+                <div id="nes-buttons">
+                    <div class="round-btn" id="btn-b">B</div>
+                    <div class="round-btn" id="btn-a">A</div>
+                </div>
             </div>
             <div class="system-buttons">
                 <div class="sys-row">
@@ -640,96 +604,7 @@
             });
         }
 
-        // 🔥 ПОЛНАЯ МАТРИЦА КЛАВИШ ДЛЯ КОМАНД ПОСТ-МЕССЕДЖА (Глобальные сканкоды EmulatorJS)
-        var globalKeyMap = {
-            'up': 38, 'down': 40, 'left': 37, 'right': 39,
-            'btn-start': 13, 'btn-select': 16,
-            // Сканкоды для Sega / SNES
-            'sega-A': 90,  // Z
-            'sega-B': 88,  // X
-            'sega-C': 67,  // C
-            'sega-X': 65,  // A
-            'sega-Y': 83,  // S
-            'sega-Z': 68,  // D
-            'snes-A': 88,  // X
-            'snes-B': 90,  // Z
-            'snes-X': 83,  // S
-            'snes-Y': 65   // A
-        };
-
-        function sendSegaKeyEvent(type, virtualKeyId) {
-            var iframe = document.getElementById('active-emulator-iframe');
-            if (!iframe || !iframe.contentWindow) return;
-            
-            var keyCode = globalKeyMap[virtualKeyId];
-            if (!keyCode) return;
-
-            iframe.contentWindow.postMessage({ type: type, keyCode: keyCode }, '*');
-        }
-
-        // 🔥 ФУНКЦИЯ ДИНАМИЧЕСКОЙ СБОРКИ ПАНЕЛИ ДЖОЙСТИКОВ ПОД КАЖДУЮ СИСТЕМУ
-        function setupDynamicGamepadLayout(system) {
-            var container = document.getElementById('action-buttons-container');
-            if (!container) return;
-            
-            container.innerHTML = "";
-            // Сбрасываем старые классы раскладок
-            container.className = "";
-
-            if (system === "nes") {
-                container.classList.add('layout-nes');
-                container.innerHTML = `
-                    <div class="action-btn" id="nes-B">B</div>
-                    <div class="action-btn" id="nes-A">A</div>
-                `;
-                bindActionKey('nes-B', jsnes.Controller.BUTTON_B);
-                bindActionKey('nes-A', jsnes.Controller.BUTTON_A);
-
-            } else if (system === "sega") {
-                container.classList.add('layout-sega');
-                container.innerHTML = `
-                    <div class="action-btn btn-color-x" id="sega-X">X</div>
-                    <div class="action-btn btn-color-y" id="sega-Y">Y</div>
-                    <div class="action-btn btn-color-z" id="sega-Z">Z</div>
-                    <div class="action-btn" id="sega-A">A</div>
-                    <div class="action-btn btn-color-c" id="sega-B">B</div>
-                    <div class="action-btn" id="sega-C">C</div>
-                `;
-                // Навешиваем 16-битные хендлеры на все 6 кнопок Сеги
-                ['X','Y','Z','A','B','C'].forEach(function(btnName) {
-                    bindActionKey_16Bit('sega-' + btnName, 'sega-' + btnName);
-                });
-
-            } else if (system === "snes") {
-                container.classList.add('layout-snes');
-                // Строим ромбовидную раскладку SNES в сетке 3х3
-                container.innerHTML = `
-                    <div class="btn-empty"></div><div class="action-btn btn-color-x" id="snes-X">X</div><div class="btn-empty"></div>
-                    <div class="action-btn btn-color-y" id="snes-Y">Y</div><div class="btn-empty"></div><div class="action-btn" id="snes-A">A</div>
-                    <div class="btn-empty"></div><div class="action-btn btn-color-c" id="snes-B">B</div><div class="btn-empty"></div>
-                `;
-                ['X','Y','A','B'].forEach(function(btnName) {
-                    bindActionKey_16Bit('snes-' + btnName, 'snes-' + btnName);
-                });
-            }
-        }
-
-        // 🔥 УЛУЧШЕННАЯ ФУНКЦИЯ ОТПРАВКИ КОМАНД ГЕЙМПАДА ВНУТРЬ IFRAME ДЛЯ МОБИЛОК
-        function sendSegaKeyEvent(type, virtualKeyId) {
-            var iframe = document.getElementById('active-emulator-iframe');
-            if (!iframe || !iframe.contentWindow) return;
-            
-            var keyCode = globalKeyMap[virtualKeyId];
-            if (!keyCode) return;
-
-            // Теперь мы передаем не просто keydown/keyup, а четкую команду для мобильного ядра
-            iframe.contentWindow.postMessage({
-                action: 'gamepad_event',
-                type: type, // 'keydown' или 'keyup'
-                keyCode: keyCode
-            }, '*');
-        }
-
+        // 🔥 Возвращаем оригинальную, стабильную загрузку 16-бит БЕЗ блокировок мобильного оверлея
         function launchIsolatedEmulatorJS(romUrl, systemType, gameTitle) {
             var container = document.getElementById('sega-display-container');
             container.innerHTML = ""; 
@@ -746,19 +621,7 @@
                 <style>
                     body, html { margin: 0; padding: 0; width: 100%; height: 100%; background: #000; overflow: hidden; }
                     #game { width: 100%; height: 100%; }
-                    /* 🔥 ЖЕСТКО СКРЫВАЕМ ЛЮБЫЕ МОБИЛЬНЫЕ КНОПКИ И МЕНЮ EMULATORJS НА СМАРТФОНЕ ЧЕРЕЗ CSS */
-                    .virtual-gamepad, #controls, .ejs-controls, #menu, .menu, [id*="player"] div[class*="control"] { 
-                        display: none !important; 
-                        visibility: hidden !important; 
-                        pointer-events: none !important; 
-                    }
                 </style>
-                <script>
-                    // 🔥 ОБМАНЫВАЕМ СМАРТФОН: Говорим эмулятору, что это ПК и никакого тач-экрана тут нет!
-                    delete window.ontouchstart;
-                    Object.defineProperty(navigator, 'maxTouchPoints', { get: function() { return 0; } });
-                    Object.defineProperty(navigator, 'msMaxTouchPoints', { get: function() { return 0; } });
-                <\/script>
             </head>
             <body>
                 <div id="game"></div>
@@ -772,45 +635,13 @@
                     EJS_startOnLoaded = true;
                     EJS_Volume = ${initialVolume};
                     EJS_Header = false;
-                    EJS_mouse = false; 
-                    EJS_gamepad = false; // Отключаем внутренний геймпад полностью
+                    EJS_mouse = true; // Родные тач-кнопки будут активны на мобилках!
                 <\/script>
                 <script src="https://cdn.emulatorjs.org/stable/data/loader.js"><\/script>
                 <script>
-                    // Принимаем команды и бьем напрямую в ядро эмулятора, обходя блокировки смартфона
                     window.addEventListener('message', function(e) {
-                        if (!e.data) return;
-
-                        if (typeof e.data.volume !== 'undefined') {
+                        if (e.data && typeof e.data.volume !== 'undefined') {
                             if (typeof EJS_setVolume === 'function') { EJS_setVolume(e.data.volume); }
-                        }
-                        
-                        // Прямая эмуляция нажатий для мобильного WASM ядра
-                        if (e.data.action === 'gamepad_event') {
-                            var eventType = e.data.type;
-                            var ejsEvt = new KeyboardEvent(eventType, { 
-                                keyCode: e.data.keyCode, 
-                                key: String.fromCharCode(e.data.keyCode),
-                                which: e.data.keyCode,
-                                bubbles: true,
-                                cancelable: true,
-                                view: window
-                            });
-                            document.dispatchEvent(ejsEvt);
-                            if (window.EJS_Emulator && window.EJS_Emulator.arguments) {
-                                // Дополнительный пинок для некоторых типов ядер
-                                try { window.EJS_instance.components.canvas.dispatchEvent(ejsEvt); } catch(err){}
-                            }
-                        }
-                        
-                        // 🔥 ГАРАНТИРОВАННОЕ ЖЕСТКОЕ СОХРАНЕНИЕ/ЗАГРУЗКА ДЛЯ 16-БИТ
-                        if (e.data.action === 'save') { 
-                            if (typeof window.EJS_EmulatorSave === 'function') { window.EJS_EmulatorSave(); }
-                            else if (window.EJS_instance && typeof window.EJS_instance.saveState === 'function') { window.EJS_instance.saveState(); }
-                        }
-                        if (e.data.action === 'load') { 
-                            if (typeof window.EJS_EmulatorLoad === 'function') { window.EJS_EmulatorLoad(); }
-                            else if (window.EJS_instance && typeof window.EJS_instance.loadState === 'function') { window.EJS_instance.loadState(); }
                         }
                     });
                 <\/script>
@@ -822,6 +653,49 @@
             iframe.id = "active-emulator-iframe";
             iframe.srcdoc = iframeHtml;
             container.appendChild(iframe);
+        }
+
+        function startGame(romUrl, gameTitle, system) {
+            currentRomName = romUrl;
+            currentSystem = system || "nes";
+            
+            if(videoEl) videoEl.pause();
+
+            document.getElementById('catalog-container').style.display = 'none';
+            document.getElementById('app-tab-bar').style.display = 'none';
+            document.getElementById('game-screen').style.display = 'flex';
+            document.getElementById('back-to-catalog').style.display = 'block';
+            document.getElementById('main-title').textContent = gameTitle;
+
+            if (currentSystem === "sega" || currentSystem === "snes") {
+                document.getElementById('game-container').style.display = 'none';
+                document.getElementById('gamepad').style.display = 'none'; // Скрываем наш нижний джойстик
+                document.getElementById('sega-display-container').style.display = 'block';
+                launchIsolatedEmulatorJS(romUrl, currentSystem, gameTitle);
+            } else {
+                document.getElementById('game-container').style.display = 'flex';
+                document.getElementById('gamepad').style.display = 'flex'; // Показываем нижний джойстик только для Денди
+                document.getElementById('sega-display-container').style.display = 'none';
+                
+                var req = new XMLHttpRequest();
+                req.open("GET", romUrl, true);
+                req.overrideMimeType("text/plain; charset=x-user-defined");
+                req.onload = function() {
+                    if (req.status === 200) {
+                        nes.loadROM(this.responseText);
+                        if(gameLoopInterval) clearInterval(gameLoopInterval);
+                        gameLoopInterval = setInterval(nes.frame, 1000 / 60);
+                    } else {
+                        alert("ОШИБКА ЗАГРУЗКИ РОМА!");
+                        exitToCatalog();
+                    }
+                };
+                req.send();
+            }
+            
+            if (window.Telegram && window.Telegram.WebApp && window.Telegram.WebApp.HapticFeedback) {
+                window.Telegram.WebApp.HapticFeedback.impactOccurred('medium');
+            }
         }
 
         function exitToCatalog() {
@@ -851,86 +725,32 @@
         
         document.getElementById('back-to-catalog').addEventListener('click', exitToCatalog);
 
-        // ХЕНДЛЕРЫ ДЛЯ СИСТЕМНЫХ КНОПОК И КРЕСТОВИНЫ (Они постоянные)
-        function bindDpadAndSystemKey(elementId, nesKey, mapKeyName) {
+        function bindKey(elementId, nesKey) {
             var el = document.getElementById(elementId);
             if(el) {
-                el.addEventListener('touchstart', function(e) { 
-                    e.preventDefault(); 
-                    if(currentSystem === "nes") nes.buttonDown(1, nesKey);
-                    else sendSegaKeyEvent('keydown', mapKeyName);
-                });
-                el.addEventListener('mousedown', function(e) { 
-                    if(currentSystem === "nes") nes.buttonDown(1, nesKey);
-                    else sendSegaKeyEvent('keydown', mapKeyName);
-                });
-                el.addEventListener('touchend', function(e) { 
-                    e.preventDefault(); 
-                    if(currentSystem === "nes") nes.buttonUp(1, nesKey);
-                    else sendSegaKeyEvent('keyup', mapKeyName);
-                });
-                el.addEventListener('mouseup', function(e) { 
-                    if(currentSystem === "nes") nes.buttonUp(1, nesKey);
-                    else sendSegaKeyEvent('keyup', mapKeyName);
-                });
+                el.addEventListener('touchstart', function(e) { e.preventDefault(); if(currentSystem === "nes") nes.buttonDown(1, nesKey); });
+                el.addEventListener('touchend', function(e) { e.preventDefault(); if(currentSystem === "nes") nes.buttonUp(1, nesKey); });
+                el.addEventListener('mousedown', function(e) { if(currentSystem === "nes") nes.buttonDown(1, nesKey); });
+                el.addEventListener('mouseup', function(e) { if(currentSystem === "nes") nes.buttonUp(1, nesKey); });
             }
         }
-
-        // Хендлер для динамических кнопок Денди (NES)
-        function bindActionKey(elementId, nesKey) {
-            var el = document.getElementById(elementId);
-            if(el) {
-                el.addEventListener('touchstart', function(e) { e.preventDefault(); nes.buttonDown(1, nesKey); });
-                el.addEventListener('mousedown', function() { nes.buttonDown(1, nesKey); });
-                el.addEventListener('touchend', function(e) { e.preventDefault(); nes.buttonUp(1, nesKey); });
-                el.addEventListener('mouseup', function() { nes.buttonUp(1, nesKey); });
-            }
-        }
-
-        // Хендлер для динамических кнопок Сеги / SNES
-        function bindActionKey_16Bit(elementId, mapKeyName) {
-            var el = document.getElementById(elementId);
-            if(el) {
-                el.addEventListener('touchstart', function(e) { e.preventDefault(); sendSegaKeyEvent('keydown', mapKeyName); });
-                el.addEventListener('mousedown', function() { sendSegaKeyEvent('keydown', mapKeyName); });
-                el.addEventListener('touchend', function(e) { e.preventDefault(); sendSegaKeyEvent('keyup', mapKeyName); });
-                el.addEventListener('mouseup', function() { sendSegaKeyEvent('keyup', mapKeyName); });
-            }
-        }
-
-        // Привязываем крестовину и системные кнопки
-        bindDpadAndSystemKey('up', jsnes.Controller.BUTTON_UP, 'up');
-        bindDpadAndSystemKey('down', jsnes.Controller.BUTTON_DOWN, 'down');
-        bindDpadAndSystemKey('left', jsnes.Controller.BUTTON_LEFT, 'left');
-        bindDpadAndSystemKey('right', jsnes.Controller.BUTTON_RIGHT, 'right');
-        bindDpadAndSystemKey('btn-start', jsnes.Controller.BUTTON_START, 'btn-start');
-        bindDpadAndSystemKey('btn-select', jsnes.Controller.BUTTON_SELECT, 'btn-select');
+        bindKey('up', jsnes.Controller.BUTTON_UP); bindKey('down', jsnes.Controller.BUTTON_DOWN);
+        bindKey('left', jsnes.Controller.BUTTON_LEFT); bindKey('right', jsnes.Controller.BUTTON_RIGHT);
+        bindKey('btn-a', jsnes.Controller.BUTTON_A); bindKey('btn-b', jsnes.Controller.BUTTON_B);
+        bindKey('btn-start', jsnes.Controller.BUTTON_START); bindKey('btn-select', jsnes.Controller.BUTTON_SELECT);
 
         document.getElementById('btn-save').addEventListener('click', function() {
-            if (!currentRomName) return;
-            if (currentSystem === "nes") {
+            if (currentSystem === "nes" && currentRomName) {
                 localStorage.setItem("save_" + currentRomName, JSON.stringify(nes.toJSON()));
                 alert("ИГРА NES СОХРАНЕНА!");
-            } else if (currentSystem === "sega" || currentSystem === "snes") {
-                var iframe = document.getElementById('active-emulator-iframe');
-                if (iframe && iframe.contentWindow) {
-                    iframe.contentWindow.postMessage({ action: 'save' }, '*');
-                    alert("ИГРА СОХРАНЕНА В КЭШ БРАУЗЕРА!");
-                }
             }
         });
 
         document.getElementById('btn-load').addEventListener('click', function() {
-            if (!currentRomName) return;
-            if (currentSystem === "nes") {
+            if (currentSystem === "nes" && currentRomName) {
                 var data = localStorage.getItem("save_" + currentRomName);
                 if (data) { nes.fromJSON(JSON.parse(data)); alert("ЗАГРУЗКА УСПЕШНА!"); }
                 else { alert("НЕТ СОХРАНЕНИЙ"); }
-            } else if (currentSystem === "sega" || currentSystem === "snes") {
-                var iframe = document.getElementById('active-emulator-iframe');
-                if (iframe && iframe.contentWindow) {
-                    iframe.contentWindow.postMessage({ action: 'load' }, '*');
-                }
             }
         });
     </script>
