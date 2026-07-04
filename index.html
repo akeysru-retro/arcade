@@ -15,8 +15,9 @@
             font-family: 'Press Start 2P', monospace;
             height: 100vh; overflow: hidden; user-select: none;
         }
-        body { display: flex; flex-direction: column; align-items: center; justify-content: flex-start; }
-        
+        body {
+            display: flex; flex-direction: column; align-items: center; justify-content: flex-start;
+        }
         .header-panel {
             display: flex; width: 100%; max-width: 400px; justify-content: space-between; align-items: center;
             padding: 8px 15px; box-sizing: border-box; background: #000; border-bottom: 2px solid #333; 
@@ -28,24 +29,31 @@
         }
         #sound-toggle.muted { color: #ffaa00; border-color: #663333; }
         #back-to-catalog { display: none; background: #224; border-color: #448; }
-        
-        .nes-io-btn { display: none; font-size: 7px; padding: 6px 8px; }
-        #header-save { background: #1e3d1e; border-color: #387338; color: #8fdf8f; }
-        #header-load { background: #1e2e3d; border-color: #385973; color: #8fbadf; }
 
+        /* ОБЩИЙ КОНТЕЙНЕР ДЛЯ ВСЕХ ВКЛАДОК С ВИДЕО-ФОНОМ */
         #catalog-container {
             width: 100%; max-width: 400px; flex-grow: 1; overflow-y: auto; position: relative;
             background-color: #000; padding-top: 25px; padding-bottom: 70px; box-sizing: border-box;
             z-index: 10; display: flex; flex-direction: column; align-items: center;
         }
-        .bg-video { position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: cover; z-index: 1; pointer-events: none; }
+        .bg-video {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            object-fit: cover; z-index: 1; pointer-events: none;
+        }
+        
+        /* СЛОИ ДЛЯ КОРРЕКТНОГО ПЕРЕКЛЮЧЕНИЯ СЕКЦИЙ */
         .app-section { width: 100%; z-index: 5; position: relative; display: none; }
         #section-games { display: block; }
-        
+
         .menu-title { font-size: 20px; color: #ffff00; text-shadow: 3px 3px #000; margin-bottom: 25px; text-align: center; letter-spacing: 2px; }
         .game-list { width: 100%; padding: 0 25px; box-sizing: border-box; }
         
-        .retro-item { font-size: 10px; color: #fff; text-shadow: 2px 2px #000; padding: 12px 0; display: flex; align-items: center; text-transform: uppercase; border-bottom: 1px solid #111; justify-content: space-between; }
+        /* ОБНОВЛЕННЫЙ СТИЛЬ КАРТОЧКИ С ПЛАТФОРМОЙ И ЗВЕЗДОЧКОЙ */
+        .retro-item { 
+            font-size: 10px; color: #fff; text-shadow: 2px 2px #000; padding: 12px 0; 
+            display: flex; align-items: center; text-transform: uppercase;
+            border-bottom: 1px solid #111; justify-content: space-between;
+        }
         .game-click-zone { display: flex; align-items: center; flex-grow: 1; cursor: pointer; justify-content: space-between; overflow: hidden; }
         .game-click-zone:active { color: #ffff00; }
         .game-title-text { display: flex; align-items: center; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
@@ -57,65 +65,168 @@
         .badge-sega { background: #1e3a8a; }
         .badge-snes { background: #4c1d95; } 
 
-        .fav-star-btn { font-size: 14px; cursor: pointer; padding: 0 5px 0 15px; user-select: none; filter: grayscale(100%); }
+        /* СТИЛЬ ИКОНКИ ИЗБРАННОГО */
+        .fav-star-btn { font-size: 14px; cursor: pointer; padding: 0 5px 0 15px; user-select: none; filter: grayscale(100%); transition: transform 0.1s ease; }
         .fav-star-btn.active { filter: grayscale(0%); text-shadow: 0 0 4px #ffcc00; }
-        .fav-filter-toggle { background: #111; border: 2px dashed #444; color: #888; font-family: 'Press Start 2P', monospace; font-size: 7px; padding: 6px; width: calc(100% - 40px); margin: 0 20px 15px 20px; box-sizing: border-box; text-align: center; }
+        .fav-star-btn:active { transform: scale(1.3); }
+
+        /* КНОПКА ФИЛЬТРА ИЗБРАННОГО */
+        .fav-filter-toggle {
+            background: #111; border: 2px dashed #444; color: #888; font-family: 'Press Start 2P', monospace;
+            font-size: 7px; padding: 6px; width: calc(100% - 40px); margin: 0 20px 15px 20px; box-sizing: border-box;
+            cursor: pointer; text-align: center; border-radius: 4px;
+        }
         .fav-filter-toggle.active { border-color: #ffcc00; color: #ffcc00; background: #221c00; }
 
-        .pagination-container { display: flex; justify-content: space-between; align-items: center; width: 100%; padding: 20px 25px 10px 25px; box-sizing: border-box; z-index: 15; position: relative; gap: 10px; }
-        .page-btn { background: #222; border: 2px solid #555; color: #fff; font-family: 'Press Start 2P', monospace; font-size: 8px; padding: 8px 12px; cursor: pointer; }
+        /* СТИЛИ ДЛЯ КНОПОК ПАГИНАЦИИ */
+        .pagination-container {
+            display: flex; justify-content: space-between; align-items: center;
+            width: 100%; padding: 20px 25px 10px 25px; box-sizing: border-box;
+            z-index: 15; position: relative; gap: 10px;
+        }
+        .page-btn {
+            background: #222; border: 2px solid #555; color: #fff;
+            font-family: 'Press Start 2P', monospace; font-size: 8px; padding: 8px 12px;
+            cursor: pointer; border-radius: 4px;
+        }
+        .page-btn:active:not(:disabled) { background: #444; color: #ffff00; }
+        .page-btn:disabled { background: #111; border-color: #333; color: #444; cursor: not-allowed; }
         .page-info-text { font-size: 7px; color: #888; text-align: center; }
 
-        .tab-bar { position: absolute; bottom: 0; left: 0; right: 0; height: 55px; background: #111; border-top: 3px solid #333; display: flex; justify-content: space-around; align-items: center; z-index: 100; box-sizing: border-box; }
-        .tab-item { display: flex; flex-direction: column; align-items: center; justify-content: center; flex-grow: 1; height: 100%; color: #888; background: none; border: none; font-family: 'Press Start 2P', monospace; font-size: 7px; gap: 6px; }
-        .tab-item.active { color: #ffff00; background: #1a1a1a; }
+        /* СТИЛИ ДЛЯ СЕКЦИИ СЕКРЕТОВ */
+        .secret-card { background: rgba(17, 17, 17, 0.9); border: 2px solid #444; margin: 0 20px 15px 20px; padding: 15px; border-radius: 4px; }
+        .secret-game { font-size: 10px; color: #ffff00; margin-bottom: 6px; }
+        .secret-title { font-size: 8px; color: #00ff00; margin-bottom: 10px; line-height: 1.4; }
+        .secret-code { font-size: 8px; color: #fff; line-height: 1.6; background: #000; padding: 8px; border: 1px dashed #555; word-wrap: break-word; user-select: text; }
 
-        #game-screen { display: none; width: 100%; max-width: 400px; flex-grow: 1; background: #000; position: relative; z-index: 20; height: 100vh; flex-direction: column; }
-        #game-container { width: 100%; flex-grow: 1; max-height: calc(100vh - 250px); background: #000; position: relative; display: flex; justify-content: center; align-items: center; overflow: hidden; padding-top: 15px; box-sizing: border-box; }
+        /* СТИЛИ ДЛЯ ФОРМЫ ЗАКАЗА */
+        .order-container { padding: 0 25px; box-sizing: border-box; width: 100%; }
+        .order-text { font-size: 8px; line-height: 1.6; color: #aaa; margin-bottom: 20px; text-align: center; }
+        .form-group { display: flex; flex-direction: column; gap: 8px; margin-bottom: 15px; }
+        .form-label { font-size: 8px; color: #ffff00; }
+        .form-input { 
+            background: #111; border: 2px solid #555; padding: 10px; color: #fff; 
+            font-family: 'Press Start 2P', monospace; font-size: 9px; border-radius: 4px;
+        }
+        .form-input:focus { border-color: #00ff00; outline: none; }
+        .order-submit-btn {
+            width: 100%; background: #0064ff; border: 3px solid #0040aa; color: #fff;
+            font-family: 'Press Start 2P', monospace; font-size: 10px; padding: 12px;
+            cursor: pointer; border-radius: 4px; box-shadow: 0 4px 0 #002266; margin-top: 10px;
+        }
+        .order-submit-btn:active { transform: translateY(4px); box-shadow: none; }
+
+        /* НИЖНИЙ ТАБ-БАР (МЕНЮ ВКЛАДОК) */
+        .tab-bar {
+            position: absolute; bottom: 0; left: 0; right: 0; height: 55px;
+            background: #111; border-top: 3px solid #333; display: flex;
+            justify-content: space-around; align-items: center; z-index: 100; box-sizing: border-box;
+        }
+        .tab-item {
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            flex-grow: 1; height: 100%; color: #888; cursor: pointer; background: none; border: none;
+            font-family: 'Press Start 2P', monospace; font-size: 7px; gap: 6px;
+        }
+        .tab-item.active { color: #ffff00; background: #1a1a1a; }
+        .tab-icon { font-size: 14px; }
+
+        /* ЭКРАН ИГРЫ */
+        #game-screen { display: none; width: 100%; max-width: 400px; flex-grow: 1; background: #000; position: relative; z-index: 20; height: 100vh; }
+        
+        #game-container { 
+            width: 100%; flex-grow: 1; max-height: calc(100vh - 250px); background: #000; 
+            position: relative; display: flex; justify-content: center; align-items: center; overflow: hidden; padding-top: 15px; box-sizing: border-box;
+        }
         #nes-canvas { width: 100%; max-height: 100%; object-fit: contain; display: block; image-rendering: pixelated; }
 
-        #sega-display-container { display: none; width: 100%; max-width: 400px; height: calc(100vh - 44px); position: absolute; top: 44px; left: 0; z-index: 9999; background: #000; }
+        #sega-display-container { display: none; width: 100%; max-width: 400px; height: calc(100vh - 44px); position: absolute; top: 44px; left: 0; z-index: 999; background: #000; }
         #sega-display-container iframe { width: 100%; height: 100%; border: none; display: block; }
 
+        /* ГЕЙМПАД ДЛЯ NES */
         #gamepad { position: absolute; bottom: 0; left: 0; right: 0; z-index: 30; display: flex; flex-direction: column; width: 100%; padding: 15px; box-sizing: border-box; justify-content: space-between; border-top: 4px solid #222; background: #111; }
         .main-controls { display: flex; width: 100%; justify-content: space-between; align-items: center; }
         .dpad { display: grid; grid-template-columns: repeat(3, 1fr); grid-template-rows: repeat(3, 1fr); width: 130px; height: 130px; }
         .btn { background: #222; border: 3px solid #444; color: white; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 14px; }
         .btn:active { background: #444; }
         #nes-buttons { display: inline-flex; gap: 15px; }
-        .round-btn { width: 60px; height: 60px; background: #cc1111; border-radius: 50%; border: 4px solid #fff; color: white; display: flex; align-items: center; justify-content: center; font-size: 16px; font-weight: bold; }
+        .round-btn { width: 60px; height: 60px; background: #cc1111; border-radius: 50%; border: 4px solid #fff; color: white; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 16px; font-family: sans-serif; box-shadow: 0 4px 0 #880000; }
+        .round-btn:active { background: #aa0000; transform: translateY(4px); box-shadow: none; }
         .system-buttons { display: flex; flex-direction: column; gap: 10px; width: 100%; margin-top: 15px; }
         .sys-row { display: flex; justify-content: center; gap: 20px; }
         .sys-btn { background: #333; border: 2px solid #555; color: #aaa; width: 80px; height: 22px; border-radius: 4px; font-size: 8px; display: flex; align-items: center; justify-content: center; }
+        .sys-btn:active { background: #111; color: #fff; }
+        .save-btn { background: #1e3d1e; border-color: #387338; color: #8fdf8f; }
+        .load-btn { background: #1e2e3d; border-color: #385973; color: #8fbadf; }
     </style>
 </head>
 <body>
 
     <div class="header-panel">
         <button id="back-to-catalog" class="head-btn">↩ МЕНЮ</button>
-        <button id="header-save" class="head-btn nes-io-btn">💾 SAVE</button>
         <div id="main-title" style="font-size: 8px; letter-spacing: 1px;">9999 IN 1</div>
-        <button id="header-load" class="head-btn nes-io-btn">📂 LOAD</button>
         <button id="sound-toggle" class="head-btn muted">🔇 ЗВУК</button>
     </div>
     
     <div id="catalog-container">
-        <video id="menu-bg-video" class="bg-video" autoplay loop muted playsinline webkit-playsinline>
+        <video id="menu-bg-video" class="bg-video" loop playsinline webkit-playsinline>
             <source src="background-video.mp4" type="video/mp4">
         </video>
 
         <div id="section-games" class="app-section">
             <div class="menu-title">9999 IN 1</div>
+            
+            <!-- 🔥 1. НОВАЯ СТРОКА ПОИСКА ИГР -->
             <div style="padding: 0 20px 10px 20px; width: 100%; box-sizing: border-box;">
                 <input type="text" id="search-games-input" class="form-input" style="width: 100%; box-sizing: border-box;" placeholder="ПОИСК ИГРЫ..." oninput="filterGames()">
             </div>
+
+            <!-- 🔥 2. НОВАЯ КНОПКА ФИЛЬТРА ИЗБРАННОГО -->
             <button id="fav-filter-btn" class="fav-filter-toggle" onclick="toggleFavFilter()">[ ПОКАЗАТЬ ⭐ ИЗБРАННОЕ ]</button>
+
             <div class="game-list" id="retro-game-list"></div>
             <div class="pagination-container" id="pagination-controls"></div>
         </div>
-        
+
+        <div id="section-secrets" class="app-section">
+            <div class="menu-title">СЕКРЕТЫ</div>
+            
+            <!-- СТРОКА ПОИСКА ЧИТОВ -->
+            <div style="padding: 0 20px 15px 20px;">
+                <input type="text" id="search-secrets-input" class="form-input" style="width: 100%; box-sizing: border-box;" placeholder="ПОИСК ИГРЫ ИЛИ ЧИТА..." oninput="filterSecrets()">
+            </div>
+
+            <div id="secrets-container"></div>
+        </div>
+
+        <div id="section-order" class="app-section">
+            <div class="menu-title">ЗАКАЗ ИГР</div>
+            <div class="order-container">
+                <div class="order-text">ЗАКАЗ НОВОЙ ИГРЫ ПЛАТНЫЙ (100 РУБЛЕЙ). НАПИШИТЕ НАЗВАНИЕ, И МЫ ДОБАВИМ ЕЁ НА ПОЛКУ БОТА!</div>
+                
+                <div class="form-group">
+                    <label class="form-label">НАЗВАНИЕ ИГРЫ:</label>
+                    <input type="text" id="order-game-title" class="form-input" placeholder="НАПРИМЕР: TEENAGE MUTANT TURTLES">
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">ПЛАТФОРМА (КОНСОЛЬ):</label>
+                    <input type="text" id="order-game-system" class="form-input" placeholder="DENDY / SEGA / GBA">
+                </div>
+
+                <button id="order-btn-submit" class="order-submit-btn" onclick="sendOrderRequest()">ОТПРАВИТЬ ЗАЯВКУ</button>
+            </div>
+        </div>
+
         <div class="tab-bar" id="app-tab-bar">
-            <button class="tab-item active" onclick="switchTab('games', this)">🎮<br>ИГРЫ</button>
+            <button class="tab-item active" onclick="switchTab('games', this)">
+                <span class="tab-icon">🎮</span><span>ИГРЫ</span>
+            </button>
+            <button class="tab-item" onclick="switchTab('secrets', this)">
+                <span class="tab-icon">🔑</span><span>СЕКРЕТЫ</span>
+            </button>
+            <button class="tab-item" onclick="switchTab('order', this)">
+                <span class="tab-icon">📥</span><span>ЗАКАЗ</span>
+            </button>
         </div>
     </div>
 
@@ -124,7 +235,6 @@
             <canvas id="nes-canvas" width="256" height="240"></canvas>
         </div>
         <div id="sega-display-container"></div>
-        
         <div id="gamepad">
             <div class="main-controls">
                 <div class="dpad">
@@ -141,6 +251,9 @@
                 <div class="sys-row">
                     <div class="sys-btn" id="btn-select">SELECT</div><div class="sys-btn" id="btn-start">START</div>
                 </div>
+                <div class="sys-row">
+                    <div class="sys-btn save-btn" id="btn-save">SAVE</div><div class="sys-btn load-btn" id="btn-load">LOAD</div>
+                </div>
             </div>
         </div>
     </div>
@@ -149,158 +262,436 @@
         window.Telegram.WebApp.ready();
         window.Telegram.WebApp.expand();
 
-        var baseGames = []; var filteredGames = []; var currentPage = 1; var itemsPerPage = 5; var showOnlyFavorites = false;
-        var currentRomName = ""; var currentSystem = "nes"; var gameLoopInterval = null;
-        var nesMemorySaveState = null;
+        var gasRetroUrl = "https://script.google.com/macros/s/AKfycbwBjulaVnjKN-Af3oDFFFaG4Us8n6Jgcz3BTJRL1HThFxlgMuxv_D4x1yK4Khy-BsVL/exec";
 
+        // ПЕРЕМЕННЫЕ УМНОЙ ПАГИНАЦИИ И АЛФАВИТНОЙ СОРТИРОВКИ
+        var baseGames = [];        // Полный отсортированный по алфавиту массив из games.js
+        var filteredGames = [];    // Массив текущего результата поиска/избранного
+        var currentPage = 1;     
+        var itemsPerPage = 5; 
+        var showOnlyFavorites = false; // Флаг режима отображения избранного
+
+        // ПЕРЕМЕННЫЕ ДЛЯ ХРАНЕНИЯ И ФИЛЬТРАЦИИ СЕКРЕТОВ
+        var allSecrets = [];
+
+        // 1. АЛФАВИТНАЯ ИНИЦИАЛИЗАЦИЯ ИЗ GAMES.JS
         var rawGamesList = window.MY_GAMES || [];
         if (rawGamesList.length > 0) {
-            baseGames = rawGamesList.sort(function(a,b) { return a.title.toString().toLowerCase().trim().localeCompare(b.title.toString().toLowerCase().trim(), 'ru'); });
-            filteredGames = [].concat(baseGames); renderGamesPage(currentPage);
+            baseGames = rawGamesList.sort(function(a, b) {
+                var titleA = a.title.toString().toLowerCase().trim();
+                var titleB = b.title.toString().toLowerCase().trim();
+                return titleA.localeCompare(titleB, 'ru', { sensitivity: 'base' });
+            });
+            filteredGames = [].concat(baseGames); // Изначально отфильтрованный список равен полному
+            renderGamesPage(currentPage);
         }
 
-        function isGameFavorite(file) { return JSON.parse(localStorage.getItem('retro_favs') || "[]").indexOf(file) !== -1; }
+        // 🔥 ПРОВЕРКА: НАХОДИТСЯ ЛИ ИГРА В LOCALSTORAGE ИЗБРАННОГО
+        function isGameFavorite(file) {
+            var favs = JSON.parse(localStorage.getItem('retro_favs') || "[]");
+            return favs.indexOf(file) !== -1;
+        }
+
+        // 🔥 ПЕРЕКЛЮЧЕНИЕ СТАТУСА ИЗБРАННОГО
         function toggleFavorite(file, event) {
-            event.stopPropagation(); var favs = JSON.parse(localStorage.getItem('retro_favs') || "[]");
-            var idx = favs.indexOf(file); if (idx === -1) favs.push(file); else favs.splice(idx, 1);
+            event.stopPropagation(); // Запрещаем клику проваливаться в запуск игры
+            var favs = JSON.parse(localStorage.getItem('retro_favs') || "[]");
+            var idx = favs.indexOf(file);
+            
+            if (idx === -1) {
+                favs.push(file);
+            } else {
+                favs.splice(idx, 1);
+            }
             localStorage.setItem('retro_favs', JSON.stringify(favs));
-            if (showOnlyFavorites) filterGames(); else renderGamesPage(currentPage);
+            
+            if (window.Telegram && window.Telegram.WebApp && window.Telegram.WebApp.HapticFeedback) {
+                window.Telegram.WebApp.HapticFeedback.impactOccurred('light');
+            }
+
+            // Перестраиваем текущий вид
+            if (showOnlyFavorites) {
+                filterGames(); // Если мы во вкладке избранного, удаленная игра должна сразу пропасть
+            } else {
+                renderGamesPage(currentPage); // Иначе просто перерисовываем звездочку
+            }
         }
 
+        // 🔥 ЖИВОЙ РЕАКТИВНЫЙ ФИЛЬТР ИГР + ИЗБРАННОГО
         function filterGames() {
             var query = document.getElementById('search-games-input').value.toLowerCase().trim();
-            filteredGames = baseGames.filter(function(g) { return g.title.toLowerCase().includes(query) && (!showOnlyFavorites || isGameFavorite(g.file)); });
-            currentPage = 1; renderGamesPage(currentPage);
+            
+            filteredGames = baseGames.filter(function(game) {
+                // Фильтр по строке поиска
+                var matchesSearch = game.title.toLowerCase().includes(query);
+                // Фильтр по кнопке избранного
+                var matchesFav = !showOnlyFavorites || isGameFavorite(game.file);
+                
+                return matchesSearch && matchesFav;
+            });
+
+            currentPage = 1; // Сбрасываем пагинацию на 1 страницу результата
+            renderGamesPage(currentPage);
         }
 
+        // 🔥 ПЕРЕКЛЮЧЕНИЕ РЕЖИМА "ТОЛЬКО ИЗБРАННОЕ"
         function toggleFavFilter() {
             showOnlyFavorites = !showOnlyFavorites;
-            document.getElementById('fav-filter-btn').textContent = showOnlyFavorites ? "[ ⭐ РЕЖИМ: ТОЛЬКО ИЗБРАННОЕ ]" : "[ ПОКАЗАТЬ ⭐ ИЗБРАННОЕ ]";
+            var btn = document.getElementById('fav-filter-btn');
+            if (showOnlyFavorites) {
+                btn.classList.add('active');
+                btn.textContent = "[ ⭐ РЕЖИМ: ТОЛЬКО ИЗБРАННОЕ ]";
+            } else {
+                btn.classList.remove('active');
+                btn.textContent = "[ ПОКАЗАТЬ ⭐ ИЗБРАННОЕ ]";
+            }
             filterGames();
         }
 
+        // 2. ФУНКЦИЯ ОТРИСОВКИ КОНКРЕТНОЙ СТРАНИЦЫ И БЕЙДЖЕЙ
         function renderGamesPage(page) {
-            var listContainer = document.getElementById('retro-game-list'); if (!listContainer) return;
+            var listContainer = document.getElementById('retro-game-list');
+            if (!listContainer) return;
+
             listContainer.innerHTML = "";
+
+            if (filteredGames.length === 0) {
+                listContainer.innerHTML = '<div style="text-align:center; font-size:8px; color:#555; padding:30px 0;">СПИСОК ПУСТ</div>';
+                renderPaginationButtons();
+                return;
+            }
+
             var startIndex = (page - 1) * itemsPerPage;
-            var pageItems = filteredGames.slice(startIndex, startIndex + itemsPerPage);
+            var endIndex = startIndex + itemsPerPage;
+            var pageItems = filteredGames.slice(startIndex, endIndex);
 
             pageItems.forEach(function(game, index) {
-                var num = (startIndex + index + 1).toString().padStart(4, '0');
-                var sysLabel = game.system.toUpperCase();
-                var badgeClass = game.system === 'sega' ? 'badge-sega' : (game.system === 'snes' ? 'badge-snes' : 'badge-nes');
-                var item = document.createElement('div'); item.className = 'retro-item';
-                item.innerHTML = '\
-                    <div class="game-click-zone" onclick="startGame(\'' + game.file + '\', \'' + game.title.replace(/'/g, "\\'") + '\', \'' + game.system + '\')">\
-                        <div class="game-title-text">' + num + '. ' + game.title + '</div>\
-                        <span class="item-system-badge ' + badgeClass + '">' + sysLabel + '</span>\
-                    </div>\
-                    <div class="fav-star-btn ' + (isGameFavorite(game.file)?'active':'') + '" onclick="toggleFavorite(\'' + game.file + '\', event)">⭐</div>\
-                ';
+                var globalIndex = startIndex + index + 1;
+                var num = globalIndex.toString().padStart(4, '0'); 
+                
+                var item = document.createElement('div');
+                item.className = 'retro-item';
+                
+                var badgeClass = 'badge-nes';
+                var sysLabel = 'NES';
+                
+                if (game.system === 'sega') {
+                    badgeClass = 'badge-sega';
+                    sysLabel = 'SEGA';
+                } else if (game.system === 'snes') {
+                    badgeClass = 'badge-snes';
+                    sysLabel = 'SNES';
+                }
+
+                // Проверяем, активна ли звезда
+                var isFav = isGameFavorite(game.file);
+                var favClass = isFav ? 'active' : '';
+
+                item.innerHTML = `
+                    <div class="game-click-zone" onclick="startGame('${game.file}', '${game.title}', '${game.system}')">
+                        <div class="game-title-text">${num}. ${game.title}</div>
+                        <span class="item-system-badge ${badgeClass}">${sysLabel}</span>
+                    </div>
+                    <div class="fav-star-btn ${favClass}" onclick="toggleFavorite('${game.file}', event)">⭐</div>
+                `;
+
                 listContainer.appendChild(item);
             });
+
             renderPaginationButtons();
         }
 
+        // 3. ГЕНЕРАЦИЯ КНОПОК НАВИГАЦИИ (НАЗАД / ВПЕРЕД)
         function renderPaginationButtons() {
-            var container = document.getElementById('pagination-controls'); if (!container) return; container.innerHTML = "";
-            var totalPages = Math.ceil(filteredGames.length / itemsPerPage); if (totalPages <= 1) return;
-            var prev = document.createElement('button'); prev.className='page-btn'; prev.disabled=(currentPage===1); prev.textContent="◀ НАЗАД";
-            prev.onclick = function() { currentPage--; renderGamesPage(currentPage); };
-            var info = document.createElement('span'); info.className='page-info-text'; info.innerHTML='PAGE<br>' + currentPage + '/' + totalPages;
-            var next = document.createElement('button'); next.className='page-btn'; next.disabled=(currentPage===totalPages); next.textContent="ВПЕРЕД ▶";
-            next.onclick = function() { currentPage++; renderGamesPage(currentPage); };
-            container.appendChild(prev); container.appendChild(info); container.appendChild(next);
+            var controlsContainer = document.getElementById('pagination-controls');
+            if (!controlsContainer) return;
+
+            controlsContainer.innerHTML = "";
+            var totalPages = Math.ceil(filteredGames.length / itemsPerPage);
+            if (totalPages <= 1) return;
+
+            var prevBtn = document.createElement('button');
+            prevBtn.className = 'page-btn';
+            prevBtn.disabled = (currentPage === 1);
+            prevBtn.textContent = "◀ НАЗАД";
+            prevBtn.addEventListener('click', function() { changeGamesPage(currentPage - 1); });
+
+            var infoSpan = document.createElement('span');
+            infoSpan.className = 'page-info-text';
+            infoSpan.innerHTML = `PAGE<br>${currentPage}/${totalPages}`;
+
+            var nextBtn = document.createElement('button');
+            nextBtn.className = 'page-btn';
+            nextBtn.disabled = (currentPage === totalPages);
+            nextBtn.textContent = "ВПЕРЕД ▶";
+            nextBtn.addEventListener('click', function() { changeGamesPage(currentPage + 1); });
+
+            controlsContainer.appendChild(prevBtn);
+            controlsContainer.appendChild(infoSpan);
+            controlsContainer.appendChild(nextBtn);
         }
 
-        // ВОЗВРАТ К СТАБИЛЬНОМУ ЗВУКУ NES БЕЗ НАГРУЗКИ НА ПРОЦЕССОР
-        var audioCtx = null; var audioEnabled = false; var bufferSize = 4096;
-        var audioBuffer = new Float32Array(bufferSize); var audioBufferIndex = 0;
+        // 4. ПЕРЕКЛЮЧЕНИЕ СТРАНИЦЫ И СКРОЛЛ НАВЕРХ
+        function changeGamesPage(newPage) {
+            currentPage = newPage;
+            renderGamesPage(currentPage);
+            
+            var catalog = document.getElementById('catalog-container');
+            if (catalog) catalog.scrollTop = 0;
 
-        var canvas = document.getElementById('nes-canvas'); var ctx = canvas.getContext('2d');
+            if (window.Telegram && window.Telegram.WebApp && window.Telegram.WebApp.HapticFeedback) {
+                window.Telegram.WebApp.HapticFeedback.impactOccurred('light');
+            }
+        }
+
+        // 2. АВТОМАТИЧЕСКАЯ ПОДГРУЗКА СЕКРЕТОВ ИЗ ТАБЛИЦЫ ЧЕРЕЗ JSONP
+        (function loadRetroSecrets() {
+            var script = document.createElement('script');
+            script.src = gasRetroUrl + "?action=get_secrets&callback=renderSecrets";
+            document.head.appendChild(script);
+        })();
+
+        function renderSecrets(data) {
+            allSecrets = data || []; 
+            displaySecretsList(allSecrets); 
+        }
+
+        function displaySecretsList(secretsArray) {
+            var secretsContainer = document.getElementById('secrets-container');
+            if (!secretsContainer) return;
+            
+            secretsContainer.innerHTML = "";
+            
+            if (secretsArray.length === 0) {
+                secretsContainer.innerHTML = '<div style="text-align:center; font-size:8px; color:#555; padding-top:20px;">НИЧЕГО НЕ НАЙДЕНО</div>';
+                return;
+            }
+
+            secretsArray.forEach(function(item) {
+                var card = document.createElement('div');
+                card.className = 'secret-card';
+                card.innerHTML = `
+                    <div class="secret-game">[${item.type}] ${item.game}</div>
+                    <div class="secret-title">${item.title}</div>
+                    <div class="secret-code">${item.code}</div>
+                `;
+                secretsContainer.appendChild(card);
+            });
+        }
+
+        function filterSecrets() {
+            var query = document.getElementById('search-secrets-input').value.toLowerCase().trim();
+            if (!query) {
+                displaySecretsList(allSecrets);
+                return;
+            }
+            var filtered = allSecrets.filter(function(item) {
+                var gameMatch = item.game.toLowerCase().includes(query);
+                var titleMatch = item.title.toLowerCase().includes(query);
+                var typeMatch = item.type.toLowerCase().includes(query);
+                return gameMatch || titleMatch || typeMatch;
+            });
+            displaySecretsList(filtered);
+        }
+
+        // 3. ОТПРАВКА ЗАКАЗА НА БОТА
+        function sendOrderRequest() {
+            var titleInput = document.getElementById('order-game-title').value.trim();
+            var systemInput = document.getElementById('order-game-system').value.trim();
+
+            if (!titleInput) { alert("ВВЕДИТЕ НАЗВАНИЕ ИГРЫ!"); return; }
+
+            var initData = window.Telegram.WebApp.initDataUnsafe;
+            var userId = initData.user ? initData.user.id : "";
+            var username = initData.user ? initData.user.username : "no_name";
+
+            if (!userId) { alert("ОШИБКА TELEGRAM ID!"); return; }
+
+            var btnSubmit = document.getElementById('order-btn-submit');
+            btnSubmit.disabled = true;
+            btnSubmit.textContent = "ОТПРАВКА...";
+
+            var requestUrl = gasRetroUrl + "?action=submit_order&title=" + encodeURIComponent(titleInput) + 
+                             "&system=" + encodeURIComponent(systemInput || "Dendy") + 
+                             "&user_id=" + userId + 
+                             "&username=" + encodeURIComponent(username);
+
+            fetch(requestUrl, { mode: 'no-cors' })
+                .then(function() {
+                    window.Telegram.WebApp.showPopup({
+                        title: "ЗАЯВКА СФОРМИРОВАНА!",
+                        message: "Счет отправлен в диалог с ботом. Если что-то пошло не так или возникли трудности при отправке — напишите админу напрямую!",
+                        buttons: [
+                            { id: "bot", type: "default", text: "🤖 К БОТУ ЗА СЧЕТОМ" },
+                            { id: "admin", type: "default", text: "👨‍💻 НАПИСАТЬ АДМИНУ" },
+                            { id: "close", type: "cancel", text: "ЗАКРЫТЬ" }
+                        ]
+                    }, function(buttonId) {
+                        if (buttonId === "bot") {
+                            window.Telegram.WebApp.openTelegramLink("https://t.me/gameMAN888_bot");
+                        } else if (buttonId === "admin") {
+                            window.Telegram.WebApp.openTelegramLink("https://t.me/Den888ak");
+                        }
+                        window.Telegram.WebApp.close(); 
+                    });
+                })
+                .catch(function() {
+                    alert("ОШИБКА СВЯЗИ С СЕРВЕРОМ!");
+                    btnSubmit.disabled = false;
+                    btnSubmit.textContent = "ОТПРАВИТЬ ЗАЯВКУ";
+                });
+        }
+
+        function switchTab(tabId, buttonElement) {
+            var sections = document.getElementsByClassName('app-section');
+            for(var i=0; i<sections.length; i++) { sections[i].style.display = 'none'; }
+            
+            var tabs = document.getElementsByClassName('tab-item');
+            for(var i=0; i<tabs.length; i++) { tabs[i].classList.remove('active'); }
+
+            document.getElementById('section-' + tabId).style.display = 'block';
+            buttonElement.classList.add('active');
+
+            if (window.Telegram && window.Telegram.WebApp && window.Telegram.WebApp.HapticFeedback) {
+                window.Telegram.WebApp.HapticFeedback.impactOccurred('light');
+            }
+        }
+
+        var canvas = document.getElementById('nes-canvas');
+        var ctx = canvas.getContext('2d');
+        var audioCtx = null;
+        var audioEnabled = false;
+        var bufferSize = 4096;
+        var audioBuffer = new Float32Array(bufferSize);
+        var audioBufferIndex = 0;
+        var gameLoopInterval = null;
+        var currentRomName = ""; 
+        var currentSystem = "nes";
+        var videoEl = document.getElementById('menu-bg-video');
+
+        if(videoEl) {
+            videoEl.muted = true;
+            videoEl.play().catch(function(e){});
+        }
+
         var nes = new jsnes.NES({
             onFrame: function(buffer) {
-                var img = ctx.getImageData(0, 0, 256, 240); var d = img.data;
-                for (var i = 0; i < buffer.length; i++) { var p = buffer[i]; var idx = i * 4; d[idx] = p & 0xff; d[idx+1] = (p >> 8) & 0xff; d[idx+2] = (p >> 16) & 0xff; d[idx+3] = 255; }
-                ctx.putImageData(img, 0, 0);
+                var imageData = ctx.getImageData(0, 0, 256, 240);
+                var data = imageData.data;
+                for (var i = 0; i < buffer.length; i++) {
+                    var pixel = buffer[i];
+                    var index = i * 4;
+                    data[index] = pixel & 0xff; 
+                    data[index+1] = (pixel >> 8) & 0xff;
+                    data[index+2] = (pixel >> 16) & 0xff;
+                    data[index+3] = 255;
+                }
+                ctx.putImageData(imageData, 0, 0);
             },
             onAudioSample: function(left, right) {
                 if (!audioEnabled) return;
-                if (audioBufferIndex < bufferSize) { audioBuffer[audioBufferIndex++] = left; }
+                if (audioBufferIndex < bufferSize) {
+                    audioBuffer[audioBufferIndex++] = left;
+                }
             }
         });
 
-        function initAudioEngine() {
+        function initAudio() {
             if (audioCtx) return;
             var AudioContext = window.AudioContext || window.webkitAudioContext;
             audioCtx = new AudioContext({ sampleRate: 44100 });
             var scriptProcessor = audioCtx.createScriptProcessor(bufferSize, 0, 1);
             scriptProcessor.onaudioprocess = function(e) {
                 var output = e.outputBuffer.getChannelData(0);
-                for (var i = 0; i < bufferSize; i++) { output[i] = audioEnabled ? audioBuffer[i] : 0; }
-                audioBuffer.fill(0); audioBufferIndex = 0;
+                for (var i = 0; i < bufferSize; i++) {
+                    output[i] = audioEnabled ? audioBuffer[i] : 0;
+                }
+                audioBuffer.fill(0);
+                audioBufferIndex = 0;
             };
             scriptProcessor.connect(audioCtx.destination);
         }
 
-        document.getElementById('sound-toggle').addEventListener('click', function() {
-            initAudioEngine();
-            if (audioCtx && audioCtx.state === 'suspended') audioCtx.resume();
-            audioEnabled = !audioEnabled;
-            
-            this.textContent = audioEnabled ? "🔊 ЗВУК: ВКЛ" : "🔇 ЗВУК";
-            if (audioEnabled) this.classList.remove('muted'); else this.classList.add('muted');
-            
-            var videoEl = document.getElementById('menu-bg-video');
-            if(videoEl) { videoEl.muted = !audioEnabled; }
-        });
+        var soundBtn = document.getElementById('sound-toggle');
+        if (soundBtn) {
+            soundBtn.addEventListener('click', function() {
+                initAudio();
+                if (audioCtx && audioCtx.state === 'suspended') audioCtx.resume();
+                audioEnabled = !audioEnabled;
+                this.textContent = audioEnabled ? "🔊 ЗВУК: ВКЛ" : "🔇 ЗВУК";
+                if(videoEl) videoEl.muted = !audioEnabled;
+                if(audioEnabled) this.classList.remove('muted'); else this.classList.add('muted');
 
-        // 🔥 ЧИСТЫЙ АБСОЛЮТНЫЙ ИЗОЛИРОВАННЫЙ IFRAME ДЛЯ СЕГИ И СНЕС
+                if (currentSystem === "sega" || currentSystem === "snes") {
+                    var iframe = document.getElementById('active-emulator-iframe');
+                    if (iframe && iframe.contentWindow) {
+                        iframe.contentWindow.postMessage({ volume: audioEnabled ? 1 : 0 }, '*');
+                    }
+                }
+            });
+        }
+
         function launchIsolatedEmulatorJS(romUrl, systemType, gameTitle) {
             var container = document.getElementById('sega-display-container');
             container.innerHTML = ""; 
 
-            var iframe = document.createElement('iframe');
-            iframe.style.width = "100%";
-            iframe.style.height = "100%";
-            iframe.style.border = "none";
-            
-            // Вычисляем корень репозитория на GitHub Pages железно
-            var rootPath = window.location.href.split('index.html')[0];
-            var coreName = systemType === "sega" ? "segaMD" : "snes";
-            
-            var innerHtml = '<!DOCTYPE html>\
-            <html>\
-            <head><meta charset="UTF-8"><style>body,html{margin:0;padding:0;width:100%;height:100%;background:#000;overflow:hidden;}#g{width:100%;height:100%;}</style></head>\
-            <body>\
-                <div id="g"></div>\
-                <script>\
-                    EJS_player = "#g";\
-                    EJS_core = "' + coreName + '";\
-                    EJS_gameName = "' + gameTitle.replace(/"/g, "") + '";\
-                    EJS_pathtodata = "' + rootPath + 'emulator/data/";\
-                    EJS_gameUrl = "' + rootPath + romUrl + '";\
-                    EJS_startOnLoaded = true;\
-                    EJS_mouse = true;\
-                    EJS_Header = false;\
-                    EJS_Volume = ' + (audioEnabled ? 1 : 0) + ';\
-                    EJS_coreConfig = { cacheFileSystem: "indexeddb", autosave: true };\
-                <\/script>\
-                <script src="' + rootPath + 'emulator/loader.js"><\/script>\
-            </body>\
-            </html>';
+            var coreType = (systemType === "sega") ? "segaMD" : "snes";
+            var absoluteRomUrl = window.location.origin + window.location.pathname.replace("index.html", "") + romUrl;
+            var initialVolume = audioEnabled ? 1 : 0;
 
+            var iframeHtml = `
+            <!DOCTYPE html>
+            <html>
+            <head>
+                <meta charset="UTF-8">
+                <style>
+                    body, html { margin: 0; padding: 0; width: 100%; height: 100%; background: #000; overflow: hidden; }
+                    #game { width: 100%; height: 100%; }
+                </style>
+                <script>
+                    if (!('ontouchstart' in window)) { window.ontouchstart = function(){}; }
+                    if (!navigator.maxTouchPoints || navigator.maxTouchPoints === 0) {
+                        Object.defineProperty(navigator, 'maxTouchPoints', {get: function(){return 5;}});
+                    }
+                <\/script>
+            </head>
+            <body>
+                <div id="game"></div>
+                <script>
+                    EJS_player = "#game";
+                    EJS_core = "${coreType}";
+                    EJS_gameName = "${gameTitle}";
+                    EJS_color = "#0064ff";
+                    EJS_pathtodata = "https://cdn.emulatorjs.org/stable/data/";
+                    EJS_gameUrl = "${absoluteRomUrl}";
+                    EJS_startOnLoaded = true;
+                    EJS_Volume = ${initialVolume};
+                    EJS_Header = false;
+                    EJS_mouse = false;
+                <\/script>
+                <script src="https://cdn.emulatorjs.org/stable/data/loader.js"><\/script>
+                <script>
+                    window.addEventListener('message', function(e) {
+                        if (e.data && typeof e.data.volume !== 'undefined') {
+                            if (typeof EJS_setVolume === 'function') { EJS_setVolume(e.data.volume); }
+                        }
+                    });
+                <\/script>
+            </body>
+            </html>
+            `;
+
+            var iframe = document.createElement('iframe');
+            iframe.id = "active-emulator-iframe";
+            iframe.srcdoc = iframeHtml;
             container.appendChild(iframe);
-            
-            var doc = iframe.contentWindow.document;
-            doc.open();
-            doc.write(innerHtml);
-            doc.close();
         }
 
         function startGame(romUrl, gameTitle, system) {
-            currentRomName = romUrl; currentSystem = system || "nes";
-            var videoEl = document.getElementById('menu-bg-video'); if(videoEl) videoEl.pause();
+            currentRomName = romUrl;
+            currentSystem = system || "nes";
+            
+            if(videoEl) videoEl.pause();
 
             document.getElementById('catalog-container').style.display = 'none';
             document.getElementById('app-tab-bar').style.display = 'none';
@@ -310,88 +701,91 @@
 
             if (currentSystem === "sega" || currentSystem === "snes") {
                 document.getElementById('game-container').style.display = 'none';
-                document.getElementById('gamepad').style.display = 'none';
-                document.getElementById('header-save').style.display = 'none'; 
-                document.getElementById('header-load').style.display = 'none';
+                document.getElementById('gamepad').style.display = 'none'; 
                 document.getElementById('sega-display-container').style.display = 'block';
                 launchIsolatedEmulatorJS(romUrl, currentSystem, gameTitle);
             } else {
                 document.getElementById('game-container').style.display = 'flex';
                 document.getElementById('gamepad').style.display = 'flex';
-                document.getElementById('header-save').style.display = 'block'; 
-                document.getElementById('header-load').style.display = 'block';
                 document.getElementById('sega-display-container').style.display = 'none';
                 
-                var req = new XMLHttpRequest(); req.open("GET", romUrl, true); req.overrideMimeType("text/plain; charset=x-user-defined");
+                var req = new XMLHttpRequest();
+                req.open("GET", romUrl, true);
+                req.overrideMimeType("text/plain; charset=x-user-defined");
                 req.onload = function() {
-                    if (req.status === 200) { nes.loadROM(this.responseText); clearInterval(gameLoopInterval); gameLoopInterval = setInterval(nes.frame, 1000/60); }
+                    if (req.status === 200) {
+                        nes.loadROM(this.responseText);
+                        if(gameLoopInterval) clearInterval(gameLoopInterval);
+                        gameLoopInterval = setInterval(nes.frame, 1000 / 60);
+                    } else {
+                        alert("ОШИБКА ЗАГРУЗКИ РОМА!");
+                        exitToCatalog();
+                    }
                 };
                 req.send();
+            }
+            
+            if (window.Telegram && window.Telegram.WebApp && window.Telegram.WebApp.HapticFeedback) {
+                window.Telegram.WebApp.HapticFeedback.impactOccurred('medium');
             }
         }
 
         function exitToCatalog() {
-            clearInterval(gameLoopInterval);
-            var videoEl = document.getElementById('menu-bg-video'); if(videoEl) videoEl.play().catch(function(){});
-
-            document.getElementById('sega-display-container').innerHTML = "";
-            document.getElementById('sega-display-container').style.display = "none";
+            if(gameLoopInterval) clearInterval(gameLoopInterval);
             
+            if(videoEl) videoEl.play().catch(function(e){});
+
+            if(currentSystem === "sega" || currentSystem === "snes") {
+                var container = document.getElementById('sega-display-container');
+                var iframe = document.getElementById('active-emulator-iframe');
+                if(iframe) {
+                    iframe.src = "about:blank"; 
+                    iframe.remove();
+                }
+                container.innerHTML = ""; 
+                container.style.display = "none";
+            }
+
             document.getElementById('game-screen').style.display = 'none';
             document.getElementById('back-to-catalog').style.display = 'none';
-            document.getElementById('header-save').style.display = 'none';
-            document.getElementById('header-load').style.display = 'none';
             document.getElementById('catalog-container').style.display = 'flex';
             document.getElementById('app-tab-bar').style.display = 'flex';
             document.getElementById('main-title').textContent = '9999 IN 1';
+            
+            // 🔥 Перерисовываем список, чтобы обновить звездочки при выходе из игры
             renderGamesPage(currentPage);
         }
-
+        
         document.getElementById('back-to-catalog').addEventListener('click', exitToCatalog);
 
-        // ЖЕЛЕЗНЫЕ ЛОКАЛЬНЫЕ СОХРАНЕНИЯ NES
-        document.getElementById('header-save').addEventListener('click', function() {
-            if (currentSystem === "nes" && currentRomName) {
-                try {
-                    var stateData = JSON.stringify(nes.toJSON());
-                    sessionStorage.setItem("session_save_" + currentRomName, stateData);
-                    localStorage.setItem("local_save_" + currentRomName, stateData);
-                    nesMemorySaveState = nes.toJSON(); 
-                    alert("ИГРА DENDY УСПЕШНО СОХРАНЕНА!");
-                } catch(e) { alert("ОШИБКА ЗАПИСИ!"); }
+        function bindKey(elementId, nesKey) {
+            var el = document.getElementById(elementId);
+            if(el) {
+                el.addEventListener('touchstart', function(e) { e.preventDefault(); if(currentSystem === "nes") nes.buttonDown(1, nesKey); });
+                el.addEventListener('touchend', function(e) { e.preventDefault(); if(currentSystem === "nes") nes.buttonUp(1, nesKey); });
+                el.addEventListener('mousedown', function(e) { if(currentSystem === "nes") nes.buttonDown(1, nesKey); });
+                el.addEventListener('mouseup', function(e) { if(currentSystem === "nes") nes.buttonUp(1, nesKey); });
             }
-        });
-
-        document.getElementById('header-load').addEventListener('click', function() {
-            if (currentSystem === "nes" && currentRomName) {
-                var stateData = sessionStorage.getItem("session_save_" + currentRomName) || localStorage.getItem("local_save_" + currentRomName);
-                if (stateData) {
-                    nes.fromJSON(JSON.parse(stateData));
-                    alert("ЗАГРУЗКА УСПЕШНА!");
-                } else if (nesMemorySaveState) {
-                    nes.fromJSON(nesMemorySaveState);
-                    alert("ВОССТАНОВЛЕНО ИЗ ПАМЯТИ!");
-                } else { alert("НЕТ СОХРАНЕНИЙ"); }
-            }
-        });
-
-        function bindKey(id, k) {
-            var el = document.getElementById(id); if(!el) return;
-            el.addEventListener('touchstart', function(e) { e.preventDefault(); nes.buttonDown(1, k); });
-            el.addEventListener('touchend', function(e) { e.preventDefault(); nes.buttonUp(1, k); });
-            el.addEventListener('mousedown', function(e) { nes.buttonDown(1, k); });
-            el.addEventListener('mouseup', function(e) { nes.buttonUp(1, k); });
         }
         bindKey('up', jsnes.Controller.BUTTON_UP); bindKey('down', jsnes.Controller.BUTTON_DOWN);
         bindKey('left', jsnes.Controller.BUTTON_LEFT); bindKey('right', jsnes.Controller.BUTTON_RIGHT);
         bindKey('btn-a', jsnes.Controller.BUTTON_A); bindKey('btn-b', jsnes.Controller.BUTTON_B);
         bindKey('btn-start', jsnes.Controller.BUTTON_START); bindKey('btn-select', jsnes.Controller.BUTTON_SELECT);
 
-        function switchTab(tabId, btn) {
-            var sections = document.querySelectorAll('.app-section'); for(var i=0; i<sections.length; i++) { sections[i].style.display = 'none'; }
-            var tabs = document.querySelectorAll('.tab-item'); for(var i=0; i<tabs.length; i++) { tabs[i].classList.remove('active'); }
-            document.getElementById('section-' + tabId).style.display = 'block'; btn.classList.add('active');
-        }
+        document.getElementById('btn-save').addEventListener('click', function() {
+            if (currentSystem === "nes" && currentRomName) {
+                localStorage.setItem("save_" + currentRomName, JSON.stringify(nes.toJSON()));
+                alert("ИГРА NES СОХРАНЕНА!");
+            }
+        });
+
+        document.getElementById('btn-load').addEventListener('click', function() {
+            if (currentSystem === "nes" && currentRomName) {
+                var data = localStorage.getItem("save_" + currentRomName);
+                if (data) { nes.fromJSON(JSON.parse(data)); alert("ЗАГРУЗКА УСПЕШНА!"); }
+                else { alert("НЕТ СОХРАНЕНИЙ"); }
+            }
+        });
     </script>
 </body>
 </html>
