@@ -66,7 +66,7 @@
         .page-btn { background: #222; border: 2px solid #555; color: #fff; font-family: 'Press Start 2P', monospace; font-size: 8px; padding: 8px 12px; cursor: pointer; }
         .page-info-text { font-size: 7px; color: #888; text-align: center; }
 
-        #tab-bar-menu { position: absolute; bottom: 0; left: 0; right: 0; height: 55px; background: #111; border-top: 3px solid #333; display: flex; justify-content: space-around; align-items: center; z-index: 100; box-sizing: border-box; }
+        .tab-bar { position: absolute; bottom: 0; left: 0; right: 0; height: 55px; background: #111; border-top: 3px solid #333; display: flex; justify-content: space-around; align-items: center; z-index: 100; box-sizing: border-box; }
         .tab-item { display: flex; flex-direction: column; align-items: center; justify-content: center; flex-grow: 1; height: 100%; color: #888; background: none; border: none; font-family: 'Press Start 2P', monospace; font-size: 7px; gap: 6px; }
         .tab-item.active { color: #ffff00; background: #1a1a1a; }
 
@@ -74,9 +74,8 @@
         #game-container { width: 100%; flex-grow: 1; max-height: calc(100vh - 250px); background: #000; position: relative; display: flex; justify-content: center; align-items: center; overflow: hidden; padding-top: 15px; box-sizing: border-box; }
         #nes-canvas { width: 100%; max-height: 100%; object-fit: contain; display: block; image-rendering: pixelated; }
 
-        /* Контейнер для 16-бит */
         #sega-display-container { display: none; width: 100%; max-width: 400px; height: calc(100vh - 44px); position: absolute; top: 44px; left: 0; z-index: 9999; background: #000; }
-        #ejs-target { width: 100%; height: 100%; }
+        #sega-display-container iframe { width: 100%; height: 100%; border: none; display: block; }
 
         #gamepad { position: absolute; bottom: 0; left: 0; right: 0; z-index: 30; display: flex; flex-direction: column; width: 100%; padding: 15px; box-sizing: border-box; justify-content: space-between; border-top: 4px solid #222; background: #111; }
         .main-controls { display: flex; width: 100%; justify-content: space-between; align-items: center; }
@@ -114,16 +113,17 @@
             <div class="game-list" id="retro-game-list"></div>
             <div class="pagination-container" id="pagination-controls"></div>
         </div>
+        
+        <div class="tab-bar" id="app-tab-bar">
+            <button class="tab-item active" onclick="switchTab('games', this)">🎮<br>ИГРЫ</button>
+        </div>
     </div>
 
     <div id="game-screen">
         <div id="game-container">
             <canvas id="nes-canvas" width="256" height="240"></canvas>
         </div>
-        
-        <div id="sega-display-container">
-            <div id="ejs-target"></div>
-        </div>
+        <div id="sega-display-container"></div>
         
         <div id="gamepad">
             <div class="main-controls">
@@ -213,9 +213,9 @@
             container.appendChild(prev); container.appendChild(info); container.appendChild(next);
         }
 
-        // 🔊 ПОЛНОЦЕННЫЙ ЗВУКОВОЙ ДВИЖОК ДЛЯ ДЕНДИ (NES)
-        var audioCtx = null; var audioProcessor = null;
-        var audioSamples = new Float32Array(4096); var audioSamplesCount = 0;
+        // 🔊 ЖЕЛЕЗНЫЙ РАБОЧИЙ ЗВУК ДЛЯ ДЕНДИ
+        var audioCtx = null; var audioProcessor = null; var audioEnabled = false;
+        var audioBuffer = [];
 
         var canvas = document.getElementById('nes-canvas'); var ctx = canvas.getContext('2d');
         var nes = new jsnes.NES({
@@ -226,7 +226,8 @@
             },
             onAudioSample: function(l, r) {
                 if (!audioEnabled) return;
-                if (audioSamplesCount < 4096) { audioSamples[audioSamplesCount++] = l; }
+                audioBuffer.push(l);
+                if (audioBuffer.length > 8192) { audioBuffer.shift(); }
             }
         });
 
@@ -234,11 +235,12 @@
             if (audioCtx) return;
             var AudioContext = window.AudioContext || window.webkitAudioContext;
             audioCtx = new AudioContext({ sampleRate: 44100 });
-            audioProcessor = audioCtx.createScriptProcessor(4096, 0, 1);
+            audioProcessor = audioCtx.createScriptProcessor(2048, 0, 1);
             audioProcessor.onaudioprocess = function(e) {
                 var out = e.outputBuffer.getChannelData(0);
-                for (var i = 0; i < 4096; i++) { out[i] = audioEnabled ? audioSamples[i] : 0; }
-                audioSamples.fill(0); audioSamplesCount = 0;
+                for (var i = 0; i < 2048; i++) {
+                    out[i] = (audioEnabled && audioBuffer.length > 0) ? audioBuffer.shift() : 0;
+                }
             };
             audioProcessor.connect(audioCtx.destination);
         }
@@ -247,45 +249,60 @@
             initAudioEngine();
             if (audioCtx && audioCtx.state === 'suspended') audioCtx.resume();
             audioEnabled = !audioEnabled;
-            
             this.textContent = audioEnabled ? "🔊 ЗВУК: ВКЛ" : "🔇 ЗВУК";
             if (audioEnabled) this.classList.remove('muted'); else this.classList.add('muted');
-            
-            // Если играет Сега/SNES, передаем громкость напрямую в EmulatorJS
-            if ((currentSystem === "sega" || currentSystem === "snes") && typeof EJS_setVolume === 'function') {
-                EJS_setVolume(audioEnabled ? 1 : 0);
-            }
         });
 
-        // 🔥 ПРЯМОЙ СТАРТ БЕЗ IFRAME: ЧИСТЫЙ АВТОНОМНЫЙ ПУТЬ ДЛЯ СЕГИ И СНЕС
+        // 🔥 ИДЕАЛЬНЫЙ АВТОНОМНЫЙ IFRAME ДЛЯ СЕГИ И СНЕС
         function launchIsolatedEmulatorJS(romUrl, systemType, gameTitle) {
-            document.getElementById('ejs-target').innerHTML = "";
+            var container = document.getElementById('sega-display-container');
+            container.innerHTML = ""; 
+
+            var iframe = document.createElement('iframe');
+            iframe.style.width = "100%";
+            iframe.style.height = "100%";
+            iframe.style.border = "none";
             
-            window.EJS_player = "#ejs-target";
-            window.EJS_core = systemType === "sega" ? "segaMD" : "snes";
-            window.EJS_gameName = gameTitle;
-            window.EJS_pathtodata = "emulator/data/"; // Локальная папка на твоем GitHub!
-            window.EJS_gameUrl = romUrl;
-            window.EJS_startOnLoaded = true;
-            window.EJS_mouse = true;
-            window.EJS_Header = false;
-            window.EJS_Volume = audioEnabled ? 1 : 0;
-            window.EJS_coreConfig = { cacheFileSystem: "indexeddb", autosave: true };
+            // Превращаем относительные пути в абсолютные, чтобы GitHub Pages не кидал ошибки CORS
+            var rootPath = window.location.origin + window.location.pathname.replace("index.html", "");
+            var coreName = systemType === "sega" ? "segaMD" : "snes";
+            
+            var innerHtml = '\
+            <!DOCTYPE html>\
+            <html>\
+            <head><meta charset="UTF-8"><style>body,html{margin:0;padding:0;width:100%;height:100%;background:#000;overflow:hidden;}#g{width:100%;height:100%;}</style></head>\
+            <body>\
+                <div id="g"></div>\
+                <script>\
+                    EJS_player = "#g";\
+                    EJS_core = "' + coreName + '";\
+                    EJS_gameName = "' + gameTitle.replace(/"/g, "") + '";\
+                    EJS_pathtodata = "' + rootPath + 'emulator/data/";\
+                    EJS_gameUrl = "' + rootPath + romUrl + '";\
+                    EJS_startOnLoaded = true;\
+                    EJS_mouse = true;\
+                    EJS_Header = false;\
+                    EJS_Volume = ' + (audioEnabled ? 1 : 0) + ';\
+                    EJS_coreConfig = { cacheFileSystem: "indexeddb", autosave: true };\
+                <\/script>\
+                <script src="' + rootPath + 'emulator/loader.js"><\/script>\
+            </body>\
+            </html>';
 
-            // Удаляем старый скрипт если был, и инициализируем загрузчик заново
-            var oldScript = document.getElementById('ejs-script');
-            if(oldScript) oldScript.remove();
-
-            var script = document.createElement('script');
-            script.id = 'ejs-script';
-            script.src = "emulator/loader.js";
-            document.body.appendChild(script);
+            container.appendChild(iframe);
+            
+            var doc = iframe.contentWindow.document;
+            doc.open();
+            doc.write(innerHtml);
+            doc.close();
         }
 
         function startGame(romUrl, gameTitle, system) {
             currentRomName = romUrl; currentSystem = system || "nes";
+            var videoEl = document.getElementById('menu-bg-video'); if(videoEl) videoEl.pause();
 
             document.getElementById('catalog-container').style.display = 'none';
+            document.getElementById('app-tab-bar').style.display = 'none';
             document.getElementById('game-screen').style.display = 'flex';
             document.getElementById('back-to-catalog').style.display = 'block';
             document.getElementById('main-title').textContent = gameTitle;
@@ -314,16 +331,17 @@
 
         function exitToCatalog() {
             clearInterval(gameLoopInterval);
-            if(currentSystem === "sega" || currentSystem === "snes") {
-                document.getElementById('ejs-target').innerHTML = "";
-                document.getElementById('sega-display-container').style.display = "none";
-                if(typeof EJS_Terminate === 'function') EJS_Terminate();
-            }
+            var videoEl = document.getElementById('menu-bg-video'); if(videoEl) videoEl.play().catch(function(){});
+
+            document.getElementById('sega-display-container').innerHTML = "";
+            document.getElementById('sega-display-container').style.display = "none";
+            
             document.getElementById('game-screen').style.display = 'none';
             document.getElementById('back-to-catalog').style.display = 'none';
             document.getElementById('header-save').style.display = 'none';
             document.getElementById('header-load').style.display = 'none';
             document.getElementById('catalog-container').style.display = 'flex';
+            document.getElementById('app-tab-bar').style.display = 'flex';
             document.getElementById('main-title').textContent = '9999 IN 1';
             renderGamesPage(currentPage);
         }
@@ -366,6 +384,12 @@
         bindKey('left', jsnes.Controller.BUTTON_LEFT); bindKey('right', jsnes.Controller.BUTTON_RIGHT);
         bindKey('btn-a', jsnes.Controller.BUTTON_A); bindKey('btn-b', jsnes.Controller.BUTTON_B);
         bindKey('btn-start', jsnes.Controller.BUTTON_START); bindKey('btn-select', jsnes.Controller.BUTTON_SELECT);
+
+        function switchTab(tabId, btn) {
+            var sections = document.querySelectorAll('.app-section'); for(var i=0; i<sections.length; i++) { sections[i].style.display = 'none'; }
+            var tabs = document.querySelectorAll('.tab-item'); for(var i=0; i<tabs.length; i++) { tabs[i].classList.remove('active'); }
+            document.getElementById('section-' + tabId).style.display = 'block'; btn.classList.add('active');
+        }
     </script>
 </body>
 </html>
