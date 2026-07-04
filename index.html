@@ -100,7 +100,6 @@
     </div>
     
     <div id="catalog-container">
-        <!-- Видео стартует без звука по умолчанию, чтобы обойти блокировку браузеров -->
         <video id="menu-bg-video" class="bg-video" autoplay loop muted playsinline webkit-playsinline>
             <source src="background-video.mp4" type="video/mp4">
         </video>
@@ -116,7 +115,7 @@
         </div>
         
         <div class="tab-bar" id="app-tab-bar">
-            <button class="tab-item active" onclick="switchTab('games', this)">...<br>ИГРЫ</button>
+            <button class="tab-item active" onclick="switchTab('games', this)">🎮<br>ИГРЫ</button>
         </div>
     </div>
 
@@ -214,9 +213,9 @@
             container.appendChild(prev); container.appendChild(info); container.appendChild(next);
         }
 
-        // 🔊 ЗВУКОВОЙ ДВИЖОК NES
-        var audioCtx = null; var audioProcessor = null; var audioEnabled = false;
-        var audioBuffer = [];
+        // ВОЗВРАТ К СТАБИЛЬНОМУ ЗВУКУ NES БЕЗ НАГРУЗКИ НА ПРОЦЕССОР
+        var audioCtx = null; var audioEnabled = false; var bufferSize = 4096;
+        var audioBuffer = new Float32Array(bufferSize); var audioBufferIndex = 0;
 
         var canvas = document.getElementById('nes-canvas'); var ctx = canvas.getContext('2d');
         var nes = new jsnes.NES({
@@ -225,10 +224,9 @@
                 for (var i = 0; i < buffer.length; i++) { var p = buffer[i]; var idx = i * 4; d[idx] = p & 0xff; d[idx+1] = (p >> 8) & 0xff; d[idx+2] = (p >> 16) & 0xff; d[idx+3] = 255; }
                 ctx.putImageData(img, 0, 0);
             },
-            onAudioSample: function(l, r) {
+            onAudioSample: function(left, right) {
                 if (!audioEnabled) return;
-                audioBuffer.push(l);
-                if (audioBuffer.length > 8192) { audioBuffer.shift(); }
+                if (audioBufferIndex < bufferSize) { audioBuffer[audioBufferIndex++] = left; }
             }
         });
 
@@ -236,17 +234,15 @@
             if (audioCtx) return;
             var AudioContext = window.AudioContext || window.webkitAudioContext;
             audioCtx = new AudioContext({ sampleRate: 44100 });
-            audioProcessor = audioCtx.createScriptProcessor(2048, 0, 1);
-            audioProcessor.onaudioprocess = function(e) {
-                var out = e.outputBuffer.getChannelData(0);
-                for (var i = 0; i < 2048; i++) {
-                    out[i] = (audioEnabled && audioBuffer.length > 0) ? audioBuffer.shift() : 0;
-                }
+            var scriptProcessor = audioCtx.createScriptProcessor(bufferSize, 0, 1);
+            scriptProcessor.onaudioprocess = function(e) {
+                var output = e.outputBuffer.getChannelData(0);
+                for (var i = 0; i < bufferSize; i++) { output[i] = audioEnabled ? audioBuffer[i] : 0; }
+                audioBuffer.fill(0); audioBufferIndex = 0;
             };
-            audioProcessor.connect(audioCtx.destination);
+            scriptProcessor.connect(audioCtx.destination);
         }
 
-        // Управление общим переключателем звука (Денди + Заставка)
         document.getElementById('sound-toggle').addEventListener('click', function() {
             initAudioEngine();
             if (audioCtx && audioCtx.state === 'suspended') audioCtx.resume();
@@ -255,12 +251,11 @@
             this.textContent = audioEnabled ? "🔊 ЗВУК: ВКЛ" : "🔇 ЗВУК";
             if (audioEnabled) this.classList.remove('muted'); else this.classList.add('muted');
             
-            // Включаем/выключаем звук у фонового видео-заставки
             var videoEl = document.getElementById('menu-bg-video');
             if(videoEl) { videoEl.muted = !audioEnabled; }
         });
 
-        // 🔥 ДЕТЕКТОР АБСОЛЮТНЫХ ПУТЕЙ ДЛЯ GITHUB PAGES ДЛЯ 16-БИТ
+        // 🔥 ЧИСТЫЙ АБСОЛЮТНЫЙ ИЗОЛИРОВАННЫЙ IFRAME ДЛЯ СЕГИ И СНЕС
         function launchIsolatedEmulatorJS(romUrl, systemType, gameTitle) {
             var container = document.getElementById('sega-display-container');
             container.innerHTML = ""; 
@@ -270,14 +265,11 @@
             iframe.style.height = "100%";
             iframe.style.border = "none";
             
-            // Защищенное вычисление пути с учетом подпапки репозитория на GitHub Pages
-            var currentHref = window.location.href;
-            var rootPath = currentHref.substring(0, currentHref.lastIndexOf('/') + 1);
-            
+            // Вычисляем корень репозитория на GitHub Pages железно
+            var rootPath = window.location.href.split('index.html')[0];
             var coreName = systemType === "sega" ? "segaMD" : "snes";
             
-            var innerHtml = '\
-            <!DOCTYPE html>\
+            var innerHtml = '<!DOCTYPE html>\
             <html>\
             <head><meta charset="UTF-8"><style>body,html{margin:0;padding:0;width:100%;height:100%;background:#000;overflow:hidden;}#g{width:100%;height:100%;}</style></head>\
             <body>\
@@ -357,6 +349,7 @@
 
         document.getElementById('back-to-catalog').addEventListener('click', exitToCatalog);
 
+        // ЖЕЛЕЗНЫЕ ЛОКАЛЬНЫЕ СОХРАНЕНИЯ NES
         document.getElementById('header-save').addEventListener('click', function() {
             if (currentSystem === "nes" && currentRomName) {
                 try {
