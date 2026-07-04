@@ -129,6 +129,7 @@
             <canvas id="nes-canvas" width="256" height="240"></canvas>
         </div>
         <div id="sega-display-container"></div>
+        
         <div id="gamepad">
             <div class="main-controls">
                 <div class="dpad">
@@ -146,7 +147,7 @@
                     <div class="sys-btn" id="btn-select">SELECT</div><div class="sys-btn" id="btn-start">START</div>
                 </div>
                 <div class="sys-row">
-                    <div class="sys-btn save-btn" id="btn-save">SAVE</div><div class="sys-btn load-btn" id="btn-load">LOAD</div>
+                    <div class="sys-btn save-btn" id="nes-save-btn">💾 SAVE</div><div class="sys-btn load-btn" id="nes-load-btn">📂 LOAD</div>
                 </div>
             </div>
         </div>
@@ -157,21 +158,19 @@
         window.Telegram.WebApp.expand();
 
         var baseGames = []; var filteredGames = []; var currentPage = 1; var itemsPerPage = 5; var showOnlyFavorites = false;
+        var currentRomName = ""; var currentSystem = "nes"; var gameLoopInterval = null;
+        var nesMemorySaveState = null;
 
         var rawGamesList = window.MY_GAMES || [];
         if (rawGamesList.length > 0) {
-            baseGames = rawGamesList.sort(function(a, b) {
-                return a.title.toString().toLowerCase().trim().localeCompare(b.title.toString().toLowerCase().trim(), 'ru');
-            });
-            filteredGames = [].concat(baseGames);
-            renderGamesPage(currentPage);
+            baseGames = rawGamesList.sort(function(a,b) { return a.title.toString().toLowerCase().trim().localeCompare(b.title.toString().toLowerCase().trim(), 'ru'); });
+            filteredGames = [].concat(baseGames); renderGamesPage(currentPage);
         }
 
         function isGameFavorite(file) { return JSON.parse(localStorage.getItem('retro_favs') || "[]").indexOf(file) !== -1; }
         function toggleFavorite(file, event) {
             event.stopPropagation(); var favs = JSON.parse(localStorage.getItem('retro_favs') || "[]");
-            var idx = favs.indexOf(file);
-            if (idx === -1) { favs.push(file); } else { favs.splice(idx, 1); }
+            var idx = favs.indexOf(file); if (idx === -1) favs.push(file); else favs.splice(idx, 1);
             localStorage.setItem('retro_favs', JSON.stringify(favs));
             if (showOnlyFavorites) filterGames(); else renderGamesPage(currentPage);
         }
@@ -230,8 +229,7 @@
         var canvas = document.getElementById('nes-canvas'); var ctx = canvas.getContext('2d');
         var audioCtx = null; var audioEnabled = false; var bufferSize = 4096;
         var audioBuffer = new Float32Array(bufferSize); var audioBufferIndex = 0;
-        var gameLoopInterval = null; var currentRomName = ""; var currentSystem = "nes";
-        var videoEl = document.getElementById('menu-bg-video');
+        var gameLoopInterval = null; var videoEl = document.getElementById('menu-bg-video');
 
         if(videoEl) { videoEl.play().catch(function(e){}); }
 
@@ -269,7 +267,6 @@
             audioEnabled = !audioEnabled;
             this.textContent = audioEnabled ? "🔊 ЗВУК: ВКЛ" : "🔇 ЗВУК";
             
-            // Синхронно включаем звук на видео-заставке меню!
             if(videoEl) videoEl.muted = !audioEnabled;
             if(audioEnabled) this.classList.remove('muted'); else this.classList.add('muted');
 
@@ -388,6 +385,8 @@
             if(el) {
                 el.addEventListener('touchstart', function(e) { e.preventDefault(); if(currentSystem === "nes") nes.buttonDown(1, nesKey); });
                 el.addEventListener('touchend', function(e) { e.preventDefault(); if(currentSystem === "nes") nes.buttonUp(1, nesKey); });
+                el.addEventListener('mousedown', function(e) { if(currentSystem === "nes") nes.buttonDown(1, nesKey); });
+                el.addEventListener('mouseup', function(e) { if(currentSystem === "nes") nes.buttonUp(1, nesKey); });
             }
         }
         bindKey('up', jsnes.Controller.BUTTON_UP); bindKey('down', jsnes.Controller.BUTTON_DOWN);
@@ -395,25 +394,20 @@
         bindKey('btn-a', jsnes.Controller.BUTTON_A); bindKey('btn-b', jsnes.Controller.BUTTON_B);
         bindKey('btn-start', jsnes.Controller.BUTTON_START); bindKey('btn-select', jsnes.Controller.BUTTON_SELECT);
 
-        document.getElementById('btn-save').addEventListener('click', function() {
+        document.getElementById('nes-save-btn').addEventListener('click', function() {
             if (currentSystem === "nes" && currentRomName) {
                 localStorage.setItem("save_" + currentRomName, JSON.stringify(nes.toJSON()));
                 alert("ИГРА NES СОХРАНЕНА!");
             }
         });
 
-        document.getElementById('btn-load').addEventListener('click', function() {
+        document.getElementById('nes-load-btn').addEventListener('click', function() {
             if (currentSystem === "nes" && currentRomName) {
                 var data = localStorage.getItem("save_" + currentRomName);
                 if (data) { nes.fromJSON(JSON.parse(data)); alert("ЗАГРУЗКА УСПЕШНА!"); }
                 else { alert("НЕТ СОХРАНЕНИЙ"); }
             }
         });
-        function switchTab(tabId, buttonElement) {
-            var sections = document.getElementsByClassName('app-section');
-            for(var i=0; i<sections.length; i++) { sections[i].style.display = 'none'; }
-            document.getElementById('section-' + tabId).style.display = 'block';
-        }
     </script>
 </body>
 </html>
