@@ -16,6 +16,7 @@
             height: 100vh; overflow: hidden; user-select: none;
         }
         body { display: flex; flex-direction: column; align-items: center; justify-content: flex-start; }
+        
         .header-panel {
             display: flex; width: 100%; max-width: 400px; justify-content: space-between; align-items: center;
             padding: 8px 15px; box-sizing: border-box; background: #000; border-bottom: 2px solid #333; 
@@ -40,6 +41,7 @@
         .bg-video { position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: cover; z-index: 1; pointer-events: none; }
         .app-section { width: 100%; z-index: 5; position: relative; display: none; }
         #section-games { display: block; }
+        
         .menu-title { font-size: 20px; color: #ffff00; text-shadow: 3px 3px #000; margin-bottom: 25px; text-align: center; letter-spacing: 2px; }
         .game-list { width: 100%; padding: 0 25px; box-sizing: border-box; }
         
@@ -79,14 +81,12 @@
         .tab-bar { position: absolute; bottom: 0; left: 0; right: 0; height: 55px; background: #111; border-top: 3px solid #333; display: flex; justify-content: space-around; align-items: center; z-index: 100; box-sizing: border-box; }
         .tab-item { display: flex; flex-direction: column; align-items: center; justify-content: center; flex-grow: 1; height: 100%; color: #888; background: none; border: none; font-family: 'Press Start 2P', monospace; font-size: 7px; gap: 6px; }
         .tab-item.active { color: #ffff00; background: #1a1a1a; }
-        .tab-icon { font-size: 14px; }
 
-        #game-screen { display: none; width: 100%; max-width: 400px; flex-grow: 1; background: #000; position: relative; z-index: 20; height: 100vh; }
+        #game-screen { display: none; width: 100%; max-width: 400px; flex-grow: 1; background: #000; position: relative; z-index: 20; height: 100vh; flex-direction: column; }
         #game-container { width: 100%; flex-grow: 1; max-height: calc(100vh - 250px); background: #000; position: relative; display: flex; justify-content: center; align-items: center; overflow: hidden; padding-top: 15px; box-sizing: border-box; }
         #nes-canvas { width: 100%; max-height: 100%; object-fit: contain; display: block; image-rendering: pixelated; }
 
-        /* Разворачиваем Сегу/SNES во весь экран, чтобы перекрыть все баги */
-        #sega-display-container { display: none; width: 100%; max-width: 400px; height: calc(100vh - 44px); position: absolute; top: 44px; left: 0; z-index: 99999; background: #000; }
+        #sega-display-container { display: none; width: 100%; max-width: 400px; height: calc(100vh - 44px); position: absolute; top: 44px; left: 0; z-index: 9999; background: #000; }
         #sega-display-container iframe { width: 100%; height: 100%; border: none; display: block; }
 
         #gamepad { position: absolute; bottom: 0; left: 0; right: 0; z-index: 30; display: flex; flex-direction: column; width: 100%; padding: 15px; box-sizing: border-box; justify-content: space-between; border-top: 4px solid #222; background: #111; }
@@ -112,7 +112,7 @@
     </div>
     
     <div id="catalog-container">
-        <video id="menu-bg-video" class="bg-video" loop playsinline webkit-playsinline>
+        <video id="menu-bg-video" class="bg-video" autoplay loop muted playsinline webkit-playsinline>
             <source src="background-video.mp4" type="video/mp4">
         </video>
 
@@ -190,6 +190,7 @@
         var gasRetroUrl = "https://script.google.com/macros/s/AKfycbwBjulaVnjKN-Af3oDFFFaG4Us8n6Jgcz3BTJRL1HThFxlgMuxv_D4x1yK4Khy-BsVL/exec";
         var baseGames = []; var filteredGames = []; var currentPage = 1; var itemsPerPage = 5; var showOnlyFavorites = false;
         var currentRomName = ""; var currentSystem = "nes"; var gameLoopInterval = null; var allSecrets = [];
+        var nesMemorySaveState = null;
 
         var rawGamesList = window.MY_GAMES || [];
         if (rawGamesList.length > 0) {
@@ -263,7 +264,6 @@
             }
         });
 
-        // 🔥 УЛЬТИМАТИВНЫЙ ОБХОД БЛОКИРОВОК: ВНУТРЕННИЙ БЭКАП НА БАЗЕ INDEXEDDB ДЛЯ 16-БИТ
         function launchIsolatedEmulatorJS(romUrl, systemType, gameTitle) {
             var container = document.getElementById('sega-display-container');
             container.innerHTML = ""; 
@@ -274,9 +274,15 @@
             var iframeHtml = `
             <!DOCTYPE html>
             <html>
-            <head><meta charset="UTF-8"></head>
+            <head>
+                <meta charset="UTF-8">
+                <style>
+                    body, html { margin: 0; padding: 0; width: 100%; height: 100%; background: #000; overflow: hidden; }
+                    #game { width: 100%; height: 100%; }
+                </style>
+            </head>
             <body>
-                <div id="game" style="width:100vh; height:100vw;"></div>
+                <div id="game"></div>
                 <script>
                     EJS_player = "#game";
                     EJS_core = "${coreType}";
@@ -287,7 +293,6 @@
                     EJS_mouse = true;
                     EJS_Header = false;
                     
-                    // 🔥 ЗАСТАВЛЯЕМ ЯДРО ХРАНИТЬ СЕЙВЫ В БРАУЗЕРНОЙ БАЗЕ ДАННЫХ СМАРТФОНА (БЕЗ ФАЙЛОВ)
                     EJS_coreConfig = {
                         cacheFileSystem: "indexeddb",
                         autosave: true
@@ -303,6 +308,8 @@
 
         function startGame(romUrl, gameTitle, system) {
             currentRomName = romUrl; currentSystem = system || "nes";
+            var videoEl = document.getElementById('menu-bg-video'); if(videoEl) videoEl.pause();
+
             document.getElementById('catalog-container').style.display = 'none';
             document.getElementById('app-tab-bar').style.display = 'none';
             document.getElementById('game-screen').style.display = 'flex';
@@ -312,14 +319,14 @@
             if (currentSystem === "sega" || currentSystem === "snes") {
                 document.getElementById('game-container').style.display = 'none';
                 document.getElementById('gamepad').style.display = 'none';
-                document.getElementById('header-save').style.display = 'none'; // Скрываем конфликтные кнопки для 16-бит
+                document.getElementById('header-save').style.display = 'none'; 
                 document.getElementById('header-load').style.display = 'none';
                 document.getElementById('sega-display-container').style.display = 'block';
                 launchIsolatedEmulatorJS(romUrl, currentSystem, gameTitle);
             } else {
                 document.getElementById('game-container').style.display = 'flex';
                 document.getElementById('gamepad').style.display = 'flex';
-                document.getElementById('header-save').style.display = 'block'; // Показываем стабильные кнопки только для Денди
+                document.getElementById('header-save').style.display = 'block'; 
                 document.getElementById('header-load').style.display = 'block';
                 document.getElementById('sega-display-container').style.display = 'none';
                 
@@ -333,6 +340,8 @@
 
         function exitToCatalog() {
             clearInterval(gameLoopInterval);
+            var videoEl = document.getElementById('menu-bg-video'); if(videoEl) videoEl.play().catch(()=>{});
+
             if(currentSystem === "sega" || currentSystem === "snes") {
                 var iframe = document.getElementById('active-emulator-iframe'); if(iframe) iframe.remove();
                 document.getElementById('sega-display-container').style.display = "none";
@@ -347,27 +356,31 @@
             renderGamesPage(currentPage);
         }
 
-        // 🔥 ЖЕЛЕЗНЫЕ ОБЛАЧНЫЕ СОХРАНЕНИЯ ДЕНДИ ЧЕРЕЗ TELEGRAM CLOUD STORAGE (РАБОТАЕТ ВСЕГДА)
+        document.getElementById('back-to-catalog').addEventListener('click', exitToCatalog);
+
+        // Стабильные сохранения Денди без сбоев сессии
         document.getElementById('header-save').addEventListener('click', function() {
             if (currentSystem === "nes" && currentRomName) {
                 try {
-                    var rawState = JSON.stringify(nes.toJSON());
-                    // Записываем прямо в вечную память профиля Telegram
-                    Telegram.WebApp.CloudStorage.setItem("tg_nes_save_" + currentRomName, rawState, function(err, success) {
-                        if (success) { alert("ИГРА УСПЕШНО СОХРАНЕНА В ОБЛАКО!"); }
-                        else { alert("ОШИБКА СОХРАНЕНИЯ В ОБЛАКО"); }
-                    });
-                } catch(e) { alert("КРИТИЧЕСКАЯ ОШИБКА ПАМЯТИ"); }
+                    var stateData = JSON.stringify(nes.toJSON());
+                    sessionStorage.setItem("session_save_" + currentRomName, stateData);
+                    localStorage.setItem("local_save_" + currentRomName, stateData);
+                    nesMemorySaveState = nes.toJSON(); 
+                    alert("ИГРА DENDY УСПЕШНО СОХРАНЕНА!");
+                } catch(e) { alert("ОШИБКА ЗАПИСИ!"); }
             }
         });
 
         document.getElementById('header-load').addEventListener('click', function() {
             if (currentSystem === "nes" && currentRomName) {
-                // Читаем из вечной памяти Telegram
-                Telegram.WebApp.CloudStorage.getItem("tg_nes_save_" + currentRomName, function(err, value) {
-                    if (value) { nes.fromJSON(JSON.parse(value)); alert("ЗАГРУЗКА ИЗ ОБЛАКА УСПЕШНА!"); }
-                    else { alert("НЕТ ОБЛАЧНЫХ СОХРАНЕНИЙ"); }
-                });
+                var stateData = sessionStorage.getItem("session_save_" + currentRomName) || localStorage.getItem("local_save_" + currentRomName);
+                if (stateData) {
+                    nes.fromJSON(JSON.parse(stateData));
+                    alert("ЗАГРУЗКА УСПЕШНА!");
+                } else if (nesMemorySaveState) {
+                    nes.fromJSON(nesMemorySaveState);
+                    alert("ВОССТАНОВЛЕНО ИЗ ПАМЯТИ!");
+                } else { alert("НЕТ СОХРАНЕНИЙ"); }
             }
         });
 
