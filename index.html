@@ -147,6 +147,7 @@
                     <div class="sys-btn" id="btn-select">SELECT</div><div class="sys-btn" id="btn-start">START</div>
                 </div>
                 <div class="sys-row">
+                    <!-- Исправленные кнопки сохранения для Денди -->
                     <div class="sys-btn save-btn" id="nes-save-btn">💾 SAVE</div><div class="sys-btn load-btn" id="nes-load-btn">📂 LOAD</div>
                 </div>
             </div>
@@ -159,18 +160,24 @@
 
         var baseGames = []; var filteredGames = []; var currentPage = 1; var itemsPerPage = 5; var showOnlyFavorites = false;
         var currentRomName = ""; var currentSystem = "nes"; var gameLoopInterval = null;
-        var nesMemorySaveState = null;
+        var videoEl = document.getElementById('menu-bg-video');
+
+        if(videoEl) { videoEl.play().catch(function(e){}); }
 
         var rawGamesList = window.MY_GAMES || [];
         if (rawGamesList.length > 0) {
-            baseGames = rawGamesList.sort(function(a,b) { return a.title.toString().toLowerCase().trim().localeCompare(b.title.toString().toLowerCase().trim(), 'ru'); });
-            filteredGames = [].concat(baseGames); renderGamesPage(currentPage);
+            baseGames = rawGamesList.sort(function(a, b) {
+                return a.title.toString().toLowerCase().trim().localeCompare(b.title.toString().toLowerCase().trim(), 'ru');
+            });
+            filteredGames = [].concat(baseGames);
+            renderGamesPage(currentPage);
         }
 
         function isGameFavorite(file) { return JSON.parse(localStorage.getItem('retro_favs') || "[]").indexOf(file) !== -1; }
         function toggleFavorite(file, event) {
             event.stopPropagation(); var favs = JSON.parse(localStorage.getItem('retro_favs') || "[]");
-            var idx = favs.indexOf(file); if (idx === -1) favs.push(file); else favs.splice(idx, 1);
+            var idx = favs.indexOf(file);
+            if (idx === -1) { favs.push(file); } else { favs.splice(idx, 1); }
             localStorage.setItem('retro_favs', JSON.stringify(favs));
             if (showOnlyFavorites) filterGames(); else renderGamesPage(currentPage);
         }
@@ -229,9 +236,6 @@
         var canvas = document.getElementById('nes-canvas'); var ctx = canvas.getContext('2d');
         var audioCtx = null; var audioEnabled = false; var bufferSize = 4096;
         var audioBuffer = new Float32Array(bufferSize); var audioBufferIndex = 0;
-        var gameLoopInterval = null; var videoEl = document.getElementById('menu-bg-video');
-
-        if(videoEl) { videoEl.play().catch(function(e){}); }
 
         var nes = new jsnes.NES({
             onFrame: function(buffer) {
@@ -276,6 +280,7 @@
             }
         });
 
+        // 🔥 ЖЕЛЕЗНЫЙ СКРИПТ ПЕРЕХВАТА И ЖЕЛЕЗОБЕТОННОГО СОХРАНЕНИЯ 16-БИТ ЧЕРЕЗ LOCALSTORAGE РОДИТЕЛЯ
         function launchIsolatedEmulatorJS(romUrl, systemType, gameTitle) {
             var container = document.getElementById('sega-display-container');
             container.innerHTML = ""; 
@@ -283,6 +288,9 @@
             var coreType = (systemType === "sega") ? "segaMD" : "snes";
             var absoluteRomUrl = window.location.origin + window.location.pathname.replace("index.html", "") + romUrl;
             var initialVolume = audioEnabled ? 1 : 0;
+
+            // Ищем старое сохранение в памяти мессенджера
+            var savedStateHex = localStorage.getItem("save_16bit_" + romUrl) || "";
 
             var iframeHtml = `
             <!DOCTYPE html>
@@ -313,6 +321,25 @@
                     EJS_Volume = ${initialVolume};
                     EJS_Header = false;
                     EJS_mouse = false;
+
+                    // Если есть сохранение — скармливаем его при старте ядра
+                    var incomingState = "${savedStateHex}";
+                    if(incomingState) {
+                        window.EJS_loadStateURL = "data:application/octet-stream;base64," + incomingState;
+                    }
+
+                    // Перехватываем хук сохранения EmulatorJS и выталкиваем в родительское окно
+                    window.EJS_onSaveState = function(e) {
+                        if (e && e.state) {
+                            var binary = "";
+                            var bytes = new Uint8Array(e.state);
+                            for (var i = 0; i < bytes.byteLength; i++) {
+                                binary += String.fromCharCode(bytes[i]);
+                            }
+                            var base64 = btoa(binary);
+                            window.parent.postMessage({ type: "EJS_SAVE", rom: "${romUrl}", state: base64 }, "*");
+                        }
+                    };
                 <\/script>
                 <script src="https://cdn.emulatorjs.org/stable/data/loader.js"><\/script>
                 <script>
@@ -329,6 +356,14 @@
             var iframe = document.createElement('iframe');
             iframe.id = "active-emulator-iframe"; iframe.srcdoc = iframeHtml; container.appendChild(iframe);
         }
+
+        // Слушаем сообщения от 16-битного iframe и намертво пишем сохранения
+        window.addEventListener('message', function(e) {
+            if (e.data && e.data.type === "EJS_SAVE") {
+                localStorage.setItem("save_16bit_" + e.data.rom, e.data.state);
+                alert("ПРОГРЕСС 16-BIT АВТОМАТИЧЕСКИ СОХРАНЕН!");
+            }
+        });
 
         function startGame(romUrl, gameTitle, system) {
             currentRomName = romUrl; currentSystem = system || "nes";
@@ -394,6 +429,7 @@
         bindKey('btn-a', jsnes.Controller.BUTTON_A); bindKey('btn-b', jsnes.Controller.BUTTON_B);
         bindKey('btn-start', jsnes.Controller.BUTTON_START); bindKey('btn-select', jsnes.Controller.BUTTON_SELECT);
 
+        // Привязка к железным ID разметки Денди
         document.getElementById('nes-save-btn').addEventListener('click', function() {
             if (currentSystem === "nes" && currentRomName) {
                 localStorage.setItem("save_" + currentRomName, JSON.stringify(nes.toJSON()));
