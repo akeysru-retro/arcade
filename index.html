@@ -194,11 +194,11 @@
 
         var rawGamesList = window.MY_GAMES || [];
         if (rawGamesList.length > 0) {
-            baseGames = rawGamesList.sort((a,b) => a.title.toString().toLowerCase().trim().localeCompare(b.title.toString().toLowerCase().trim(), 'ru'));
+            baseGames = rawGamesList.sort(function(a,b) { return a.title.toString().toLowerCase().trim().localeCompare(b.title.toString().toLowerCase().trim(), 'ru'); });
             filteredGames = [].concat(baseGames); renderGamesPage(currentPage);
         }
 
-        function isGameFavorite(file) { return JSON.parse(localStorage.getItem('retro_favs') || "[]").includes(file); }
+        function isGameFavorite(file) { return JSON.parse(localStorage.getItem('retro_favs') || "[]").indexOf(file) !== -1; }
         function toggleFavorite(file, event) {
             event.stopPropagation(); var favs = JSON.parse(localStorage.getItem('retro_favs') || "[]");
             var idx = favs.indexOf(file); if (idx === -1) favs.push(file); else favs.splice(idx, 1);
@@ -208,7 +208,7 @@
 
         function filterGames() {
             var query = document.getElementById('search-games-input').value.toLowerCase().trim();
-            filteredGames = baseGames.filter(g => g.title.toLowerCase().includes(query) && (!showOnlyFavorites || isGameFavorite(g.file)));
+            filteredGames = baseGames.filter(function(g) { return g.title.toLowerCase().includes(query) && (!showOnlyFavorites || isGameFavorite(g.file)); });
             currentPage = 1; renderGamesPage(currentPage);
         }
 
@@ -227,18 +227,18 @@
             var startIndex = (page - 1) * itemsPerPage;
             var pageItems = filteredGames.slice(startIndex, startIndex + itemsPerPage);
 
-            pageItems.forEach((game, index) => {
+            pageItems.forEach(function(game, index) {
                 var num = (startIndex + index + 1).toString().padStart(4, '0');
                 var sysLabel = game.system.toUpperCase();
                 var badgeClass = game.system === 'sega' ? 'badge-sega' : (game.system === 'snes' ? 'badge-snes' : 'badge-nes');
                 var item = document.createElement('div'); item.className = 'retro-item';
-                item.innerHTML = `
-                    <div class="game-click-zone" onclick="startGame('${game.file}', '${game.title}', '${game.system}')">
-                        <div class="game-title-text">${num}. ${game.title}</div>
-                        <span class="item-system-badge ${badgeClass}">${sysLabel}</span>
-                    </div>
-                    <div class="fav-star-btn ${isGameFavorite(game.file)?'active':''}" onclick="toggleFavorite('${game.file}', event)">⭐</div>
-                `;
+                item.innerHTML = '\
+                    <div class="game-click-zone" onclick="startGame(\'' + game.file + '\', \'' + game.title.replace(/'/g, "\\'") + '\', \'' + game.system + '\')">\
+                        <div class="game-title-text">' + num + '. ' + game.title + '</div>\
+                        <span class="item-system-badge ' + badgeClass + '">' + sysLabel + '</span>\
+                    </div>\
+                    <div class="fav-star-btn ' + (isGameFavorite(game.file)?'active':'') + '" onclick="toggleFavorite(\'' + game.file + '\', event)">⭐</div>\
+                ';
                 listContainer.appendChild(item);
             });
             renderPaginationButtons();
@@ -248,14 +248,14 @@
             var container = document.getElementById('pagination-controls'); if (!container) return; container.innerHTML = "";
             var totalPages = Math.ceil(filteredGames.length / itemsPerPage); if (totalPages <= 1) return;
             var prev = document.createElement('button'); prev.className='page-btn'; prev.disabled=(currentPage===1); prev.textContent="◀ НАЗАД";
-            prev.onclick = () => { currentPage--; renderGamesPage(currentPage); };
-            var info = document.createElement('span'); info.className='page-info-text'; info.innerHTML=`PAGE<br>${currentPage}/${totalPages}`;
+            prev.onclick = function() { currentPage--; renderGamesPage(currentPage); };
+            var info = document.createElement('span'); info.className='page-info-text'; info.innerHTML='PAGE<br>' + currentPage + '/' + totalPages;
             var next = document.createElement('button'); next.className='page-btn'; next.disabled=(currentPage===totalPages); next.textContent="ВПЕРЕД ▶";
-            next.onclick = () => { currentPage++; renderGamesPage(currentPage); };
+            next.onclick = function() { currentPage++; renderGamesPage(currentPage); };
             container.appendChild(prev); container.appendChild(info); container.appendChild(next);
         }
 
-        var canvas = document.getElementById('nes-canvas'); var ctx = canvas.getContext('2d'); var audioCtx = null; var audioEnabled = false;
+        var canvas = document.getElementById('nes-canvas'); var ctx = canvas.getContext('2d');
         var nes = new jsnes.NES({
             onFrame: function(buffer) {
                 var img = ctx.getImageData(0, 0, 256, 240); var d = img.data;
@@ -264,51 +264,27 @@
             }
         });
 
+        // 🔥 ПОЛНОСТЬЮ АВТОНОМНЫЙ ПРЯМОЙ СТАРТ ЧЕРЕЗ ОТНОСИТЕЛЬНЫЙ IFRAME БЕЗ SRCDOC
         function launchIsolatedEmulatorJS(romUrl, systemType, gameTitle) {
             var container = document.getElementById('sega-display-container');
             container.innerHTML = ""; 
-            var coreType = (systemType === "sega") ? "segaMD" : "snes";
-            var absoluteRomUrl = window.location.origin + window.location.pathname.replace("index.html", "") + romUrl;
-            var localEmulatorPath = window.location.origin + window.location.pathname.replace("index.html", "") + "emulator/";
-
-            var iframeHtml = `
-            <!DOCTYPE html>
-            <html>
-            <head>
-                <meta charset="UTF-8">
-                <style>
-                    body, html { margin: 0; padding: 0; width: 100%; height: 100%; background: #000; overflow: hidden; }
-                    #game { width: 100%; height: 100%; }
-                </style>
-            </head>
-            <body>
-                <div id="game"></div>
-                <script>
-                    EJS_player = "#game";
-                    EJS_core = "${coreType}";
-                    EJS_gameName = "${gameTitle.replace(/'/g, "")}";
-                    EJS_pathtodata = "${localEmulatorPath}";
-                    EJS_gameUrl = "${absoluteRomUrl}";
-                    EJS_startOnLoaded = true;
-                    EJS_mouse = true;
-                    EJS_Header = false;
-                    
-                    EJS_coreConfig = {
-                        cacheFileSystem: "indexeddb",
-                        autosave: true
-                    };
-                <\/script>
-                <script src="${localEmulatorPath}loader.js"><\/script>
-            </body>
-            </html>
-            `;
+            
             var iframe = document.createElement('iframe');
-            iframe.id = "active-emulator-iframe"; iframe.srcdoc = iframeHtml; container.appendChild(iframe);
+            iframe.id = "active-emulator-iframe";
+            
+            // Подключаем напрямую локальный html эмулятора из папки, созданной гитхабом
+            var localEmulatorUrl = "emulator/index.html" + 
+                                   "?core=" + (systemType === "sega" ? "segaMD" : "snes") +
+                                   "&rom=" + encodeURIComponent("../" + romUrl) +
+                                   "&name=" + encodeURIComponent(gameTitle);
+            
+            iframe.src = localEmulatorUrl;
+            container.appendChild(iframe);
         }
 
         function startGame(romUrl, gameTitle, system) {
             currentRomName = romUrl; currentSystem = system || "nes";
-            var videoEl = document.getElementById('menu-bg-video'); if(videoEl) videoEl.pause();
+            var videoEl = document.getElementById('menu-bg-video'); if(videoEl) videoEl.focus();
 
             document.getElementById('catalog-container').style.display = 'none';
             document.getElementById('app-tab-bar').style.display = 'none';
@@ -340,8 +316,6 @@
 
         function exitToCatalog() {
             clearInterval(gameLoopInterval);
-            var videoEl = document.getElementById('menu-bg-video'); if(videoEl) videoEl.play().catch(()=>{});
-
             if(currentSystem === "sega" || currentSystem === "snes") {
                 var iframe = document.getElementById('active-emulator-iframe'); if(iframe) iframe.remove();
                 document.getElementById('sega-display-container').style.display = "none";
@@ -358,7 +332,6 @@
 
         document.getElementById('back-to-catalog').addEventListener('click', exitToCatalog);
 
-        // Стабильные сохранения Денди без сбоев сессии
         document.getElementById('header-save').addEventListener('click', function() {
             if (currentSystem === "nes" && currentRomName) {
                 try {
@@ -384,10 +357,13 @@
             }
         });
 
+        // 🔥 КЛАССИЧЕСКИЕ НАДЕЖНЫЕ ОБРАБОТЧИКИ НАЖАТИЙ ДЛЯ ДЕНДИ (РАБОТАЮТ ВСЕ КНОПКИ)
         function bindKey(id, k) {
             var el = document.getElementById(id); if(!el) return;
-            el.addEventListener('touchstart', (e) => { e.preventDefault(); nes.buttonDown(1, k); });
-            el.addEventListener('touchend', (e) => { e.preventDefault(); nes.buttonUp(1, k); });
+            el.addEventListener('touchstart', function(e) { e.preventDefault(); nes.buttonDown(1, k); });
+            el.addEventListener('touchend', function(e) { e.preventDefault(); nes.buttonUp(1, k); });
+            el.addEventListener('mousedown', function(e) { nes.buttonDown(1, k); });
+            el.addEventListener('mouseup', function(e) { nes.buttonUp(1, k); });
         }
         bindKey('up', jsnes.Controller.BUTTON_UP); bindKey('down', jsnes.Controller.BUTTON_DOWN);
         bindKey('left', jsnes.Controller.BUTTON_LEFT); bindKey('right', jsnes.Controller.BUTTON_RIGHT);
@@ -395,8 +371,8 @@
         bindKey('btn-start', jsnes.Controller.BUTTON_START); bindKey('btn-select', jsnes.Controller.BUTTON_SELECT);
 
         function switchTab(tabId, btn) {
-            document.querySelectorAll('.app-section').forEach(s => s.style.display = 'none');
-            document.querySelectorAll('.tab-item').forEach(t => t.classList.remove('active'));
+            var sections = document.querySelectorAll('.app-section'); for(var i=0; i<sections.length; i++) { sections[i].style.display = 'none'; }
+            var tabs = document.querySelectorAll('.tab-item'); for(var i=0; i<tabs.length; i++) { tabs[i].classList.remove('active'); }
             document.getElementById('section-' + tabId).style.display = 'block'; btn.classList.add('active');
         }
     </script>
