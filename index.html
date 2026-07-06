@@ -18,7 +18,6 @@
         body {
             display: flex; flex-direction: column; align-items: center; justify-content: flex-start;
         }
-        /* üî• –ù–ê–®–ê –ù–ï–£–Ø–ó–í–ò–ú–ê–Ø –®–ê–ü–ö–ê –¢–ï–ü–ï–†–¨ –í–°–ï–ì–î–ê –ü–û–í–ï–†–• –°–ï–ì–ò –ò –°–ù–ï–° */
         .header-panel {
             display: flex; width: 100%; max-width: 400px; justify-content: space-between; align-items: center;
             padding: 8px 15px; box-sizing: border-box; background: #000; border-bottom: 2px solid #333; 
@@ -58,7 +57,7 @@
         .game-click-zone { display: flex; align-items: center; flex-grow: 1; cursor: pointer; justify-content: space-between; overflow: hidden; }
         .game-click-zone:active { color: #ffff00; }
         .game-title-text { display: flex; align-items: center; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-        .game-title-text::before { content: "‚ñ∂ "; opacity: 0; margin-right: 8px; color: #ffff00; }
+        .game-title-text::before { content: "? "; opacity: 0; margin-right: 8px; color: #ffff00; }
         .game-click-zone:active .game-title-text::before { opacity: 1; }
         
         .item-system-badge { font-size: 7px; padding: 3px 6px; background: #333; border-radius: 2px; color: #fff; margin-left: 10px; font-family: sans-serif; font-weight: bold; flex-shrink: 0; }
@@ -90,10 +89,6 @@
         .page-btn:disabled { background: #111; border-color: #333; color: #444; cursor: not-allowed; }
         .page-info-text { font-size: 7px; color: #888; text-align: center; }
 
-<<<<<<< HEAD
-=======
-        /* –≠–ö–†–ê–ù –í–´–ë–û–†–ê –°–õ–û–¢–û–í */
->>>>>>> 63e2e7d5ce43657d248ad1d4204568c34c482e99
         #section-saves-manager { padding: 0 25px; box-sizing: border-box; width: 100%; }
         .btn-launch-new {
             width: 100%; background: #00aaee; border: 3px solid #0055aa; color: #fff;
@@ -130,10 +125,6 @@
         }
         .order-submit-btn:active { transform: translateY(4px); box-shadow: none; }
 
-<<<<<<< HEAD
-=======
-        /* –ò–ì–†–û–í–û–ô –≠–ö–†–ê–ù */
->>>>>>> 63e2e7d5ce43657d248ad1d4204568c34c482e99
         #game-screen { display: none; width: 100%; max-width: 400px; flex-grow: 1; background: #000; position: relative; z-index: 20; height: 100vh; padding-top: 44px; box-sizing: border-box; }
         #game-container { 
             width: 100%; flex-grow: 1; max-height: calc(100vh - 250px); background: #000; 
@@ -141,10 +132,6 @@
         }
         #nes-canvas { width: 100%; max-height: 100%; object-fit: contain; display: block; image-rendering: pixelated; }
 
-<<<<<<< HEAD
-=======
-        /* üî• –°–ï–ì–ê –¢–ï–ü–ï–†–¨ –ü–û–î–ß–ò–ù–Ø–ï–¢–°–Ø –ù–ê–®–ï–ô –®–ê–ü–ö–ï */
->>>>>>> 63e2e7d5ce43657d248ad1d4204568c34c482e99
         #sega-display-container { display: none; width: 100%; max-width: 400px; height: calc(100vh - 44px); position: absolute; top: 44px; left: 0; right: 0; bottom: 0; z-index: 1000; background: #000; }
         #sega-display-container iframe { width: 100%; height: 100%; border: none; display: block; }
 
@@ -164,14 +151,10 @@
 <body>
 
     <div class="header-panel">
-        <button id="back-to-catalog" class="head-btn">‚Ü© –ú–ï–ù–Æ</button>
-<<<<<<< HEAD
-=======
-        <!-- üî• –ù–ê–®–ê –û–ë–õ–ê–ß–ù–ê–Ø –ö–ù–û–ü–ö–ê SAVE –í–°–ï–ì–î–ê –í–ò–î–ò–ú–ê –í –®–ê–ü–ö–ï -->
->>>>>>> 63e2e7d5ce43657d248ad1d4204568c34c482e99
-        <button id="header-save" class="head-btn ingame-btn">üíæ –°–ï–ô–í –í –û–ë–õ–ê–ö–û</button>
+        <button id="back-to-catalog" class="head-btn">? ßÆß¶ßØß¿</button>
+        <button id="header-save" class="head-btn ingame-btn">?? ß≥ß¶ß´ß£ ß£ ß∞ß¢ß≠ß°ß¨ß∞</button>
         <div id="main-title" style="font-size: 8px; letter-spacing: 1px;">9999 IN 1</div>
-        <button id="sound-toggle" class="head-btn muted">üîá –ó–í–£–ö</button>
+        <button id="sound-toggle" class="head-btn muted">?? ß©ß£ßµß¨</button>
     </div>
     
     <div id="catalog-container">
@@ -179,69 +162,59 @@
             <source src="background-video.mp4" type="video/mp4">
         </video>
 
-        <!-- –í–ö–õ–ê–î–ö–ê –ò–ì–†–´ -->
         <div id="section-games" class="app-section">
             <div class="menu-title">9999 IN 1</div>
             <div style="padding: 0 20px 10px 20px; width: 100%; box-sizing: border-box;">
-                <input type="text" id="search-games-input" class="form-input" style="width: 100%; box-sizing: border-box;" placeholder="–ü–û–ò–°–ö –ò–ì–†–´..." oninput="filterGames()">
+                <input type="text" id="search-games-input" class="form-input" style="width: 100%; box-sizing: border-box;" placeholder="ß±ß∞ß™ß≥ß¨ ß™ß§ß≤ßΩ..." oninput="filterGames()">
             </div>
-            <button id="fav-filter-btn" class="fav-filter-toggle" onclick="toggleFavFilter()">[ –ü–û–ö–ê–ó–ê–¢–¨ ‚≠ê –ò–ó–ë–†–ê–ù–ù–û–ï ]</button>
+            <button id="fav-filter-btn" class="fav-filter-toggle" onclick="toggleFavFilter()">[ ß±ß∞ß¨ß°ß©ß°ß¥ßæ ? ß™ß©ß¢ß≤ß°ßØßØß∞ß¶ ]</button>
             <div class="game-list" id="retro-game-list"></div>
             <div class="pagination-container" id="pagination-controls"></div>
         </div>
 
-<<<<<<< HEAD
-        <!-- –ú–ï–ù–ï–î–ñ–ï–† –°–õ–û–¢–û–í –°–û–•–†–ê–ù–ï–ù–ò–ô -->
-=======
-        <!-- –ú–ï–ù–ï–î–ñ–ï–† 5 –°–õ–û–¢–û–í –°–û–•–†–ê–ù–ï–ù–ò–ô -->
->>>>>>> 63e2e7d5ce43657d248ad1d4204568c34c482e99
+        <!-- ßÆß¶ßØß¶ß•ß®ß¶ß≤ ß≥ß≠ß∞ß¥ß∞ß£ ß≥ß∞ß∑ß≤ß°ßØß¶ßØß™ß´ -->
         <div id="section-saves" class="app-section">
-            <div class="menu-title" id="saves-manager-title">–ó–ê–ì–†–£–ó–ö–ê...</div>
+            <div class="menu-title" id="saves-manager-title">ß©ß°ß§ß≤ßµß©ß¨ß°...</div>
             <div id="section-saves-manager">
-                <button class="btn-launch-new" onclick="launchGamePureNew()">‚ñ∂ –ò–ì–†–ê–¢–¨ –° –ù–ê–ß–ê–õ–ê</button>
-                <div class="saves-block-title">–í–´–ë–ï–†–ò –°–õ–û–¢ –û–ë–õ–ê–ö–ê (1 –ò–ó 5):</div>
+                <button class="btn-launch-new" onclick="launchGamePureNew()">? ß™ß§ß≤ß°ß¥ßæ ß≥ ßØß°ßπß°ß≠ß°</button>
+                <div class="saves-block-title">ß£ßΩß¢ß¶ß≤ß™ ß≥ß≠ß∞ß¥ ß∞ß¢ß≠ß°ß¨ß° (1 ß™ß© 5):</div>
                 <div id="cloud-saves-list-container"></div>
             </div>
         </div>
 
-<<<<<<< HEAD
-=======
-        <!-- –í–ö–õ–ê–î–ö–ê –°–ï–ö–†–ï–¢–´ -->
->>>>>>> 63e2e7d5ce43657d248ad1d4204568c34c482e99
         <div id="section-secrets" class="app-section">
-            <div class="menu-title">–°–ï–ö–†–ï–¢–´</div>
+            <div class="menu-title">ß≥ß¶ß¨ß≤ß¶ß¥ßΩ</div>
             <div style="padding: 0 20px 15px 20px;">
-                <input type="text" id="search-secrets-input" class="form-input" style="width: 100%; box-sizing: border-box;" placeholder="–ü–û–ò–°–ö –ò–ì–†–´ –ò–õ–ò –ß–ò–¢–ê..." oninput="filterSecrets()">
+                <input type="text" id="search-secrets-input" class="form-input" style="width: 100%; box-sizing: border-box;" placeholder="ß±ß∞ß™ß≥ß¨ ß™ß§ß≤ßΩ ß™ß≠ß™ ßπß™ß¥ß°..." oninput="filterSecrets()">
             </div>
             <div id="secrets-container"></div>
         </div>
 
-        <!-- –í–ö–õ–ê–î–ö–ê –ó–ê–ö–ê–ó -->
         <div id="section-order" class="app-section">
-            <div class="menu-title">–ó–ê–ö–ê–ó –ò–ì–†</div>
+            <div class="menu-title">ß©ß°ß¨ß°ß© ß™ß§ß≤</div>
             <div class="order-container">
-                <div class="order-text">–ó–ê–ö–ê–ó –ù–û–í–û–ô –ò–ì–†–´ –ü–õ–ê–¢–ù–´–ô (100 –†–£–ë–õ–ï–ô). –ù–ê–ü–ò–®–ò–¢–ï –ù–ê–ó–í–ê–ù–ò–ï, –ò –ú–´ –î–û–ë–ê–í–ò–ú –ï–Å –ù–ê –ü–û–õ–ö–£ –ë–û–¢–ê!</div>
+                <div class="order-text">ß©ß°ß¨ß°ß© ßØß∞ß£ß∞ß´ ß™ß§ß≤ßΩ ß±ß≠ß°ß¥ßØßΩß´ (100 ß≤ßµß¢ß≠ß¶ß´). ßØß°ß±ß™ß∫ß™ß¥ß¶ ßØß°ß©ß£ß°ßØß™ß¶, ß™ ßÆßΩ ß•ß∞ß¢ß°ß£ß™ßÆ ß¶ßß ßØß° ß±ß∞ß≠ß¨ßµ ß¢ß∞ß¥ß°!</div>
                 <div class="form-group">
-                    <label class="form-label">–ù–ê–ó–í–ê–ù–ò–ï –ò–ì–†–´:</label>
-                    <input type="text" id="order-game-title" class="form-input" placeholder="–ù–ê–ü–†–ò–ú–ï–†: TEENAGE MUTANT TURTLES">
+                    <label class="form-label">ßØß°ß©ß£ß°ßØß™ß¶ ß™ß§ß≤ßΩ:</label>
+                    <input type="text" id="order-game-title" class="form-input" placeholder="ßØß°ß±ß≤ß™ßÆß¶ß≤: TEENAGE MUTANT TURTLES">
                 </div>
                 <div class="form-group">
-                    <label class="form-label">–ü–õ–ê–¢–§–û–†–ú–ê (–ö–û–ù–°–û–õ–¨):</label>
+                    <label class="form-label">ß±ß≠ß°ß¥ß∂ß∞ß≤ßÆß° (ß¨ß∞ßØß≥ß∞ß≠ßæ):</label>
                     <input type="text" id="order-game-system" class="form-input" placeholder="DENDY / SEGA / GBA">
                 </div>
-                <button id="order-btn-submit" class="order-submit-btn" onclick="sendOrderRequest()">–û–¢–ü–†–ê–í–ò–¢–¨ –ó–ê–Ø–í–ö–£</button>
+                <button id="order-btn-submit" class="order-submit-btn" onclick="sendOrderRequest()">ß∞ß¥ß±ß≤ß°ß£ß™ß¥ßæ ß©ß°ß¡ß£ß¨ßµ</button>
             </div>
         </div>
 
         <div class="tab-bar" id="app-tab-bar">
             <button class="tab-item active" onclick="switchTab('games', this)">
-                <span class="tab-icon">üéÆ</span><span>–ò–ì–†–´</span>
+                <span class="tab-icon">??</span><span>ß™ß§ß≤ßΩ</span>
             </button>
             <button class="tab-item" onclick="switchTab('secrets', this)">
-                <span class="tab-icon">üîë</span><span>–°–ï–ö–†–ï–¢–´</span>
+                <span class="tab-icon">??</span><span>ß≥ß¶ß¨ß≤ß¶ß¥ßΩ</span>
             </button>
             <button class="tab-item" onclick="switchTab('order', this)">
-                <span class="tab-icon">üì•</span><span>–ó–ê–ö–ê–ó</span>
+                <span class="tab-icon">??</span><span>ß©ß°ß¨ß°ß©</span>
             </button>
         </div>
     </div>
@@ -254,9 +227,9 @@
         <div id="gamepad">
             <div class="main-controls">
                 <div class="dpad">
-                    <div></div><div class="btn" id="up">‚ñ≤</div><div></div>
-                    <div class="btn" id="left">‚óÄ</div><div></div><div class="btn" id="right">‚ñ∂</div>
-                    <div></div><div class="btn" id="down">‚ñº</div><div></div>
+                    <div></div><div class="btn" id="up">°¯</div><div></div>
+                    <div class="btn" id="left">?</div><div></div><div class="btn" id="right">?</div>
+                    <div></div><div class="btn" id="down">®ã</div><div></div>
                 </div>
                 <div id="nes-buttons">
                     <div class="round-btn" id="btn-b">B</div>
@@ -283,10 +256,6 @@
         var itemsPerPage = 5; 
         var showOnlyFavorites = false; 
 
-<<<<<<< HEAD
-=======
-        // üî• –ü–ï–†–ï–ú–ï–ù–ù–´–ï –•–†–ê–ù–ï–ù–ò–Ø 5 –°–õ–û–¢–û–í
->>>>>>> 63e2e7d5ce43657d248ad1d4204568c34c482e99
         var currentSelectedGameObj = null; 
         var selectedSlotNumber = 1; 
         var cloudSavesMap = {}; 
@@ -336,9 +305,9 @@
             showOnlyFavorites = !showOnlyFavorites;
             var btn = document.getElementById('fav-filter-btn');
             if (showOnlyFavorites) {
-                btn.classList.add('active'); btn.textContent = "[ ‚≠ê –†–ï–ñ–ò–ú: –¢–û–õ–¨–ö–û –ò–ó–ë–†–ê–ù–ù–û–ï ]";
+                btn.classList.add('active'); btn.textContent = "[ ? ß≤ß¶ß®ß™ßÆ: ß¥ß∞ß≠ßæß¨ß∞ ß™ß©ß¢ß≤ß°ßØßØß∞ß¶ ]";
             } else {
-                btn.classList.remove('active'); btn.textContent = "[ –ü–û–ö–ê–ó–ê–¢–¨ ‚≠ê –ò–ó–ë–†–ê–ù–ù–û–ï ]";
+                btn.classList.remove('active'); btn.textContent = "[ ß±ß∞ß¨ß°ß©ß°ß¥ßæ ? ß™ß©ß¢ß≤ß°ßØßØß∞ß¶ ]";
             }
             filterGames();
         }
@@ -348,7 +317,7 @@
             if (!listContainer) return;
             listContainer.innerHTML = "";
             if (filteredGames.length === 0) {
-                listContainer.innerHTML = '<div style="text-align:center; font-size:8px; color:#555; padding:30px 0;">–°–ü–ò–°–û–ö –ü–£–°–¢</div>';
+                listContainer.innerHTML = '<div style="text-align:center; font-size:8px; color:#555; padding:30px 0;">ß≥ß±ß™ß≥ß∞ß¨ ß±ßµß≥ß¥</div>';
                 renderPaginationButtons(); return;
             }
             var startIndex = (page - 1) * itemsPerPage;
@@ -371,7 +340,7 @@
                         <div class="game-title-text">${num}. ${game.title}</div>
                         <span class="item-system-badge ${badgeClass}">${sysLabel}</span>
                     </div>
-                    <div class="fav-star-btn ${favClass}" onclick="toggleFavorite('${game.file}', event)">‚≠ê</div>
+                    <div class="fav-star-btn ${favClass}" onclick="toggleFavorite('${game.file}', event)">?</div>
                 `;
                 listContainer.appendChild(item);
             });
@@ -386,14 +355,14 @@
             if (totalPages <= 1) return;
 
             var prevBtn = document.createElement('button');
-            prevBtn.className = 'page-btn'; prevBtn.disabled = (currentPage === 1); prevBtn.textContent = "‚óÄ –ù–ê–ó–ê–î";
+            prevBtn.className = 'page-btn'; prevBtn.disabled = (currentPage === 1); prevBtn.textContent = "? ßØß°ß©ß°ß•";
             prevBtn.addEventListener('click', function() { changeGamesPage(currentPage - 1); });
 
             var infoSpan = document.createElement('span');
             infoSpan.className = 'page-info-text'; infoSpan.innerHTML = `PAGE<br>${currentPage}/${totalPages}`;
 
             var nextBtn = document.createElement('button');
-            nextBtn.className = 'page-btn'; nextBtn.disabled = (currentPage === totalPages); nextBtn.textContent = "–í–ü–ï–†–ï–î ‚ñ∂";
+            nextBtn.className = 'page-btn'; nextBtn.disabled = (currentPage === totalPages); nextBtn.textContent = "ß£ß±ß¶ß≤ß¶ß• ?";
             nextBtn.addEventListener('click', function() { changeGamesPage(currentPage + 1); });
 
             controlsContainer.appendChild(prevBtn); controlsContainer.appendChild(infoSpan); controlsContainer.appendChild(nextBtn);
@@ -407,10 +376,6 @@
             }
         }
 
-<<<<<<< HEAD
-=======
-        // üî• –ü–û–õ–£–ß–ï–ù–ò–ï 5 –û–¢–î–ï–õ–¨–ù–´–• –°–õ–û–¢–û–í –ò–ó –¢–ê–ë–õ–ò–¶–´ –° –£–ß–ï–¢–û–ú –ü–û–ü–†–ê–í–ö–ò –ö–û–î–ê
->>>>>>> 63e2e7d5ce43657d248ad1d4204568c34c482e99
         function openSavesManagerScreen(gameObj) {
             currentSelectedGameObj = gameObj;
             cloudSavesMap = {}; 
@@ -421,7 +386,7 @@
             document.getElementById('saves-manager-title').textContent = gameObj.title.toUpperCase();
 
             var listContainer = document.getElementById('cloud-saves-list-container');
-            listContainer.innerHTML = '<div style="text-align:center; font-size:7px; color:#888; padding:20px 0;">–û–ü–†–û–° –û–ë–õ–ê–ß–ù–´–• –°–õ–û–¢–û–í...</div>';
+            listContainer.innerHTML = '<div style="text-align:center; font-size:7px; color:#888; padding:20px 0;">ß∞ß±ß≤ß∞ß≥ ß∞ß¢ß≠ß°ßπßØßΩß∑ ß≥ß≠ß∞ß¥ß∞ß£...</div>';
 
             var initData = window.Telegram.WebApp.initDataUnsafe;
             var userId = initData.user ? initData.user.id : "test_user_888";
@@ -443,10 +408,6 @@
                 });
             }
 
-<<<<<<< HEAD
-=======
-            // –†–µ–Ω–¥–µ—Ä–∏–º —Ä–æ–≤–Ω–æ 5 —Å–ª–æ—Ç–æ–≤ (–∫–∞–∫ –Ω–∞ –º–∞–∫–µ—Ç–µ –∫–æ–Ω–∫—É—Ä–µ–Ω—Ç–∞)
->>>>>>> 63e2e7d5ce43657d248ad1d4204568c34c482e99
             for (var slot = 1; slot <= 5; slot++) {
                 var card = document.createElement('div');
                 card.className = 'cloud-save-card';
@@ -455,18 +416,18 @@
                     var saveItem = activeSlotsData[slot];
                     card.innerHTML = `
                         <div>
-                            <div class="cloud-save-info" style="color:#00ff00;">–°–õ–û–¢ 0${slot} (–°–û–•–†–ê–ù–ï–ù)</div>
-                            <div class="cloud-save-date">–ó–∞–ø–∏—Å—å: ${saveItem.date_time}</div>
+                            <div class="cloud-save-info" style="color:#00ff00;">ß≥ß≠ß∞ß¥ 0${slot} (ß≥ß∞ß∑ß≤ß°ßØß¶ßØ)</div>
+                            <div class="cloud-save-date">ß©ß—ß·ß⁄ß„ßÓ: ${saveItem.date_time}</div>
                         </div>
-                        <button class="head-btn" style="font-size:7px; background:#0064ff;" onclick="launchGameWithCloudSlot(${slot})">–ó–ê–ì–†–£–ó–ò–¢–¨</button>
+                        <button class="head-btn" style="font-size:7px; background:#0064ff;" onclick="launchGameWithCloudSlot(${slot})">ß©ß°ß§ß≤ßµß©ß™ß¥ßæ</button>
                     `;
                 } else {
                     card.innerHTML = `
                         <div>
-                            <div class="cloud-save-info" style="color:#666;">–°–õ–û–¢ 0${slot}</div>
-                            <div class="cloud-save-date">–ü–£–°–¢–ê–Ø –Ø–ß–ï–ô–ö–ê –¢–ê–ë–õ–ò–¶–´</div>
+                            <div class="cloud-save-info" style="color:#666;">ß≥ß≠ß∞ß¥ 0${slot}</div>
+                            <div class="cloud-save-date">ß±ßµß≥ß¥ß°ß¡ ß¡ßπß¶ß´ß¨ß° ß¥ß°ß¢ß≠ß™ß∏ßΩ</div>
                         </div>
-                        <button class="head-btn" style="font-size:7px; background:#222; color:#777;" onclick="launchGameWithCloudSlot(${slot})">–ò–ì–†–ê–¢–¨</button>
+                        <button class="head-btn" style="font-size:7px; background:#222; color:#777;" onclick="launchGameWithCloudSlot(${slot})">ß™ß§ß≤ß°ß¥ßæ</button>
                     `;
                 }
                 listContainer.appendChild(card);
@@ -479,11 +440,7 @@
         }
 
         function launchGameWithCloudSlot(slotNum) {
-<<<<<<< HEAD
             selectedSlotNumber = parseInt(slotNum); 
-=======
-            selectedSlotNumber = slotNum; // –ñ—ë—Å—Ç–∫–æ –ø—Ä–∏–≤—è–∑—ã–≤–∞–µ–º –Ω–æ–º–µ—Ä —Å–ª–æ—Ç–∞!
->>>>>>> 63e2e7d5ce43657d248ad1d4204568c34c482e99
             startGame(currentSelectedGameObj.file, currentSelectedGameObj.title, currentSelectedGameObj.system);
         }
 
@@ -499,7 +456,7 @@
             var secretsContainer = document.getElementById('secrets-container'); if (!secretsContainer) return;
             secretsContainer.innerHTML = "";
             if (secretsArray.length === 0) {
-                secretsContainer.innerHTML = '<div style="text-align:center; font-size:8px; color:#555; padding-top:20px;">–ù–ò–ß–ï–ì–û –ù–ï –ù–ê–ô–î–ï–ù–û</div>'; return;
+                secretsContainer.innerHTML = '<div style="text-align:center; font-size:8px; color:#555; padding-top:20px;">ßØß™ßπß¶ß§ß∞ ßØß¶ ßØß°ß´ß•ß¶ßØß∞</div>'; return;
             }
             secretsArray.forEach(function(item) {
                 var card = document.createElement('div'); card.className = 'secret-card';
@@ -524,13 +481,13 @@
         function sendOrderRequest() {
             var titleInput = document.getElementById('order-game-title').value.trim();
             var systemInput = document.getElementById('order-game-system').value.trim();
-            if (!titleInput) { alert("–í–í–ï–î–ò–¢–ï –ù–ê–ó–í–ê–ù–ò–ï –ò–ì–†–´!"); return; }
+            if (!titleInput) { alert("ß£ß£ß¶ß•ß™ß¥ß¶ ßØß°ß©ß£ß°ßØß™ß¶ ß™ß§ß≤ßΩ!"); return; }
             var initData = window.Telegram.WebApp.initDataUnsafe;
             var userId = initData.user ? initData.user.id : "";
             var username = initData.user ? initData.user.username : "no_name";
-            if (!userId) { alert("–û–®–ò–ë–ö–ê TELEGRAM ID!"); return; }
+            if (!userId) { alert("ß∞ß∫ß™ß¢ß¨ß° TELEGRAM ID!"); return; }
             var btnSubmit = document.getElementById('order-btn-submit');
-            btnSubmit.disabled = true; btnSubmit.textContent = "–û–¢–ü–†–ê–í–ö–ê...";
+            btnSubmit.disabled = true; btnSubmit.textContent = "ß∞ß¥ß±ß≤ß°ß£ß¨ß°...";
 
             var requestUrl = gasRetroUrl + "?action=submit_order&title=" + encodeURIComponent(titleInput) + 
                              "&system=" + encodeURIComponent(systemInput || "Dendy") + "&user_id=" + userId + "&username=" + encodeURIComponent(username);
@@ -538,24 +495,24 @@
             fetch(requestUrl, { mode: 'no-cors' })
                 .then(function() {
                     window.Telegram.WebApp.showPopup({
-                        title: "–ó–ê–Ø–í–ö–ê –°–§–û–†–ú–ò–†–û–í–ê–ù–ê!",
-                        message: "–°—á–µ—Ç –æ—Ç–ø—Ä–∞–≤–ª–µ–Ω –≤ –¥–∏–∞–ª–æ–≥ —Å –±–æ—Ç–æ–º.",
+                        title: "ß©ß°ß¡ß£ß¨ß° ß≥ß∂ß∞ß≤ßÆß™ß≤ß∞ß£ß°ßØß°!",
+                        message: "ß≥ßÈß÷ß‰ ß‡ß‰ß·ß‚ß—ß”ß›ß÷ßﬂ ß” ß’ß⁄ß—ß›ß‡ß‘ ß„ ß“ß‡ß‰ß‡ßﬁ.",
                         buttons: [
-                            { id: "bot", type: "default", text: "ü§ñ –ö –ë–û–¢–£" },
-                            { id: "close", type: "cancel", text: "–ó–ê–ö–†–´–¢–¨" }
+                            { id: "bot", type: "default", text: "?? ß¨ ß¢ß∞ß¥ßµ" },
+                            { id: "close", type: "cancel", text: "ß©ß°ß¨ß≤ßΩß¥ßæ" }
                         ]
                     }, function(buttonId) {
                         if (buttonId === "bot") { window.Telegram.WebApp.openTelegramLink("https://t.me/gameMAN888_bot"); }
                         window.Telegram.WebApp.close(); 
                     });
                 })
-                .catch(function() { alert("–û–®–ò–ë–ö–ê –°–í–Ø–ó–ò –° –°–ï–†–í–ï–†–û–ú!"); btnSubmit.disabled = false; btnSubmit.textContent = "–û–¢–ü–†–ê–í–ò–¢–¨ –ó–ê–Ø–í–ö–£"; });
+                .catch(function() { alert("ß∞ß∫ß™ß¢ß¨ß° ß≥ß£ß¡ß©ß™ ß≥ ß≥ß¶ß≤ß£ß¶ß≤ß∞ßÆ!"); btnSubmit.disabled = false; btnSubmit.textContent = "ß∞ß¥ß±ß≤ß°ß£ß™ß¥ßæ ß©ß°ß¡ß£ß¨ßµ"; });
         }
 
         function switchTab(tabId, buttonElement) {
             showOnlyFavorites = false;
             document.getElementById('fav-filter-btn').classList.remove('active');
-            document.getElementById('fav-filter-btn').textContent = "[ –ü–û–ö–ê–ó–ê–¢–¨ ‚≠ê –ò–ó–ë–†–ê–ù–ù–û–ï ]";
+            document.getElementById('fav-filter-btn').textContent = "[ ß±ß∞ß¨ß°ß©ß°ß¥ßæ ? ß™ß©ß¢ß≤ß°ßØßØß∞ß¶ ]";
             document.getElementById('search-games-input').value = "";
             filteredGames = [].concat(baseGames);
             renderGamesPage(1);
@@ -609,7 +566,7 @@
         if (soundBtn) {
             soundBtn.addEventListener('click', function() {
                 initAudio(); if (audioCtx && audioCtx.state === 'suspended') audioCtx.resume();
-                audioEnabled = !audioEnabled; this.textContent = audioEnabled ? "üîä –ó–í–£–ö: –í–ö–õ" : "üîá –ó–í–£–ö";
+                audioEnabled = !audioEnabled; this.textContent = audioEnabled ? "?? ß©ß£ßµß¨: ß£ß¨ß≠" : "?? ß©ß£ßµß¨";
                 if(videoEl) videoEl.muted = !audioEnabled;
                 if(audioEnabled) this.classList.remove('muted'); else this.classList.add('muted');
                 if (currentSystem === "sega" || currentSystem === "snes") {
@@ -627,12 +584,11 @@
             var absoluteRomUrl = window.location.origin + window.location.pathname.replace("index.html", "") + romUrl;
             var initialVolume = audioEnabled ? 1 : 0;
 
-            // üî• –ü–µ—Ä–µ–¥–∞–µ–º –±—É—Ñ–µ—Ä base64 –≤—ã–±—Ä–∞–Ω–Ω–æ–≥–æ —Å–ª–æ—Ç–∞ –≤ –ª–æ–∫–∞–ª—å–Ω–æ–µ –∏–º—è —Ñ—Ä–µ–π–º–∞
-<<<<<<< HEAD
+            // ?? ß±ß÷ß‚ß÷ß’ß—ß÷ßﬁ ß“ßÂßÊß÷ß‚ base64 ß”ßÌß“ß‚ß—ßﬂßﬂß‡ß‘ß‡ ß„ß›ß‡ß‰ß— ß” ß›ß‡ß‹ß—ß›ßÓßﬂß‡ß÷ ß⁄ßﬁßÒ ßÊß‚ß÷ß€ßﬁß—
             var currentSaveBuffer = cloudSavesMap[selectedSlotNumber] || "";
             var injectionPayloadScript = "";
             
-            // –ï—Å–ª–∏ –≤ —Ç–∞–±–ª–∏—Ü–µ –µ—Å—Ç—å —Ä–µ–∞–ª—å–Ω—ã–π –∑–∞—à–∏—Ñ—Ä–æ–≤–∞–Ω–Ω—ã–π —Å–µ–π–≤ –¥–ª—è 16-–±–∏—Ç ‚Äî –∏–Ω–∂–µ–∫—Ç–∏–º –µ–≥–æ –≤ —è–¥—Ä–æ!
+            // ß¶ß„ß›ß⁄ ß” ß‰ß—ß“ß›ß⁄ßËß÷ ß÷ß„ß‰ßÓ ß‚ß÷ß—ß›ßÓßﬂßÌß€ ßŸß—ßÍß⁄ßÊß‚ß‡ß”ß—ßﬂßﬂßÌß€ ß„ß÷ß€ß” ß’ß›ßÒ 16-ß“ß⁄ß‰ °™ ß⁄ßﬂßÿß÷ß‹ß‰ß⁄ßﬁ ß÷ß‘ß‡ ß” ßÒß’ß‚ß‡!
             if (currentSaveBuffer && currentSaveBuffer.length > 50) {
                 injectionPayloadScript = `
                     window.addEventListener('load', function() {
@@ -641,15 +597,15 @@
                               clearInterval(checkExist);
                               setTimeout(function(){
                                  try {
-                                    // –î–µ—Å–µ—Ä–∏–∞–ª–∏–∑—É–µ–º base64 —Å—Ç—Ä–æ–∫—É –æ–±—Ä–∞—Ç–Ω–æ –≤ –±–∏–Ω–∞—Ä–Ω—ã–π —Ñ–∞–π–ª —Å—Ç–µ–π—Ç–∞ —è–¥—Ä–∞ WASM
+                                    // ß•ß÷ß„ß÷ß‚ß⁄ß—ß›ß⁄ßŸßÂß÷ßﬁ base64 ß„ß‰ß‚ß‡ß‹ßÂ ß‡ß“ß‚ß—ß‰ßﬂß‡ ß” ß“ß⁄ßﬂß—ß‚ßﬂßÌß€ ßÊß—ß€ß› ß„ß‰ß÷ß€ß‰ß— ßÒß’ß‚ß— WASM
                                     var binaryStr = atob("${currentSaveBuffer}");
                                     var len = binaryStr.length;
                                     var bytes = new Uint8Array(len);
                                     for (var i = 0; i < len; i++) { bytes[i] = binaryStr.charCodeAt(i); }
                                     
-                                    // –ü—Ä—è–º–æ–π –ø—É—à —Ñ–∞–π–ª–∞ –≤ –≤–∏—Ä—Ç—É–∞–ª—å–Ω—É—é –ø–∞–º—è—Ç—å RetroArch EmulatorJS
+                                    // ß±ß‚ßÒßﬁß‡ß€ ß·ßÂßÍ ßÊß—ß€ß›ß— ß” ß”ß⁄ß‚ß‰ßÂß—ß›ßÓßﬂßÂß ß·ß—ßﬁßÒß‰ßÓ RetroArch EmulatorJS
                                     window.EJS_instance.loadState(bytes);
-                                 } catch(err) { console.error("–û—à–∏–±–∫–∞ –∞–≤—Ç–æ–∏–Ω–∂–µ–∫—Ç–∞:", err); }
+                                 } catch(err) { console.error("ß∞ßÍß⁄ß“ß‹ß— ß—ß”ß‰ß‡ß⁄ßﬂßÿß÷ß‹ß‰ß—:", err); }
                               }, 2000);
                            }
                         }, 200);
@@ -657,8 +613,6 @@
                 `;
             }
 
-=======
->>>>>>> 63e2e7d5ce43657d248ad1d4204568c34c482e99
             var iframeHtml = `
             <!DOCTYPE html>
             <html>
@@ -674,10 +628,6 @@
                 <script>
                     EJS_player = "#game";
                     EJS_core = "${coreType}";
-<<<<<<< HEAD
-=======
-                    // üî• –ü—Ä–∏–≤—è–∑—ã–≤–∞–µ–º —è—á–µ–π–∫—É –∫ —É–Ω–∏–∫–∞–ª—å–Ω–æ–º—É ID –∏–≥—Ä—ã –¥–ª—è —Ä–∞–∑–¥–µ–ª–µ–Ω–∏—è —Å–ª–æ—Ç–æ–≤!
->>>>>>> 63e2e7d5ce43657d248ad1d4204568c34c482e99
                     EJS_gameName = "${gameTitle.replace(/ /g, '_')}_slot_${selectedSlotNumber}"; 
                     EJS_color = "#0064ff";
                     EJS_pathtodata = "https://cdn.emulatorjs.org/stable/data/";
@@ -685,40 +635,32 @@
                     EJS_startOnLoaded = true;
                     EJS_Volume = ${initialVolume};
                     EJS_mouse = true; 
-<<<<<<< HEAD
                     EJS_Header = true; 
                 <\/script>
                 <script src="https://cdn.emulatorjs.org/stable/data/loader.js"><\/script>
                 <script>
                     ${injectionPayloadScript}
 
-                    // –°–ª—É—à–∞–µ–º –∫–æ–º–∞–Ω–¥—É ¬´request_16bit_save¬ª –æ—Ç –Ω–∞—à–µ–π –≤–µ—Ä—Ö–Ω–µ–π –ø–∞–Ω–µ–ª–∏
+                    // ß≥ß›ßÂßÍß—ß÷ßﬁ ß‹ß‡ßﬁß—ßﬂß’ßÂ ?request_16bit_save? ß‡ß‰ ßﬂß—ßÍß÷ß€ ß”ß÷ß‚ßÁßﬂß÷ß€ ß·ß—ßﬂß÷ß›ß⁄
                     window.addEventListener('message', function(e) {
                         if (e.data && e.data.action === 'request_16bit_save') {
                             if (typeof window.EJS_instance !== 'undefined' && window.EJS_instance.exportState) {
-                                // –í—ã—Ç–∞—Å–∫–∏–≤–∞–µ–º –±–∏–Ω–∞—Ä–Ω—ã–π —Å–Ω–∏–º–æ–∫ –Ω–∞–ø—Ä—è–º—É—é –∏–∑ WASM-–∫–æ–Ω—Ç–µ–∫—Å—Ç–∞
+                                // ß£ßÌß‰ß—ß„ß‹ß⁄ß”ß—ß÷ßﬁ ß“ß⁄ßﬂß—ß‚ßﬂßÌß€ ß„ßﬂß⁄ßﬁß‡ß‹ ßﬂß—ß·ß‚ßÒßﬁßÂß ß⁄ßŸ WASM-ß‹ß‡ßﬂß‰ß÷ß‹ß„ß‰ß—
                                 window.EJS_instance.exportState(function(bytes) {
                                     if (!bytes) return;
-                                    // –ü–µ—Ä–µ–≤–æ–¥–∏–º –±–∏–Ω–∞—Ä–Ω–∏–∫ –≤ base64 —Å—Ç—Ä–æ–∫—É, –ø—Ä–∏–≥–æ–¥–Ω—É—é –¥–ª—è Google Sheets
+                                    // ß±ß÷ß‚ß÷ß”ß‡ß’ß⁄ßﬁ ß“ß⁄ßﬂß—ß‚ßﬂß⁄ß‹ ß” base64 ß„ß‰ß‚ß‡ß‹ßÂ, ß·ß‚ß⁄ß‘ß‡ß’ßﬂßÂß ß’ß›ßÒ Google Sheets
                                     var binary = '';
                                     var len = bytes.byteLength;
                                     for (var i = 0; i < len; i++) { binary += String.fromCharCode(bytes[i]); }
                                     var base64Str = btoa(binary);
                                     
-                                    // –í—ã—Å—Ç—Ä–µ–ª–∏–≤–∞–µ–º —Å–µ–π–≤ —Ä–æ–¥–∏—Ç–µ–ª—é
+                                    // ß£ßÌß„ß‰ß‚ß÷ß›ß⁄ß”ß—ß÷ßﬁ ß„ß÷ß€ß” ß‚ß‡ß’ß⁄ß‰ß÷ß›ß
                                     window.parent.postMessage({ action: 'respond_16bit_save', data: base64Str }, '*');
                                 });
                             }
                         }
                     });
                 <\/script>
-=======
-                    
-                    // –í–∫–ª—é—á–∞–µ–º —Ä–æ–¥–Ω—É—é —à–∞–ø–∫—É: —á–µ—Ä–µ–∑ –Ω–µ–µ –º–æ–±–∏–ª—å–Ω—ã–µ —é–∑–µ—Ä—ã –±—É–¥—É—Ç –Ω–∞–∂–∏–º–∞—Ç—å –°–æ—Ö—Ä–∞–Ω–∏—Ç—å/–ó–∞–≥—Ä—É–∑–∏—Ç—å —Å–æ—Å—Ç–æ—è–Ω–∏–µ —Å–æ—Å—Ç–æ—è–Ω–∏–µ
-                    EJS_Header = true; 
-                <\/script>
-                <script src="https://cdn.emulatorjs.org/stable/data/loader.js"><\/script>
->>>>>>> 63e2e7d5ce43657d248ad1d4204568c34c482e99
             </body>
             </html>
             `;
@@ -738,11 +680,6 @@
             document.getElementById('app-tab-bar').style.display = 'none';
             document.getElementById('game-screen').style.display = 'flex';
             document.getElementById('back-to-catalog').style.display = 'block';
-<<<<<<< HEAD
-=======
-            
-            // –í–∫–ª—é—á–∞–µ–º –Ω–∞—à—É –≤–µ—Ä—Ö–Ω—é—é –∫–Ω–æ–ø–∫—É —Å–æ—Ö—Ä–∞–Ω–µ–Ω–∏—è
->>>>>>> 63e2e7d5ce43657d248ad1d4204568c34c482e99
             document.getElementById('header-save').style.display = 'block';
             document.getElementById('main-title').textContent = gameTitle;
 
@@ -765,24 +702,16 @@
                         if(gameLoopInterval) clearInterval(gameLoopInterval);
                         gameLoopInterval = setInterval(nes.frame, 1000 / 60);
                         
-<<<<<<< HEAD
-=======
-                        // –í–æ—Å—Å—Ç–∞–Ω–æ–≤–ª–µ–Ω–∏–µ –î–µ–Ω–¥–∏ –∏–∑ –≤—ã–±—Ä–∞–Ω–Ω–æ–≥–æ —Å–ª–æ—Ç–∞ —Ç–∞–±–ª–∏—Ü—ã
->>>>>>> 63e2e7d5ce43657d248ad1d4204568c34c482e99
                         var slotBuffer = cloudSavesMap[selectedSlotNumber];
                         if (slotBuffer) {
                             setTimeout(function(){
                                 try {
                                     nes.fromJSON(JSON.parse(slotBuffer));
-<<<<<<< HEAD
-                                    window.Telegram.WebApp.showAlert("–ü–†–û–ì–†–ï–°–° –°–õ–û–¢–ê 0" + selectedSlotNumber + " –í–û–°–°–¢–ê–ù–û–í–õ–ï–ù!");
-=======
-                                    window.Telegram.WebApp.showAlert("–û–ë–õ–ê–ß–ù–´–ô –°–ï–ô–í –°–õ–û–¢–ê 0" + selectedSlotNumber + " –í–û–°–°–¢–ê–ù–û–í–õ–ï–ù!");
->>>>>>> 63e2e7d5ce43657d248ad1d4204568c34c482e99
+                                    window.Telegram.WebApp.showAlert("ß±ß≤ß∞ß§ß≤ß¶ß≥ß≥ ß≥ß≠ß∞ß¥ß° 0" + selectedSlotNumber + " ß£ß∞ß≥ß≥ß¥ß°ßØß∞ß£ß≠ß¶ßØ!");
                                 }catch(err){}
                             }, 800);
                         }
-                    } else { alert("–û–®–ò–ë–ö–ê –†–û–ú–ê!"); exitToCatalog(); }
+                    } else { alert("ß∞ß∫ß™ß¢ß¨ß° ß≤ß∞ßÆß°!"); exitToCatalog(); }
                 };
                 req.send();
             }
@@ -814,47 +743,8 @@
         }
         
         document.getElementById('back-to-catalog').addEventListener('click', exitToCatalog);
-        
-        // üî• –ò–°–ü–†–ê–í–õ–ï–ù–ù–ê–Ø –§–£–ù–ö–¶–ò–Ø –û–¢–ü–†–ê–í–ö–ò: –°–õ–û–¢ –ü–ï–†–ï–î–ê–ï–¢–°–Ø –ë–ï–ó –°–ë–û–ï–í –°–¢–†–û–ö–û–ô
-        function sendPackToGoogleSheetsCloud(userId, file, dateTime, payload, slot) {
-            var postData = "action=set_save" +
-                           "&user_id=" + encodeURIComponent(userId) +
-                           "&game_file=" + encodeURIComponent(file) +
-                           "&date_time=" + encodeURIComponent(dateTime) +
-                           "&slot_num=" + encodeURIComponent(String(slot).trim()) +
-                           "&save_data=" + encodeURIComponent(payload);
 
-            fetch(gasRetroUrl, {
-                method: "POST",
-                mode: "no-cors",
-                headers: { "Content-Type": "application/x-www-form-urlencoded" },
-                body: postData
-            })
-            .then(function() {
-                window.Telegram.WebApp.showAlert("–ü–†–û–ì–†–ï–°–° –°–õ–û–¢–ê 0" + slot + " –£–°–ü–ï–®–ù–û –ó–ê–ü–ò–°–ê–ù!");
-            })
-            .catch(function(err) {
-                alert("–û–®–ò–ë–ö–ê –°–í–Ø–ó–ò –° –û–ë–õ–ê–ö–û–ú!");
-            });
-        }
-
-        // –ù–∞—à–∞ —É–Ω–∏–≤–µ—Ä—Å–∞–ª—å–Ω–∞—è –∫–Ω–æ–ø–∫–∞ ¬´–°–û–•–†–ê–ù–ò–¢–¨¬ª –≤ —à–∞–ø–∫–µ
-        document.getElementById('header-save').addEventListener('click', function() {
-            if (!currentRomName) return;
-            var initData = window.Telegram.WebApp.initDataUnsafe;
-            var userId = initData.user ? initData.user.id : "test_user_888";
-            var nowStr = new Date().toLocaleString('ru-RU');
-
-            if (currentSystem === "nes") {
-                var rawSavePayload = JSON.stringify(nes.toJSON());
-                sendPackToGoogleSheetsCloud(userId, currentRomName, nowStr, rawSavePayload, selectedSlotNumber);
-            } else if (currentSystem === "sega" || currentSystem === "snes") {
-                // –î–ª—è 16-–±–∏—Ç –º—ã –æ—Ç–ø—Ä–∞–≤–ª—è–µ–º –≤ –æ–±–ª–∞–∫–æ –ø–æ–¥—Ç–≤–µ—Ä–∂–¥–µ–Ω–∏–µ —Å–µ—Å—Å–∏–∏ –ø–æ–¥ –Ω–æ–º–µ—Ä–æ–º —Å–ª–æ—Ç–∞
-                sendPackToGoogleSheetsCloud(userId, currentRomName, nowStr, "16bit_indexeddb_synchronized", selectedSlotNumber);
-            }
-        });
-
-        // üî• –ú–û–©–ù–ê–Ø JSON-–ü–û–¢–û–ö–û–í–ê–Ø –ü–ï–†–ï–î–ê–ß–ê –°–ï–ô–í–û–í (–ò–°–ü–†–ê–í–õ–ï–ù–´ –í–°–ï –°–î–í–ò–ì–ò –°–õ–û–¢–û–í)
+        // ?? ßÆß∞ßªßØß°ß¡ JSON-ß±ß∞ß¥ß∞ß¨ß∞ß£ß°ß¡ ß±ß¶ß≤ß¶ß•ß°ßπß° ß≥ß¶ß´ß£ß∞ß£ (ß™ß≥ß±ß≤ß°ß£ß≠ß¶ßØßΩ ß£ß≥ß¶ ß≥ß•ß£ß™ß§ß™ ß≥ß≠ß∞ß¥ß∞ß£)
         function sendPackToGoogleSheetsCloud(userId, file, dateTime, payload, slot) {
             var rawJsonPayload = {
                 action: "set_save",
@@ -869,17 +759,17 @@
                 method: "POST",
                 mode: "no-cors",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify(rawJsonPayload) // –û—Ç–ø—Ä–∞–≤–ª—è–µ–º —á–∏—Å—Ç—ã–π —Å—Ç—Ä—É–∫—Ç—É—Ä–∏—Ä–æ–≤–∞–Ω–Ω—ã–π JSON!
+                body: JSON.stringify(rawJsonPayload) // ß∞ß‰ß·ß‚ß—ß”ß›ßÒß÷ßﬁ ßÈß⁄ß„ß‰ßÌß€ ß„ß‰ß‚ßÂß‹ß‰ßÂß‚ß⁄ß‚ß‡ß”ß—ßﬂßﬂßÌß€ JSON!
             })
             .then(function() {
-                window.Telegram.WebApp.showAlert("–ü–†–û–ì–†–ï–°–° –°–õ–û–¢–ê 0" + slot + " –ó–ê–ü–ò–°–ê–ù –í –û–ë–õ–ê–ö–û!");
+                window.Telegram.WebApp.showAlert("ß±ß≤ß∞ß§ß≤ß¶ß≥ß≥ ß≥ß≠ß∞ß¥ß° 0" + slot + " ß©ß°ß±ß™ß≥ß°ßØ ß£ ß∞ß¢ß≠ß°ß¨ß∞!");
             })
             .catch(function(err) {
-                alert("–û–®–ò–ë–ö–ê –°–ò–ù–•–†–û–ù–ò–ó–ê–¶–ò–ò!");
+                alert("ß∞ß∫ß™ß¢ß¨ß° ß≥ß™ßØß∑ß≤ß∞ßØß™ß©ß°ß∏ß™ß™!");
             });
         }
 
-        // –ö–Ω–æ–ø–∫–∞ —Å–æ—Ö—Ä–∞–Ω–µ–Ω–∏—è –≤ —Ö–µ–¥–µ—Ä–µ –ø–∞–Ω–µ–ª–∏
+        // ß¨ßﬂß‡ß·ß‹ß— ß„ß‡ßÁß‚ß—ßﬂß÷ßﬂß⁄ßÒ ß” ßÁß÷ß’ß÷ß‚ß÷ ß·ß—ßﬂß÷ß›ß⁄
         document.getElementById('header-save').addEventListener('click', function() {
             if (!currentRomName) return;
             var initData = window.Telegram.WebApp.initDataUnsafe;
@@ -890,7 +780,7 @@
                 var rawSavePayload = JSON.stringify(nes.toJSON());
                 sendPackToGoogleSheetsCloud(userId, currentRomName, nowStr, rawSavePayload, selectedSlotNumber);
             } else if (currentSystem === "sega" || currentSystem === "snes") {
-                // üî• –î–ª—è –°–µ–≥–∏/SNES —Å—Ç—É—á–∏–º—Å—è –≤ iframe –∑–∞ —Ä–µ–∞–ª—å–Ω—ã–º —Å–ª–µ–ø–∫–æ–º –±–∞–π—Ç!
+                // ?? ß•ß›ßÒ ß≥ß÷ß‘ß⁄/SNES ß„ß‰ßÂßÈß⁄ßﬁß„ßÒ ß” iframe ßŸß— ß‚ß÷ß—ß›ßÓßﬂßÌßﬁ ß„ß›ß÷ß·ß‹ß‡ßﬁ ß“ß—ß€ß‰!
                 var iframe = document.getElementById('active-emulator-iframe');
                 if (iframe && iframe.contentWindow) {
                     iframe.contentWindow.postMessage({ action: 'request_16bit_save' }, '*');
@@ -898,16 +788,16 @@
             }
         });
 
-        // –°–ª—É—à–∞–µ–º –æ—Ç–≤–µ—Ç —Å base64-—Å–Ω–∏–º–∫–æ–º –æ—Ç 16-–±–∏—Ç–Ω—ã—Ö —è–¥–µ—Ä
+        // ß≥ß›ßÂßÍß—ß÷ßﬁ ß‡ß‰ß”ß÷ß‰ ß„ base64-ß„ßﬂß⁄ßﬁß‹ß‡ßﬁ ß‡ß‰ 16-ß“ß⁄ß‰ßﬂßÌßÁ ßÒß’ß÷ß‚
         window.addEventListener('message', function(e) {
-            if (e.data && e.data.action === 'respond_save_string') return; // –ò–≥–Ω–æ—Ä–∏—Ä—É–µ–º —Å—Ç–∞—Ä—ã–µ —Ö—É–∫–∏
+            if (e.data && e.data.action === 'respond_save_string') return; // ß™ß‘ßﬂß‡ß‚ß⁄ß‚ßÂß÷ßﬁ ß„ß‰ß—ß‚ßÌß÷ ßÁßÂß‹ß⁄
             
             if (e.data && e.data.action === 'respond_16bit_save') {
                 var initData = window.Telegram.WebApp.initDataUnsafe;
                 var userId = initData.user ? initData.user.id : "test_user_888";
                 var nowStr = new Date().toLocaleString('ru-RU');
                 
-                // –ü—É—à–∏–º —Ä–µ–∞–ª—å–Ω—É—é base64-—Å—Ç—Ä–æ–∫—É —Å–æ—Ö—Ä–∞–Ω–µ–Ω–∏—è 16-–±–∏—Ç –≤ –≤—ã–±—Ä–∞–Ω–Ω—ã–π —Å–ª–æ—Ç!
+                // ß±ßÂßÍß⁄ßﬁ ß‚ß÷ß—ß›ßÓßﬂßÂß base64-ß„ß‰ß‚ß‡ß‹ßÂ ß„ß‡ßÁß‚ß—ßﬂß÷ßﬂß⁄ßÒ 16-ß“ß⁄ß‰ ß” ß”ßÌß“ß‚ß—ßﬂßﬂßÌß€ ß„ß›ß‡ß‰!
                 sendPackToGoogleSheetsCloud(userId, currentRomName, nowStr, e.data.data, selectedSlotNumber);
             }
         });
