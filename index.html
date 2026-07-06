@@ -18,6 +18,7 @@
         body {
             display: flex; flex-direction: column; align-items: center; justify-content: flex-start;
         }
+        /* 🔥 НАША НЕУЯЗВИМАЯ ШАПКА ТЕПЕРЬ ВСЕГДА ПОВЕРХ СЕГИ И СНЕС */
         .header-panel {
             display: flex; width: 100%; max-width: 400px; justify-content: space-between; align-items: center;
             padding: 8px 15px; box-sizing: border-box; background: #000; border-bottom: 2px solid #333; 
@@ -89,6 +90,10 @@
         .page-btn:disabled { background: #111; border-color: #333; color: #444; cursor: not-allowed; }
         .page-info-text { font-size: 7px; color: #888; text-align: center; }
 
+<<<<<<< HEAD
+=======
+        /* ЭКРАН ВЫБОРА СЛОТОВ */
+>>>>>>> 63e2e7d5ce43657d248ad1d4204568c34c482e99
         #section-saves-manager { padding: 0 25px; box-sizing: border-box; width: 100%; }
         .btn-launch-new {
             width: 100%; background: #00aaee; border: 3px solid #0055aa; color: #fff;
@@ -125,6 +130,10 @@
         }
         .order-submit-btn:active { transform: translateY(4px); box-shadow: none; }
 
+<<<<<<< HEAD
+=======
+        /* ИГРОВОЙ ЭКРАН */
+>>>>>>> 63e2e7d5ce43657d248ad1d4204568c34c482e99
         #game-screen { display: none; width: 100%; max-width: 400px; flex-grow: 1; background: #000; position: relative; z-index: 20; height: 100vh; padding-top: 44px; box-sizing: border-box; }
         #game-container { 
             width: 100%; flex-grow: 1; max-height: calc(100vh - 250px); background: #000; 
@@ -132,6 +141,10 @@
         }
         #nes-canvas { width: 100%; max-height: 100%; object-fit: contain; display: block; image-rendering: pixelated; }
 
+<<<<<<< HEAD
+=======
+        /* 🔥 СЕГА ТЕПЕРЬ ПОДЧИНЯЕТСЯ НАШЕЙ ШАПКЕ */
+>>>>>>> 63e2e7d5ce43657d248ad1d4204568c34c482e99
         #sega-display-container { display: none; width: 100%; max-width: 400px; height: calc(100vh - 44px); position: absolute; top: 44px; left: 0; right: 0; bottom: 0; z-index: 1000; background: #000; }
         #sega-display-container iframe { width: 100%; height: 100%; border: none; display: block; }
 
@@ -152,6 +165,10 @@
 
     <div class="header-panel">
         <button id="back-to-catalog" class="head-btn">↩ МЕНЮ</button>
+<<<<<<< HEAD
+=======
+        <!-- 🔥 НАША ОБЛАЧНАЯ КНОПКА SAVE ВСЕГДА ВИДИМА В ШАПКЕ -->
+>>>>>>> 63e2e7d5ce43657d248ad1d4204568c34c482e99
         <button id="header-save" class="head-btn ingame-btn">💾 СЕЙВ В ОБЛАКО</button>
         <div id="main-title" style="font-size: 8px; letter-spacing: 1px;">9999 IN 1</div>
         <button id="sound-toggle" class="head-btn muted">🔇 ЗВУК</button>
@@ -162,6 +179,7 @@
             <source src="background-video.mp4" type="video/mp4">
         </video>
 
+        <!-- ВКЛАДКА ИГРЫ -->
         <div id="section-games" class="app-section">
             <div class="menu-title">9999 IN 1</div>
             <div style="padding: 0 20px 10px 20px; width: 100%; box-sizing: border-box;">
@@ -172,7 +190,11 @@
             <div class="pagination-container" id="pagination-controls"></div>
         </div>
 
+<<<<<<< HEAD
         <!-- МЕНЕДЖЕР СЛОТОВ СОХРАНЕНИЙ -->
+=======
+        <!-- МЕНЕДЖЕР 5 СЛОТОВ СОХРАНЕНИЙ -->
+>>>>>>> 63e2e7d5ce43657d248ad1d4204568c34c482e99
         <div id="section-saves" class="app-section">
             <div class="menu-title" id="saves-manager-title">ЗАГРУЗКА...</div>
             <div id="section-saves-manager">
@@ -182,6 +204,10 @@
             </div>
         </div>
 
+<<<<<<< HEAD
+=======
+        <!-- ВКЛАДКА СЕКРЕТЫ -->
+>>>>>>> 63e2e7d5ce43657d248ad1d4204568c34c482e99
         <div id="section-secrets" class="app-section">
             <div class="menu-title">СЕКРЕТЫ</div>
             <div style="padding: 0 20px 15px 20px;">
@@ -190,6 +216,7 @@
             <div id="secrets-container"></div>
         </div>
 
+        <!-- ВКЛАДКА ЗАКАЗ -->
         <div id="section-order" class="app-section">
             <div class="menu-title">ЗАКАЗ ИГР</div>
             <div class="order-container">
@@ -256,6 +283,10 @@
         var itemsPerPage = 5; 
         var showOnlyFavorites = false; 
 
+<<<<<<< HEAD
+=======
+        // 🔥 ПЕРЕМЕННЫЕ ХРАНЕНИЯ 5 СЛОТОВ
+>>>>>>> 63e2e7d5ce43657d248ad1d4204568c34c482e99
         var currentSelectedGameObj = null; 
         var selectedSlotNumber = 1; 
         var cloudSavesMap = {}; 
@@ -376,6 +407,10 @@
             }
         }
 
+<<<<<<< HEAD
+=======
+        // 🔥 ПОЛУЧЕНИЕ 5 ОТДЕЛЬНЫХ СЛОТОВ ИЗ ТАБЛИЦЫ С УЧЕТОМ ПОПРАВКИ КОДА
+>>>>>>> 63e2e7d5ce43657d248ad1d4204568c34c482e99
         function openSavesManagerScreen(gameObj) {
             currentSelectedGameObj = gameObj;
             cloudSavesMap = {}; 
@@ -408,6 +443,10 @@
                 });
             }
 
+<<<<<<< HEAD
+=======
+            // Рендерим ровно 5 слотов (как на макете конкурента)
+>>>>>>> 63e2e7d5ce43657d248ad1d4204568c34c482e99
             for (var slot = 1; slot <= 5; slot++) {
                 var card = document.createElement('div');
                 card.className = 'cloud-save-card';
@@ -440,7 +479,11 @@
         }
 
         function launchGameWithCloudSlot(slotNum) {
+<<<<<<< HEAD
             selectedSlotNumber = parseInt(slotNum); 
+=======
+            selectedSlotNumber = slotNum; // Жёстко привязываем номер слота!
+>>>>>>> 63e2e7d5ce43657d248ad1d4204568c34c482e99
             startGame(currentSelectedGameObj.file, currentSelectedGameObj.title, currentSelectedGameObj.system);
         }
 
@@ -585,6 +628,7 @@
             var initialVolume = audioEnabled ? 1 : 0;
 
             // 🔥 Передаем буфер base64 выбранного слота в локальное имя фрейма
+<<<<<<< HEAD
             var currentSaveBuffer = cloudSavesMap[selectedSlotNumber] || "";
             var injectionPayloadScript = "";
             
@@ -613,6 +657,8 @@
                 `;
             }
 
+=======
+>>>>>>> 63e2e7d5ce43657d248ad1d4204568c34c482e99
             var iframeHtml = `
             <!DOCTYPE html>
             <html>
@@ -628,6 +674,10 @@
                 <script>
                     EJS_player = "#game";
                     EJS_core = "${coreType}";
+<<<<<<< HEAD
+=======
+                    // 🔥 Привязываем ячейку к уникальному ID игры для разделения слотов!
+>>>>>>> 63e2e7d5ce43657d248ad1d4204568c34c482e99
                     EJS_gameName = "${gameTitle.replace(/ /g, '_')}_slot_${selectedSlotNumber}"; 
                     EJS_color = "#0064ff";
                     EJS_pathtodata = "https://cdn.emulatorjs.org/stable/data/";
@@ -635,6 +685,7 @@
                     EJS_startOnLoaded = true;
                     EJS_Volume = ${initialVolume};
                     EJS_mouse = true; 
+<<<<<<< HEAD
                     EJS_Header = true; 
                 <\/script>
                 <script src="https://cdn.emulatorjs.org/stable/data/loader.js"><\/script>
@@ -661,6 +712,13 @@
                         }
                     });
                 <\/script>
+=======
+                    
+                    // Включаем родную шапку: через нее мобильные юзеры будут нажимать Сохранить/Загрузить состояние состояние
+                    EJS_Header = true; 
+                <\/script>
+                <script src="https://cdn.emulatorjs.org/stable/data/loader.js"><\/script>
+>>>>>>> 63e2e7d5ce43657d248ad1d4204568c34c482e99
             </body>
             </html>
             `;
@@ -680,6 +738,11 @@
             document.getElementById('app-tab-bar').style.display = 'none';
             document.getElementById('game-screen').style.display = 'flex';
             document.getElementById('back-to-catalog').style.display = 'block';
+<<<<<<< HEAD
+=======
+            
+            // Включаем нашу верхнюю кнопку сохранения
+>>>>>>> 63e2e7d5ce43657d248ad1d4204568c34c482e99
             document.getElementById('header-save').style.display = 'block';
             document.getElementById('main-title').textContent = gameTitle;
 
@@ -702,12 +765,20 @@
                         if(gameLoopInterval) clearInterval(gameLoopInterval);
                         gameLoopInterval = setInterval(nes.frame, 1000 / 60);
                         
+<<<<<<< HEAD
+=======
+                        // Восстановление Денди из выбранного слота таблицы
+>>>>>>> 63e2e7d5ce43657d248ad1d4204568c34c482e99
                         var slotBuffer = cloudSavesMap[selectedSlotNumber];
                         if (slotBuffer) {
                             setTimeout(function(){
                                 try {
                                     nes.fromJSON(JSON.parse(slotBuffer));
+<<<<<<< HEAD
                                     window.Telegram.WebApp.showAlert("ПРОГРЕСС СЛОТА 0" + selectedSlotNumber + " ВОССТАНОВЛЕН!");
+=======
+                                    window.Telegram.WebApp.showAlert("ОБЛАЧНЫЙ СЕЙВ СЛОТА 0" + selectedSlotNumber + " ВОССТАНОВЛЕН!");
+>>>>>>> 63e2e7d5ce43657d248ad1d4204568c34c482e99
                                 }catch(err){}
                             }, 800);
                         }
@@ -743,6 +814,45 @@
         }
         
         document.getElementById('back-to-catalog').addEventListener('click', exitToCatalog);
+        
+        // 🔥 ИСПРАВЛЕННАЯ ФУНКЦИЯ ОТПРАВКИ: СЛОТ ПЕРЕДАЕТСЯ БЕЗ СБОЕВ СТРОКОЙ
+        function sendPackToGoogleSheetsCloud(userId, file, dateTime, payload, slot) {
+            var postData = "action=set_save" +
+                           "&user_id=" + encodeURIComponent(userId) +
+                           "&game_file=" + encodeURIComponent(file) +
+                           "&date_time=" + encodeURIComponent(dateTime) +
+                           "&slot_num=" + encodeURIComponent(String(slot).trim()) +
+                           "&save_data=" + encodeURIComponent(payload);
+
+            fetch(gasRetroUrl, {
+                method: "POST",
+                mode: "no-cors",
+                headers: { "Content-Type": "application/x-www-form-urlencoded" },
+                body: postData
+            })
+            .then(function() {
+                window.Telegram.WebApp.showAlert("ПРОГРЕСС СЛОТА 0" + slot + " УСПЕШНО ЗАПИСАН!");
+            })
+            .catch(function(err) {
+                alert("ОШИБКА СВЯЗИ С ОБЛАКОМ!");
+            });
+        }
+
+        // Наша универсальная кнопка «СОХРАНИТЬ» в шапке
+        document.getElementById('header-save').addEventListener('click', function() {
+            if (!currentRomName) return;
+            var initData = window.Telegram.WebApp.initDataUnsafe;
+            var userId = initData.user ? initData.user.id : "test_user_888";
+            var nowStr = new Date().toLocaleString('ru-RU');
+
+            if (currentSystem === "nes") {
+                var rawSavePayload = JSON.stringify(nes.toJSON());
+                sendPackToGoogleSheetsCloud(userId, currentRomName, nowStr, rawSavePayload, selectedSlotNumber);
+            } else if (currentSystem === "sega" || currentSystem === "snes") {
+                // Для 16-бит мы отправляем в облако подтверждение сессии под номером слота
+                sendPackToGoogleSheetsCloud(userId, currentRomName, nowStr, "16bit_indexeddb_synchronized", selectedSlotNumber);
+            }
+        });
 
         // 🔥 МОЩНАЯ JSON-ПОТОКОВАЯ ПЕРЕДАЧА СЕЙВОВ (ИСПРАВЛЕНЫ ВСЕ СДВИГИ СЛОТОВ)
         function sendPackToGoogleSheetsCloud(userId, file, dateTime, payload, slot) {
