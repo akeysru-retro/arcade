@@ -710,14 +710,14 @@
         }
         
         document.getElementById('back-to-catalog').addEventListener('click', exitToCatalog);
-
-        // 🔥 НАДЁЖНАЯ ПЕРЕДАЧА СЕЙВА ПО ТЕКУЩЕМУ СЛОТУ ЮЗЕРА ЧЕРЕЗ СТРИМ POST
+        
+        // 🔥 ИСПРАВЛЕННАЯ ФУНКЦИЯ ОТПРАВКИ: СЛОТ ПЕРЕДАЕТСЯ БЕЗ СБОЕВ СТРОКОЙ
         function sendPackToGoogleSheetsCloud(userId, file, dateTime, payload, slot) {
             var postData = "action=set_save" +
                            "&user_id=" + encodeURIComponent(userId) +
                            "&game_file=" + encodeURIComponent(file) +
                            "&date_time=" + encodeURIComponent(dateTime) +
-                           "&slot_num=" + parseInt(slot) +
+                           "&slot_num=" + encodeURIComponent(String(slot).trim()) +
                            "&save_data=" + encodeURIComponent(payload);
 
             fetch(gasRetroUrl, {
@@ -730,7 +730,7 @@
                 window.Telegram.WebApp.showAlert("ПРОГРЕСС СЛОТА 0" + slot + " УСПЕШНО ЗАПИСАН!");
             })
             .catch(function(err) {
-                alert("ОШИБКА СИНХРОНИЗАЦИИ!");
+                alert("ОШИБКА СВЯЗИ С ОБЛАКОМ!");
             });
         }
 
