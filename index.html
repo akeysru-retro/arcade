@@ -29,9 +29,6 @@
         }
         #sound-toggle.muted { color: #ffaa00; border-color: #663333; }
         #back-to-catalog { display: none; background: #224; border-color: #448; }
-        
-        .ingame-btn { display: none; font-size: 7px; padding: 6px 8px; }
-        #header-save { background: #1e3d1e; border-color: #387338; color: #8fdf8f; }
 
         /* ОБЩИЙ КОНТЕЙНЕР ДЛЯ ВСЕХ ВКЛАДОК С ВИДЕО-ФОНОМ */
         #catalog-container {
@@ -50,7 +47,6 @@
         .menu-title { font-size: 20px; color: #ffff00; text-shadow: 3px 3px #000; margin-bottom: 25px; text-align: center; letter-spacing: 2px; }
         .game-list { width: 100%; padding: 0 25px; box-sizing: border-box; }
         
-        /* КАРТОЧКА С ИГРОЙ */
         .retro-item { 
             font-size: 10px; color: #fff; text-shadow: 2px 2px #000; padding: 12px 0; 
             display: flex; align-items: center; text-transform: uppercase;
@@ -91,7 +87,7 @@
         .page-btn:disabled { background: #111; border-color: #333; color: #444; cursor: not-allowed; }
         .page-info-text { font-size: 7px; color: #888; text-align: center; }
 
-        /* 🔥 ЭКРАН ВЫБОРА СЛОТОВ СОХРАНЕНИЙ (КАК НА СКРИНШОТАХ) */
+        /* ЭКРАН ВЫБОРА СЛОТОВ СОХРАНЕНИЙ */
         #section-saves-manager { padding: 0 25px; box-sizing: border-box; width: 100%; }
         .btn-launch-new {
             width: 100%; background: #0064ff; border: 3px solid #0040aa; color: #fff;
@@ -142,17 +138,20 @@
         .tab-item.active { color: #ffff00; background: #1a1a1a; }
         .tab-icon { font-size: 14px; }
 
+        /* 🔥 ИЗМЕНЕНО: Игровой экран теперь делится 50/50, чтобы фреймы Сеги/SNES не перекрывали наши кнопки */
         #game-screen { display: none; width: 100%; max-width: 400px; flex-grow: 1; background: #000; position: relative; z-index: 20; height: 100vh; }
         #game-container { 
-            width: 100%; flex-grow: 1; max-height: calc(100vh - 250px); background: #000; 
+            width: 100%; height: 50vh; background: #000; 
             position: relative; display: flex; justify-content: center; align-items: center; overflow: hidden; padding-top: 15px; box-sizing: border-box;
         }
         #nes-canvas { width: 100%; max-height: 100%; object-fit: contain; display: block; image-rendering: pixelated; }
 
-        #sega-display-container { display: none; width: 100%; max-width: 400px; height: calc(100vh - 44px); position: absolute; top: 44px; left: 0; z-index: 999; background: #000; }
+        /* 🔥 ИЗМЕНЕНО: Контейнер 16-бит теперь занимает строго верхние 50% экрана мобильного */
+        #sega-display-container { display: none; width: 100%; max-width: 400px; height: 50vh; background: #000; }
         #sega-display-container iframe { width: 100%; height: 100%; border: none; display: block; }
 
-        #gamepad { position: absolute; bottom: 0; left: 0; right: 0; z-index: 30; display: flex; flex-direction: column; width: 100%; padding: 15px; box-sizing: border-box; justify-content: space-between; border-top: 4px solid #222; background: #111; }
+        /* 🔥 ГЕЙМПАД ТЕПЕРЬ АКТИВЕН ДЛЯ ВСЕХ СИСТЕМ И НАХОДИТСЯ СТРОГО СНИЗУ */
+        #gamepad { position: absolute; bottom: 0; left: 0; right: 0; z-index: 10005; display: flex; flex-direction: column; width: 100%; padding: 15px; box-sizing: border-box; justify-content: space-between; border-top: 4px solid #222; background: #111; height: 50vh; }
         .main-controls { display: flex; width: 100%; justify-content: space-between; align-items: center; }
         .dpad { display: grid; grid-template-columns: repeat(3, 1fr); grid-template-rows: repeat(3, 1fr); width: 130px; height: 130px; }
         .btn { background: #222; border: 3px solid #444; color: white; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 14px; }
@@ -163,14 +162,14 @@
         .system-buttons { display: flex; flex-direction: column; gap: 10px; width: 100%; margin-top: 15px; }
         .sys-row { display: flex; justify-content: center; gap: 20px; }
         .sys-btn { background: #333; border: 2px solid #555; color: #aaa; width: 80px; height: 22px; border-radius: 4px; font-size: 8px; display: flex; align-items: center; justify-content: center; }
+        .save-btn { background: #1e3d1e; border-color: #387338; color: #8fdf8f; }
+        .load-btn { background: #1e2e3d; border-color: #385973; color: #8fbadf; }
     </style>
 </head>
 <body>
 
     <div class="header-panel">
         <button id="back-to-catalog" class="head-btn">↩ МЕНЮ</button>
-        <!-- 🔥 НАША ОБЛАЧНАЯ КНОПКА SAVE В ХЕДЕРЕ -->
-        <button id="header-save" class="head-btn ingame-btn">💾 СОХРАНИТЬ В ОБЛАКО</button>
         <div id="main-title" style="font-size: 8px; letter-spacing: 1px;">9999 IN 1</div>
         <button id="sound-toggle" class="head-btn muted">🔇 ЗВУК</button>
     </div>
@@ -191,15 +190,13 @@
             <div class="pagination-container" id="pagination-controls"></div>
         </div>
 
-        <!-- 🔥 МЕНЕДЖЕР СЛОТОВ ОБЛАЧНЫХ СОХРАНЕНИЙ -->
+        <!-- МЕНЕДЖЕР СЛОТОВ ОБЛАЧНЫХ СОХРАНЕНИЙ -->
         <div id="section-saves" class="app-section">
             <div class="menu-title" id="saves-manager-title">ЗАГРУЗКА...</div>
             <div id="section-saves-manager">
                 <button class="btn-launch-new" onclick="launchGamePureNew()">▶ ИГРАТЬ С НАЧАЛА</button>
                 <div class="saves-block-title">ОБЛАЧНЫЕ СОХРАНЕНИЯ (GAS):</div>
-                <div id="cloud-saves-list-container">
-                    <!-- Сюда скрипт динамически выведет карточку сохранения -->
-                </div>
+                <div id="cloud-saves-list-container"></div>
             </div>
         </div>
 
@@ -263,6 +260,10 @@
                 <div class="sys-row">
                     <div class="sys-btn" id="btn-select">SELECT</div><div class="sys-btn" id="btn-start">START</div>
                 </div>
+                <!-- 🔥 НАШИ НЕУЯЗВИМЫЕ СИСТЕМНЫЕ КНОПКИ ЗАПИСИ ТЕПЕРЬ ВСЕГДА ТУТ СНИЗУ -->
+                <div class="sys-row">
+                    <div class="sys-btn save-btn" id="btn-save">SAVE</div><div class="sys-btn load-btn" id="btn-load">LOAD</div>
+                </div>
             </div>
         </div>
     </div>
@@ -281,6 +282,7 @@
 
         var currentSelectedGameObj = null; 
         var cloudSaveBufferString = null; 
+        var localNesMemoryState = null; // Оперативный бэкап
 
         var allSecrets = [];
 
@@ -408,7 +410,7 @@
             document.getElementById('saves-manager-title').textContent = gameObj.title.toUpperCase();
 
             var listContainer = document.getElementById('cloud-saves-list-container');
-            listContainer.innerHTML = '<div style="text-align:center; font-size:7px; color:#888; padding:20px 0;">ПРОГРЕВ ОБЛАКА...</div>';
+            listContainer.innerHTML = '<div style="text-align:center; font-size:7px; color:#888; padding:20px 0;">ПРОВЕРКА ОБЛАКА СЕЙВОВ...</div>';
 
             var initData = window.Telegram.WebApp.initDataUnsafe;
             var userId = initData.user ? initData.user.id : "test_user_888";
@@ -430,7 +432,7 @@
                 card.onclick = function() { launchGameWithCloudSave(); };
                 card.innerHTML = `
                     <div>
-                        <div class="cloud-save-info">СЛОТ СОХРАНЕНИЯ 01</div>
+                        <div class="cloud-save-info">ОБЛАЧНЫЙ СЛОТ ПРОДОЛЖЕНИЯ</div>
                         <div class="cloud-save-date">Запись: ${data.date_time}</div>
                     </div>
                     <div style="font-size:12px;">📂</div>
@@ -643,13 +645,14 @@
                         if (!e.data) return;
                         if (e.data.volume !== 'undefined') { if (typeof EJS_setVolume === 'function') { EJS_setVolume(e.data.volume); } }
                         
-                        // Слушаем команду на сборку внутренней IndexedDB строки от родительского хедера
                         if (e.data.action === 'request_save_string') {
                             if (typeof window.EJS_EmulatorSave === 'function') {
                                 window.EJS_EmulatorSave();
-                                setTimeout(function(){
-                                   window.parent.postMessage({ action: 'respond_save_string', data: '16bit_state_triggered' }, '*');
-                                }, 500);
+                            }
+                        }
+                        if (e.data.action === 'request_load_string') {
+                            if (typeof window.EJS_EmulatorLoad === 'function') {
+                                window.EJS_EmulatorLoad();
                             }
                         }
                     });
@@ -673,18 +676,17 @@
             document.getElementById('app-tab-bar').style.display = 'none';
             document.getElementById('game-screen').style.display = 'flex';
             document.getElementById('back-to-catalog').style.display = 'block';
-            
-            document.getElementById('header-save').style.display = 'block';
             document.getElementById('main-title').textContent = gameTitle;
+
+            // 🔥 Фиксируем отображение нашего геймпада
+            document.getElementById('gamepad').style.display = 'flex';
 
             if (currentSystem === "sega" || currentSystem === "snes") {
                 document.getElementById('game-container').style.display = 'none';
-                document.getElementById('gamepad').style.display = 'none'; 
                 document.getElementById('sega-display-container').style.display = 'block';
                 launchIsolatedEmulatorJS(romUrl, currentSystem, gameTitle);
             } else {
                 document.getElementById('game-container').style.display = 'flex';
-                document.getElementById('gamepad').style.display = 'flex'; 
                 document.getElementById('sega-display-container').style.display = 'none';
                 
                 var req = new XMLHttpRequest();
@@ -700,7 +702,7 @@
                             setTimeout(function(){
                                 try {
                                     nes.fromJSON(JSON.parse(cloudSaveBufferString));
-                                    window.Telegram.WebApp.showAlert("ОБЛАЧНЫЙ ПРОГРЕСС ВОССТАНОВЛЕН!");
+                                    window.Telegram.WebApp.showAlert("ПРОГРЕСС ИЗ ОБЛАКА ЗАГРУЖЕН!");
                                 }catch(err){}
                             }, 1000);
                         }
@@ -726,7 +728,6 @@
 
             document.getElementById('game-screen').style.display = 'none';
             document.getElementById('back-to-catalog').style.display = 'none';
-            document.getElementById('header-save').style.display = 'none';
             
             var sections = document.getElementsByClassName('app-section');
             for(var i=0; i<sections.length; i++) { sections[i].style.display = 'none'; }
@@ -740,7 +741,7 @@
         
         document.getElementById('back-to-catalog').addEventListener('click', exitToCatalog);
 
-        // 🔥 ПОТОКОВАЯ ОТПРАВКА БЕЗОПАСНЫХ POST-ПАКЕТОВ ДЛЯ ОБЛАКА (ИСПРАВЛЕННЫЙ БАГ)
+        // 🔥 КНОПКА ПОТОКОВОЙ КОРРЕКТНОЙ ЗАПИСИ ПРОГРЕССА (POST)
         function sendPackToGoogleSheetsCloud(userId, file, dateTime, payload) {
             var postData = "action=set_save" +
                            "&user_id=" + encodeURIComponent(userId) +
@@ -755,16 +756,15 @@
                 body: postData
             })
             .then(function() {
-                window.Telegram.WebApp.showAlert("ПРОГРЕСС УСПЕШНО ЗАПИСАН В ТВОЮ GOOGLE ТАБЛИЦУ!");
+                window.Telegram.WebApp.showAlert("ОБЛАЧНЫЙ СЕЙВ ЗАПИСАН В ТАБЛИЦУ!");
             })
             .catch(function(err) {
-                console.error("Ошибка записи:", err);
-                alert("ОШИБКА СВЯЗИ С ОБЛАКОМ!");
+                alert("ОШИБКА СИНХРОНИЗАЦИИ С ТАБЛИЦЕЙ!");
             });
         }
 
-        // Кнопка сохранения в хедере
-        document.getElementById('header-save').addEventListener('click', function() {
+        // 🔥 СВЯЗЫВАЕМ КНОПКИ НАШЕГО НЕЗАВИСИМОГО НИЖНЕГО ГЕЙМПАДА
+        document.getElementById('btn-save').addEventListener('click', function() {
             if (!currentRomName) return;
 
             var initData = window.Telegram.WebApp.initDataUnsafe;
@@ -773,31 +773,36 @@
 
             if (currentSystem === "nes") {
                 var rawSavePayload = JSON.stringify(nes.toJSON());
+                localStorage.setItem("local_save_" + currentRomName, rawSavePayload);
                 sendPackToGoogleSheetsCloud(userId, currentRomName, nowStr, rawSavePayload);
             } else if (currentSystem === "sega" || currentSystem === "snes") {
                 var iframe = document.getElementById('active-emulator-iframe');
                 if (iframe && iframe.contentWindow) {
                     iframe.contentWindow.postMessage({ action: 'request_save_string' }, '*');
-                    
-                    window.Telegram.WebApp.showPopup({
-                        title: "ОБЛАЧНАЯ ЗАПИСЬ 16-BIT",
-                        message: "Сохранить прогресс игры в ячейку Google Таблицы?",
-                        buttons: [
-                            { id: "yes", type: "default", text: "ДА, ЗАПИСАТЬ" },
-                            { id: "no", type: "cancel", text: "ОТМЕНА" }
-                        ]
-                    }, function(btnId) {
-                        if(btnId === "yes") {
-                            sendPackToGoogleSheetsCloud(userId, currentRomName, nowStr, "16bit_indexeddb_synchronized");
-                        }
-                    });
+                    sendPackToGoogleSheetsCloud(userId, currentRomName, nowStr, "16bit_indexeddb_synchronized");
                 }
             }
         });
 
-        window.addEventListener('message', function(e) {
-            if (e.data && e.data.action === 'respond_save_string') {
-               console.log("Синхронизация 16-бит ядра подтверждена.");
+        document.getElementById('btn-load').addEventListener('click', function() {
+            if (!currentRomName) return;
+
+            if (currentSystem === "nes") {
+                var localData = localStorage.getItem("local_save_" + currentRomName);
+                if (localData) {
+                    nes.fromJSON(JSON.parse(localData));
+                    window.Telegram.WebApp.showAlert("ЛОКАЛЬНЫЙ ПРОГРЕСС ЗАГРУЖЕН!");
+                } else if (cloudSaveBufferString) {
+                    nes.fromJSON(JSON.parse(cloudSaveBufferString));
+                    window.Telegram.WebApp.showAlert("ОБЛАЧНЫЙ СЕЙВ ЗАГРУЖЕН!");
+                } else {
+                    alert("НЕТ СОХРАНЕНИЙ!");
+                }
+            } else if (currentSystem === "sega" || currentSystem === "snes") {
+                var iframe = document.getElementById('active-emulator-iframe');
+                if (iframe && iframe.contentWindow) {
+                    iframe.contentWindow.postMessage({ action: 'request_load_string' }, '*');
+                }
             }
         });
 
