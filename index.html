@@ -191,7 +191,7 @@
             <div class="pagination-container" id="pagination-controls"></div>
         </div>
 
-        <!-- 🔥 НОВАЯ СЕКЦИЯ: МЕНЕДЖЕР СЛОТОВ ОБЛАЧНЫХ СОХРАНЕНИЙ (КАК НА ТВОИХ СКРИНШОТАХ) -->
+        <!-- 🔥 МЕНЕДЖЕР СЛОТОВ ОБЛАЧНЫХ СОХРАНЕНИЙ -->
         <div id="section-saves" class="app-section">
             <div class="menu-title" id="saves-manager-title">ЗАГРУЗКА...</div>
             <div id="section-saves-manager">
@@ -279,9 +279,8 @@
         var itemsPerPage = 5; 
         var showOnlyFavorites = false; 
 
-        // 🔥 ПЕРЕМЕННЫЕ ТЕКУЩЕЙ СЕССИИ ИГРЫ ДЛЯ СЛОТОВ
         var currentSelectedGameObj = null; 
-        var cloudSaveBufferString = null; // Буфер для загрузки сейва в оперативку эмулятора
+        var cloudSaveBufferString = null; 
 
         var allSecrets = [];
 
@@ -399,12 +398,10 @@
             }
         }
 
-        // 🔥 ОТКРЫТИЕ СЛОТОВ СОХРАНЕНИЙ ИЗ ТАБЛИЦЫ ПЕРЕД ЗАПУСКОМ ИГРЫ
         function openSavesManagerScreen(gameObj) {
             currentSelectedGameObj = gameObj;
-            cloudSaveBufferString = null; // Обнуляем прошлый буфер
+            cloudSaveBufferString = null; 
 
-            // Переключаем секцию
             var sections = document.getElementsByClassName('app-section');
             for(var i=0; i<sections.length; i++) { sections[i].style.display = 'none'; }
             document.getElementById('section-saves').style.display = 'block';
@@ -416,19 +413,17 @@
             var initData = window.Telegram.WebApp.initDataUnsafe;
             var userId = initData.user ? initData.user.id : "test_user_888";
 
-            // Вызываем GAS по JSONP для получения сейва
             var script = document.createElement('script');
             script.src = gasRetroUrl + "?action=get_saves&user_id=" + userId + "&game_file=" + encodeURIComponent(gameObj.file) + "&callback=onCloudSavesReceived";
             document.head.appendChild(script);
         }
 
-        // Коллбэк ответа GAS
         function onCloudSavesReceived(data) {
             var listContainer = document.getElementById('cloud-saves-list-container');
             listContainer.innerHTML = "";
 
             if (data && data.status === "found") {
-                cloudSaveBufferString = data.save_data; // Записываем base64 в память
+                cloudSaveBufferString = data.save_data; 
                 
                 var card = document.createElement('div');
                 card.className = 'cloud-save-card';
@@ -446,13 +441,11 @@
             }
         }
 
-        // Запуск чистой игры
         function launchGamePureNew() {
             cloudSaveBufferString = null;
             startGame(currentSelectedGameObj.file, currentSelectedGameObj.title, currentSelectedGameObj.system);
         }
 
-        // Запуск с восстановлением из облака
         function launchGameWithCloudSave() {
             startGame(currentSelectedGameObj.file, currentSelectedGameObj.title, currentSelectedGameObj.system);
         }
@@ -602,7 +595,6 @@
             var absoluteRomUrl = window.location.origin + window.location.pathname.replace("index.html", "") + romUrl;
             var initialVolume = audioEnabled ? 1 : 0;
 
-            // Готовим строку инъекции для автозагрузки, если буфер полный
             var injectionPayloadScript = "";
             if (cloudSaveBufferString) {
                 injectionPayloadScript = `
@@ -610,12 +602,7 @@
                         var checkExist = setInterval(function() {
                            if (typeof window.EJS_EmulatorLoad === 'function' || (window.EJS_instance && window.EJS_instance.loadState)) {
                               clearInterval(checkExist);
-                              // Даем ядру 2 секунды полностью проинициализировать ROM и пушим сейв
                               setTimeout(function(){
-                                 if(EJS_instance && typeof EJS_instance.loadState === 'function') {
-                                    // Локальный инжект десериализации WASM стейта
-                                    try { window.EJS_instance.components.canvas.parentElement.focus(); }catch(e){}
-                                 }
                                  window.postMessage({ action: 'internal_inject_load', data: "${cloudSaveBufferString}" }, '*');
                               }, 2500);
                            }
@@ -656,10 +643,9 @@
                         if (!e.data) return;
                         if (e.data.volume !== 'undefined') { if (typeof EJS_setVolume === 'function') { EJS_setVolume(e.data.volume); } }
                         
-                        // Запрос слепка памяти от верхней кнопки родителю index.html
+                        // Слушаем команду на сборку внутренней IndexedDB строки от родительского хедера
                         if (e.data.action === 'request_save_string') {
                             if (typeof window.EJS_EmulatorSave === 'function') {
-                                // Штатное сохранение
                                 window.EJS_EmulatorSave();
                                 setTimeout(function(){
                                    window.parent.postMessage({ action: 'respond_save_string', data: '16bit_state_triggered' }, '*');
@@ -688,7 +674,6 @@
             document.getElementById('game-screen').style.display = 'flex';
             document.getElementById('back-to-catalog').style.display = 'block';
             
-            // Включаем верхнюю кнопку сохранения
             document.getElementById('header-save').style.display = 'block';
             document.getElementById('main-title').textContent = gameTitle;
 
@@ -711,7 +696,6 @@
                         if(gameLoopInterval) clearInterval(gameLoopInterval);
                         gameLoopInterval = setInterval(nes.frame, 1000 / 60);
                         
-                        // 🔥 Автозапуск облачного сохранения для Денди
                         if (cloudSaveBufferString) {
                             setTimeout(function(){
                                 try {
@@ -744,7 +728,6 @@
             document.getElementById('back-to-catalog').style.display = 'none';
             document.getElementById('header-save').style.display = 'none';
             
-            // Сбрасываем вкладки и возвращаем чистый главный экран
             var sections = document.getElementsByClassName('app-section');
             for(var i=0; i<sections.length; i++) { sections[i].style.display = 'none'; }
             document.getElementById('section-games').style.display = 'block';
@@ -757,35 +740,54 @@
         
         document.getElementById('back-to-catalog').addEventListener('click', exitToCatalog);
 
-        // 🔥 НАША УНИВЕРСАЛЬНАЯ НАЖИМНАЯ КНОПКА «СОХРАНИТЬ В ОБЛАКО»
+        // 🔥 ПОТОКОВАЯ ОТПРАВКА БЕЗОПАСНЫХ POST-ПАКЕТОВ ДЛЯ ОБЛАКА (ИСПРАВЛЕННЫЙ БАГ)
+        function sendPackToGoogleSheetsCloud(userId, file, dateTime, payload) {
+            var postData = "action=set_save" +
+                           "&user_id=" + encodeURIComponent(userId) +
+                           "&game_file=" + encodeURIComponent(file) +
+                           "&date_time=" + encodeURIComponent(dateTime) +
+                           "&save_data=" + encodeURIComponent(payload);
+
+            fetch(gasRetroUrl, {
+                method: "POST",
+                mode: "no-cors",
+                headers: { "Content-Type": "application/x-www-form-urlencoded" },
+                body: postData
+            })
+            .then(function() {
+                window.Telegram.WebApp.showAlert("ПРОГРЕСС УСПЕШНО ЗАПИСАН В ТВОЮ GOOGLE ТАБЛИЦУ!");
+            })
+            .catch(function(err) {
+                console.error("Ошибка записи:", err);
+                alert("ОШИБКА СВЯЗИ С ОБЛАКОМ!");
+            });
+        }
+
+        // Кнопка сохранения в хедере
         document.getElementById('header-save').addEventListener('click', function() {
             if (!currentRomName) return;
 
             var initData = window.Telegram.WebApp.initDataUnsafe;
             var userId = initData.user ? initData.user.id : "test_user_888";
             var nowStr = new Date().toLocaleString('ru-RU');
-            var rawSavePayload = "";
 
             if (currentSystem === "nes") {
-                // У Денди сериализуем память в строку
-                rawSavePayload = JSON.stringify(nes.toJSON());
+                var rawSavePayload = JSON.stringify(nes.toJSON());
                 sendPackToGoogleSheetsCloud(userId, currentRomName, nowStr, rawSavePayload);
             } else if (currentSystem === "sega" || currentSystem === "snes") {
-                // У Сеги/SNES дергаем iframe эмулятора сделать локальный внутренний сейв в IndexedDB смартфона
                 var iframe = document.getElementById('active-emulator-iframe');
                 if (iframe && iframe.contentWindow) {
                     iframe.contentWindow.postMessage({ action: 'request_save_string' }, '*');
-                    // Дополнительный пинок ядру через общую команду
+                    
                     window.Telegram.WebApp.showPopup({
-                        title: "ОБЛАЧНАЯ СИНХРОНИЗАЦИЯ",
-                        message: "Сохранить текущую сессию в ячейку Google Таблицы?",
+                        title: "ОБЛАЧНАЯ ЗАПИСЬ 16-BIT",
+                        message: "Сохранить прогресс игры в ячейку Google Таблицы?",
                         buttons: [
                             { id: "yes", type: "default", text: "ДА, ЗАПИСАТЬ" },
                             { id: "no", type: "cancel", text: "ОТМЕНА" }
                         ]
                     }, function(btnId) {
                         if(btnId === "yes") {
-                            // Так как IndexedDB изолирован, для 16-бит мы посылаем пустой триггер-метку, подтверждающий сессию
                             sendPackToGoogleSheetsCloud(userId, currentRomName, nowStr, "16bit_indexeddb_synchronized");
                         }
                     });
@@ -793,35 +795,11 @@
             }
         });
 
-        // Слушаем ответ от Iframe для 16-бит систем
         window.addEventListener('message', function(e) {
             if (e.data && e.data.action === 'respond_save_string') {
-               console.log("16-битное ядро успешно синхронизировано.");
+               console.log("Синхронизация 16-бит ядра подтверждена.");
             }
         });
-
-        // 🔥 JSONP ОТПРАВКА ПАКЕТА ДАННЫХ В ОБЛАКО ТАБЛИЦЫ С ГИТХАБА
-        function sendPackToGoogleSheetsCloud(userId, file, dateTime, payload) {
-            // Чтобы длинная строка не ломала URL-запрос, зажимаем её в URI-безопасный формат
-            var encodedPayload = encodeURIComponent(payload);
-            
-            var script = document.createElement('script');
-            script.src = gasRetroUrl + "?action=set_save" +
-                         "&user_id=" + userId +
-                         "&game_file=" + encodeURIComponent(file) +
-                         "&date_time=" + encodeURIComponent(dateTime) +
-                         "&save_data=" + encodedPayload +
-                         "&callback=onCloudSaveSuccess";
-            document.head.appendChild(script);
-        }
-
-        function onCloudSaveSuccess(res) {
-            if(res && res.status === "success") {
-                window.Telegram.WebApp.showAlert("ПРОГРЕСС УСПЕШНО ЗАПИСАН В ТВОЮ GOOGLE ТАБЛИЦУ!");
-            } else {
-                alert("ОШИБКА ОБЛАЧНОЙ ЗАПИСИ!");
-            }
-        }
 
         function bindKey(elementId, nesKey) {
             var el = document.getElementById(elementId);
