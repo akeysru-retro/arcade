@@ -598,34 +598,26 @@
             var absoluteRomUrl = window.location.origin + window.location.pathname.replace("index.html", "") + romUrl;
             var initialVolume = audioEnabled ? 1 : 0;
 
-            // Достаем облачный сейв из нашей карты, если он загрузился из GAS
             var currentSaveBuffer = cloudSavesMap[selectedSlotNumber] || "";
             var injectionPayloadScript = "";
             
-            // Если сейв есть, мы превращаем его из Base64 обратно в бинарник для эмулятора
             if (currentSaveBuffer && currentSaveBuffer.length > 50) {
                 injectionPayloadScript = `
-                    window.addEventListener('load', function() {
-                        var timerCount = 0;
-                        var checkExist = setInterval(function() {
-                           timerCount++;
-                           // 🔥 ИСПРАВЛЕНО: Проверяем правильный инстанс эмулятора EJS_emulator
-                           if (typeof window.EJS_emulator !== 'undefined' && window.EJS_emulator.loadState) {
-                              clearInterval(checkExist);
-                              setTimeout(function(){
-                                 try {
-                                    var binaryStr = atob("${currentSaveBuffer}");
-                                    var len = binaryStr.length;
-                                    var bytes = new Uint8Array(len);
-                                    for (var i = 0; i < len; i++) { bytes[i] = binaryStr.charCodeAt(i); }
-                                    window.EJS_emulator.loadState(bytes);
-                                    console.log("Облачное сохранение успешно загружено в игру!");
-                                 } catch(err) { console.error("Ошибка инжекта:", err); }
-                              }, 1000);
-                           }
-                           if (timerCount > 60) clearInterval(checkExist);
-                        }, 150);
-                    });
+                    // Ждем, пока EmulatorJS полностью соберет инстанс ядра
+                    window.EJS_onVirtualGamepadInited = function() {
+                        try {
+                            var binaryStr = atob("${currentSaveBuffer}");
+                            var len = binaryStr.length;
+                            var bytes = new Uint8Array(len);
+                            for (var i = 0; i < len; i++) { bytes[i] = binaryStr.charCodeAt(i); }
+                            
+                            // 🔥 Внедряем сейв через официальный метод EmulatorJS, присланный в доке
+                            if (window.EJS_emulator && window.EJS_emulator.loadState) {
+                                window.EJS_emulator.loadState(bytes);
+                                console.log("Успешный автоигрек 16-бит из облака таблицы!");
+                            }
+                        } catch(err) { console.error("Ошибка автоинжекта:", err); }
+                    };
                 `;
             }
 
@@ -657,21 +649,23 @@
                 <script>
                     ${injectionPayloadScript}
 
-                    // 🔥 ИСПРАВЛЕНО: Слушаем запрос на сейв от верхней кнопки меню
+                    // Слушаем команду от внешней кнопки Mini App "СЕЙВ В ОБЛАКО"
                     window.addEventListener('message', function(e) {
                         if (!e.data) return;
                         if (e.data.action === 'request_16bit_save') {
+                            // 🔥 Используем точное имя метода получения буфера из твоей доки!
                             if (typeof window.EJS_emulator !== 'undefined' && window.EJS_emulator.saveState) {
-                                window.EJS_emulator.saveState(function(data) {
-                                    if (!data || !data.state) return;
+                                window.EJS_emulator.saveState(function(res) {
+                                    // Проверяем бинарную структуру ответа ядра
+                                    var bytes = res.state || res; 
+                                    if (!bytes) return;
                                     
-                                    // Конвертируем бинарный массив состояния в Base64 для передачи в GAS
-                                    var bytes = data.state;
                                     var binary = '';
                                     var len = bytes.byteLength;
                                     for (var i = 0; i < len; i++) { binary += String.fromCharCode(bytes[i]); }
                                     var base64Str = btoa(binary);
                                     
+                                    // Отправляем чистый слепок родителю для записи в Google Таблицу
                                     window.parent.postMessage({ action: 'respond_16bit_save', data: base64Str }, '*');
                                 });
                             }
