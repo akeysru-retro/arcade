@@ -263,7 +263,7 @@
 
         var gasRetroUrl = "https://script.google.com/macros/s/AKfycbwBjulaVnjKN-Af3oDFFFaG4Us8n6Jgcz3BTJRL1HThFxlgMuxv_D4x1yK4Khy-BsVL/exec";
 
-        // 🔥 Инициализация автономной базы данных Dexie.js как у конкурента
+        // 🔥 Унифицированная база данных Dexie.js (хранит ВСЕ платформы, включая NES)
         var db = new Dexie('emu-saves-v1');
         db.version(1).stores({
             states: 'key, platform, romUrl, slot, timestamp, data'
@@ -394,7 +394,6 @@
             }
         }
 
-        // Чистый автономный рендеринг слотов памяти из IndexedDB телефона
         async function openSavesManagerScreen(gameObj) {
             currentSelectedGameObj = gameObj;
 
@@ -406,7 +405,6 @@
             var listContainer = document.getElementById('cloud-saves-list-container');
             listContainer.innerHTML = "";
 
-            // Опрашиваем локальную базу Dexie.js по ключам для этой игры
             for (var slot = 1; slot <= 5; slot++) {
                 var uniqueKey = `${gameObj.system}:${gameObj.file}:${slot}`;
                 var record = await db.states.get(uniqueKey);
@@ -483,11 +481,11 @@
         function sendOrderRequest() {
             var titleInput = document.getElementById('order-game-title').value.trim();
             var systemInput = document.getElementById('order-game-system').value.trim();
-            if (!titleInput) { alert("ВВЕДИТЕ НАЗВАНИЕ ИГРЫ!"); return; }
+            if (!titleInput) { window.Telegram.WebApp.showAlert("ВВЕДИТЕ НАЗВАНИЕ ИГРЫ!"); return; }
             var initData = window.Telegram.WebApp.initDataUnsafe;
             var userId = initData.user ? initData.user.id : "";
             var username = initData.user ? initData.user.username : "no_name";
-            if (!userId) { alert("ОШИБКА TELEGRAM ID!"); return; }
+            if (!userId) { window.Telegram.WebApp.showAlert("ОШИБКА TELEGRAM ID!"); return; }
             var btnSubmit = document.getElementById('order-btn-submit');
             btnSubmit.disabled = true; btnSubmit.textContent = "ОТПРАВКА...";
 
@@ -508,7 +506,7 @@
                         window.Telegram.WebApp.close(); 
                     });
                 })
-                .catch(function() { alert("ОШИБКА СВЯЗИ С СЕРВЕРОМ!"); btnSubmit.disabled = false; btnSubmit.textContent = "ОТПРАВИТЬ ЗАЯВКУ"; });
+                .catch(function() { window.Telegram.WebApp.showAlert("ОШИБКА СВЯЗИ С СЕРВЕРОМ!"); btnSubmit.disabled = false; btnSubmit.textContent = "ОТПРАВИТЬ ЗАЯВКУ"; });
         }
 
         function switchTab(tabId, buttonElement) {
@@ -551,6 +549,7 @@
             }
         });
 
+        // 🔥 Авто-инициализация аудио при первом клике по экрану игры
         function initAudio() {
             if (audioCtx) return;
             var AudioContext = window.AudioContext || window.webkitAudioContext;
@@ -578,7 +577,7 @@
             });
         }
 
-        // 🔥 Работающая система сохранений Sega/SNES на базе IndexedDB без костылей и лимитов
+        // 🔥 Исправленный мост: Передача ArrayBuffer по правилам трансферирования без fetch внутри iframe
         async function launchIsolatedEmulatorJS(romUrl, systemType, gameTitle) {
             var container = document.getElementById('sega-display-container');
             container.innerHTML = ""; 
@@ -587,38 +586,9 @@
             var absoluteRomUrl = window.location.origin + window.location.pathname.replace("index.html", "") + romUrl;
             var initialVolume = audioEnabled ? 1 : 0;
 
-            // Извлекаем ArrayBuffer напрямую из базы IndexedDB телефона пользователя
             var uniqueKey = `${systemType}:${romUrl}:${selectedSlotNumber}`;
             var record = await db.states.get(uniqueKey);
-            var injectionPayloadScript = "";
             
-            if (record && record.data) {
-                // Создаем глобальный Blob-объект в оперативной памяти для прямой склейки стейта внутри iframe
-                var blob = new Blob([record.data], {type: "application/octet-stream"});
-                var blobUrl = URL.createObjectURL(blob);
-                
-                injectionPayloadScript = `
-                    window.addEventListener('load', function() {
-                        var timerCount = 0;
-                        var checkExist = setInterval(function() {
-                           timerCount++;
-                           if (typeof window.EJS_emulator !== 'undefined' && window.EJS_emulator.loadState) {
-                              clearInterval(checkExist);
-                              
-                              // Запрашиваем бинарные данные блоба напрямую из виртуального моста памяти
-                              fetch("${blobUrl}")
-                                 .then(res => res.arrayBuffer())
-                                 .then(buffer => {
-                                    window.EJS_emulator.loadState(new Uint8Array(buffer));
-                                    console.log("Успешная мгновенная загрузка 16-бит из IndexedDB устройства!");
-                                 });
-                           }
-                           if (timerCount > 60) clearInterval(checkExist);
-                        }, 150);
-                    });
-                `;
-            }
-
             var iframeHtml = `
             <!DOCTYPE html>
             <html>
@@ -645,19 +615,34 @@
                 <\/script>
                 <script src="https://cdn.emulatorjs.org/stable/data/loader.js"><\/script>
                 <script>
-                    ${injectionPayloadScript}
+                    // Принимаем ArrayBuffer от родительского окна без CORS-рисков
+                    window.addEventListener('message', function(msg) {
+                        if (!msg.data) return;
+                        
+                        // Загрузка стейта при старте игры
+                        if (msg.data.action === 'inject_16bit_buffer' && msg.data.buffer) {
+                            var checkExist = setInterval(function() {
+                               if (typeof window.EJS_emulator !== 'undefined' && window.EJS_emulator.loadState) {
+                                  clearInterval(checkExist);
+                                  setTimeout(function(){
+                                     try {
+                                        window.EJS_emulator.loadState(new Uint8Array(msg.data.buffer));
+                                        console.log("Сейв успешно развернут из трансфера родительского окна!");
+                                     } catch(err) { console.error(err); }
+                                  }, 1000);
+                               }
+                            }, 100);
+                        }
 
-                    // Слушаем команду на сохранение прогресса
-                    window.addEventListener('message', function(e) {
-                        if (!e.data) return;
-                        if (e.data.action === 'request_16bit_save') {
+                        // Сбор стейта при сохранении игры
+                        if (msg.data.action === 'request_16bit_save') {
                             if (typeof window.EJS_emulator !== 'undefined' && window.EJS_emulator.saveState) {
                                 window.EJS_emulator.saveState(function(res) {
                                     var bytes = res.state || res; 
                                     if (!bytes) return;
-                                    
-                                    // Передаем ArrayBuffer обратно родителю через независимый слепок памяти
-                                    window.parent.postMessage({ action: 'respond_16bit_save', buffer: bytes.buffer || bytes }, '*');
+                                    var cleanBuffer = bytes.buffer || bytes;
+                                    // Передаем ArrayBuffer обратно через transferList
+                                    window.parent.postMessage({ action: 'respond_16bit_save', buffer: cleanBuffer }, '*', [cleanBuffer]);
                                 });
                             }
                         }
@@ -670,13 +655,25 @@
             var iframe = document.createElement('iframe');
             iframe.id = "active-emulator-iframe";
             iframe.srcdoc = iframeHtml;
+            
+            // Если в базе есть сохранение, дожидаемся загрузки фрейма и пересылаем буфер
+            iframe.addEventListener('load', function() {
+                if (record && record.data) {
+                    // Передаем буфер в transferList, чтобы iOS WebView не заблокировал его
+                    iframe.contentWindow.postMessage({ action: 'inject_16bit_buffer', buffer: record.data }, '*', [record.data]);
+                }
+            });
+
             container.appendChild(iframe);
         }
 
-        function startGame(romUrl, gameTitle, system) {
+        // 🔥 Исправленный современный асинхронный fetch-загрузчик ROM-файлов
+        async function startGame(romUrl, gameTitle, system) {
             currentRomName = romUrl;
             currentSystem = system || "nes";
             if(videoEl) videoEl.pause();
+
+            initAudio(); // Подготавливаем аудио-контекст
 
             document.getElementById('catalog-container').style.display = 'none';
             document.getElementById('app-tab-bar').style.display = 'none';
@@ -689,32 +686,37 @@
                 document.getElementById('game-container').style.display = 'none';
                 document.getElementById('gamepad').style.display = 'none'; 
                 document.getElementById('sega-display-container').style.display = 'block';
-                launchIsolatedEmulatorJS(romUrl, currentSystem, gameTitle);
+                await launchIsolatedEmulatorJS(romUrl, currentSystem, gameTitle);
             } else {
                 document.getElementById('game-container').style.display = 'flex';
                 document.getElementById('gamepad').style.display = 'flex'; 
                 document.getElementById('sega-display-container').style.display = 'none';
                 
-                var req = new XMLHttpRequest();
-                req.open("GET", romUrl, true);
-                req.overrideMimeType("text/plain; charset=x-user-defined");
-                req.onload = function() {
-                    if (req.status === 200) {
-                        nes.loadROM(this.responseText);
-                        if(gameLoopInterval) clearInterval(gameLoopInterval);
-                        gameLoopInterval = setInterval(function() { nes.frame(); }, 1000 / 60);
-                        
-                        // Локальное восстановление стейта Денди из localStorage (твоя стабильная схема)
-                        var localNesSave = localStorage.getItem("local_nes_save_" + currentRomName + "_slot_" + selectedSlotNumber);
-                        if (localNesSave) {
-                            try {
-                                nes.fromJSON(JSON.parse(localNesSave));
-                                window.Telegram.WebApp.showAlert("ПРОГРЕСС СЛОТА 0" + selectedSlotNumber + " ВОССТАНОВЛЕН!");
-                            }catch(err){}
-                        }
-                    } else { alert("ОШИБКА РОМА!"); exitToCatalog(); }
-                };
-                req.send();
+                try {
+                    var res = await fetch(romUrl);
+                    if (!res.ok) throw new Error('Загрузка ROM провалилась');
+                    var buf = await res.arrayBuffer();
+                    
+                    nes.loadROM(new Uint8Array(buf));
+                    
+                    if(gameLoopInterval) clearInterval(gameLoopInterval);
+                    gameLoopInterval = setInterval(function() { nes.frame(); }, 1000 / 60);
+                    
+                    // Унифицированное чтение сейва NES из общей базы Dexie
+                    var uniqueKey = `nes:${currentRomName}:${selectedSlotNumber}`;
+                    var record = await db.states.get(uniqueKey);
+                    if (record && record.data) {
+                        try {
+                            var stringData = new TextDecoder().decode(record.data);
+                            nes.fromJSON(JSON.parse(stringData));
+                            window.Telegram.WebApp.showAlert("ПРОГРЕСС СЛОТА 0" + selectedSlotNumber + " ВОССТАНОВЛЕН!");
+                        } catch(err){}
+                    }
+                } catch(e) {
+                    console.error(e);
+                    window.Telegram.WebApp.showAlert("Ошибка загрузки игры. Проверьте соединение.");
+                    exitToCatalog();
+                }
             }
         }
 
@@ -746,25 +748,42 @@
         document.getElementById('back-to-catalog').addEventListener('click', exitToCatalog);
 
         // ОБРАБОТЧИК КЛИКА ВЕРХНЕЙ КНОПКИ "СОХРАНИТЬ ИГРУ"
-        document.getElementById('header-save').addEventListener('click', function() {
+        document.getElementById('header-save').addEventListener('click', async function() {
             if (!currentRomName) return;
+            
+            var saveBtn = document.getElementById('header-save');
+            saveBtn.disabled = true;
+            saveBtn.textContent = "ЗАПИСЬ...";
 
             if (currentSystem === "nes") {
+                var uniqueKey = `nes:${currentRomName}:${selectedSlotNumber}`;
                 var rawSavePayload = JSON.stringify(nes.toJSON());
-                var nowStr = new Date().toLocaleString('ru-RU');
-                localStorage.setItem("local_nes_save_" + currentRomName + "_slot_" + selectedSlotNumber, rawSavePayload);
-                localStorage.setItem("meta_save_" + currentRomName + "_slot_" + selectedSlotNumber, nowStr);
-                window.Telegram.WebApp.showAlert("ПРОГРЕСС DENDY В СЛОТ 0" + selectedSlotNumber + " УСПЕШНО ЗАПИСАН!");
+                var encodedData = new TextEncoder().encode(rawSavePayload);
+                
+                try {
+                    await db.states.put({
+                        key: uniqueKey,
+                        platform: 'nes',
+                        romUrl: currentRomName,
+                        slot: selectedSlotNumber,
+                        timestamp: Date.now(),
+                        data: encodedData.buffer
+                    });
+                    window.Telegram.WebApp.showAlert("ПРОГРЕСС DENDY УСПЕШНО ЗАПИСАН!");
+                } catch(err) {
+                    window.Telegram.WebApp.showAlert("Ошибка локального сохранения.");
+                }
+                saveBtn.disabled = false;
+                saveBtn.textContent = "💾 СОХРАНИТЬ ИГРУ";
             } else if (currentSystem === "sega" || currentSystem === "snes") {
                 var iframe = document.getElementById('active-emulator-iframe');
                 if (iframe && iframe.contentWindow) {
-                    // Даем приказ фрейму эмулятора выгрузить стейт игры
                     iframe.contentWindow.postMessage({ action: 'request_16bit_save' }, '*');
                 }
             }
         });
 
-        // 🔥 СЛУШАТЕЛЬ ОТВЕТА ОТ ФРЕЙМА СЕГА/SNES: Запись бинарного слепка напрямую в IndexedDB устройства!
+        // 🔥 Слушатель ответа от фрейма Sega/SNES с мгновенной перезаписью без утечек памяти
         window.addEventListener('message', async function(e) {
             if (!e.data) return;
             if (e.data.action === 'respond_16bit_save' && e.data.buffer) {
@@ -777,17 +796,20 @@
                         romUrl: currentRomName,
                         slot: selectedSlotNumber,
                         timestamp: Date.now(),
-                        data: e.data.buffer // Dexie запишет чистый ArrayBuffer без конвертации в Base64!
+                        data: e.data.buffer
                     });
                     window.Telegram.WebApp.showAlert("ПРОГРЕСС ИГРЫ УСПЕШНО ЗАПИСАН В ПАМЯТЬ ТЕЛЕФОНА!");
                 } catch(err) {
-                    console.error(err);
-                    alert("ОШИБКА ЗАПИСИ В INDEXEDDB!");
+                    window.Telegram.WebApp.showAlert("ОШИБКА ЗАПИСИ В INDEXEDDB!");
                 }
+                
+                var saveBtn = document.getElementById('header-save');
+                saveBtn.disabled = false;
+                saveBtn.textContent = "💾 СОХРАНИТЬ ИГРУ";
             }
         });
 
-        // Железная привязка физического управления Dendy (без скроллов WebView)
+        // Железная привязка физического управления Dendy
         function bindKey(elementId, nesKey) {
             var el = document.getElementById(elementId);
             if(el) {
