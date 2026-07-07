@@ -14,6 +14,7 @@
             background-color: #000; color: #fff; margin: 0; padding: 0;
             font-family: 'Press Start 2P', monospace;
             height: 100vh; overflow: hidden; user-select: none;
+            -webkit-touch-callout: none; -webkit-user-select: none;
         }
         body {
             display: flex; flex-direction: column; align-items: center; justify-content: flex-start;
@@ -135,19 +136,18 @@
         #sega-display-container { display: none; width: 100%; max-width: 400px; height: calc(100vh - 44px); position: absolute; top: 44px; left: 0; right: 0; bottom: 0; z-index: 1000; background: #000; }
         #sega-display-container iframe { width: 100%; height: 100%; border: none; display: block; }
 
-        #gamepad { position: absolute; bottom: 0; left: 0; right: 0; z-index: 30; display: flex; flex-direction: column; width: 100%; padding: 15px; box-sizing: border-box; justify-content: space-between; border-top: 4px solid #222; background: #111; }
+        #gamepad { position: absolute; bottom: 0; left: 0; right: 0; z-index: 30; display: flex; flex-direction: column; width: 100%; padding: 15px; box-sizing: border-box; justify-content: space-between; border-top: 4px solid #222; background: #111; touch-action: none; }
         .main-controls { display: flex; width: 100%; justify-content: space-between; align-items: center; }
         .dpad { display: grid; grid-template-columns: repeat(3, 1fr); grid-template-rows: repeat(3, 1fr); width: 130px; height: 130px; }
-        .btn { background: #222; border: 3px solid #444; color: white; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 14px; }
+        .btn { background: #222; border: 3px solid #444; color: white; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 14px; touch-action: none; }
         .btn:active { background: #444; }
         #nes-buttons { display: inline-flex; gap: 15px; }
-        .round-btn { width: 60px; height: 60px; background: #cc1111; border-radius: 50%; border: 4px solid #fff; color: white; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 16px; font-family: sans-serif; box-shadow: 0 4px 0 #880000; }
+        .round-btn { width: 60px; height: 60px; background: #cc1111; border-radius: 50%; border: 4px solid #fff; color: white; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 16px; font-family: sans-serif; box-shadow: 0 4px 0 #880000; touch-action: none; }
         .round-btn:active { background: #aa0000; transform: translateY(4px); box-shadow: none; }
         .system-buttons { display: flex; flex-direction: column; gap: 10px; width: 100%; margin-top: 15px; }
         .sys-row { display: flex; justify-content: center; gap: 20px; }
-        .sys-btn { background: #333; border: 2px solid #555; color: #aaa; width: 80px; height: 22px; border-radius: 4px; font-size: 8px; display: flex; align-items: center; justify-content: center; }
+        .sys-btn { background: #333; border: 2px solid #555; color: #aaa; width: 80px; height: 22px; border-radius: 4px; font-size: 8px; display: flex; align-items: center; justify-content: center; touch-action: none; }
 
-        /* 🔥 ТАБ-БАР ЖЕСТКО ЗАФИКСИРОВАН НА ЭКРАНЕ С ВЫСШИМ Z-INDEX */
         .tab-bar {
             position: fixed !important; bottom: 0 !important; left: 0; right: 0; height: 55px;
             background: #111; border-top: 3px solid #333; display: flex;
@@ -313,7 +313,6 @@
             renderGamesPage(currentPage);
         }
 
-        // ... [Остальные функции пагинации и поиска оставляем] ...
         function toggleFavFilter() {
             showOnlyFavorites = !showOnlyFavorites;
             var btn = document.getElementById('fav-filter-btn');
@@ -389,7 +388,6 @@
             }
         }
 
-        // 🔥 МЕТОД КОНКУРЕНТА: СЛОТЫ МГНОВЕННО ГЕНЕРИРУЮТСЯ ИЗ ПАМЯТИ ТЕЛЕФОНА (ЛОКАЛЬНО)
         function openSavesManagerScreen(gameObj) {
             currentSelectedGameObj = gameObj;
 
@@ -571,6 +569,35 @@
             });
         }
 
+        // ЖЕЛЕЗНЫЙ ТАЧ-ФИКС ДЛЯ ДЕНДИ: Убирает конфликты со свайпами WebApp Telegram
+        function bindRetroButton(elementId, nesButtonCode) {
+            var btn = document.getElementById(elementId);
+            if (!btn) return;
+
+            btn.addEventListener('touchstart', function(e) {
+                e.preventDefault(); 
+                if (window.Telegram && window.Telegram.WebApp.HapticFeedback) {
+                    window.Telegram.WebApp.HapticFeedback.impactOccurred('light');
+                }
+                nes.buttonPressed(1, nesButtonCode);
+            }, { passive: false });
+
+            btn.addEventListener('touchend', function(e) {
+                e.preventDefault();
+                nes.buttonReleased(1, nesButtonCode);
+            }, { passive: false });
+        }
+
+        // Привязываем события ко всем кнопкам управления
+        bindRetroButton('up', jsnes.Controller.BUTTON_UP);
+        bindRetroButton('down', jsnes.Controller.BUTTON_DOWN);
+        bindRetroButton('left', jsnes.Controller.BUTTON_LEFT);
+        bindRetroButton('right', jsnes.Controller.BUTTON_RIGHT);
+        bindRetroButton('btn-a', jsnes.Controller.BUTTON_A);
+        bindRetroButton('btn-b', jsnes.Controller.BUTTON_B);
+        bindRetroButton('btn-select', jsnes.Controller.BUTTON_SELECT);
+        bindRetroButton('btn-start', jsnes.Controller.BUTTON_START);
+
         function launchIsolatedEmulatorJS(romUrl, systemType, gameTitle) {
             var container = document.getElementById('sega-display-container');
             container.innerHTML = ""; 
@@ -579,6 +606,7 @@
             var absoluteRomUrl = window.location.origin + window.location.pathname.replace("index.html", "") + romUrl;
             var initialVolume = audioEnabled ? 1 : 0;
 
+            // 🔥 Переменная EJS_gameName теперь уникальна для каждого выбранного слота! База IndexedDB будет разделена.
             var iframeHtml = `
             <!DOCTYPE html>
             <html>
@@ -594,11 +622,7 @@
                 <script>
                     EJS_player = "#game";
                     EJS_core = "${coreType}";
-                    
-                    // 🔥 МЕТОД КОНКУРЕНТА: Номер слота встроен прямо в EJS_gameName.
-                    // EmulatorJS сам создаст 5 изолированных IndexedDB баз данных в браузере телефона!
-                    EJS_gameName = "${gameTitle.replace(/ /g, '_')}_slot_${selectedSlotNumber}"; 
-                    
+                    EJS_gameName = "${gameTitle.replace(/[^a-zA-Z0-9]/g, '_')}_slot_${selectedSlotNumber}"; 
                     EJS_color = "#0064ff";
                     EJS_pathtodata = "https://cdn.emulatorjs.org/stable/data/";
                     EJS_gameUrl = "${absoluteRomUrl}";
@@ -647,18 +671,15 @@
                     if (req.status === 200) {
                         nes.loadROM(this.responseText);
                         if(gameLoopInterval) clearInterval(gameLoopInterval);
-                        // 🔥 ФИКС ГЕЙМПАДА DENDY: Обернуто в анонимную функцию, чтобы nes не терял контекст
                         gameLoopInterval = setInterval(function() { nes.frame(); }, 1000 / 60); 
                         
-                        // Загрузка Денди из выбранного локального слота телефона
+                        // 🔥 СЕЙВ ДЕНДИ: Восстанавливаем строго после успешной загрузки ромы в эмулятор
                         var localNesSave = localStorage.getItem("local_nes_save_" + currentRomName + "_slot_" + selectedSlotNumber);
                         if (localNesSave) {
-                            setTimeout(function(){
-                                try {
-                                    nes.fromJSON(JSON.parse(localNesSave));
-                                    window.Telegram.WebApp.showAlert("ПРОГРЕСС СЛОТА 0" + selectedSlotNumber + " ВОССТАНОВЛЕН!");
-                                }catch(err){}
-                            }, 600);
+                            try {
+                                nes.fromJSON(JSON.parse(localNesSave));
+                                window.Telegram.WebApp.showAlert("ПРОГРЕСС СЛОТА 0" + selectedSlotNumber + " ВОССТАНОВЛЕН!");
+                            } catch(err) {}
                         }
                     } else { alert("ОШИБКА РОМА!"); exitToCatalog(); }
                 };
@@ -693,7 +714,6 @@
         
         document.getElementById('back-to-catalog').addEventListener('click', exitToCatalog);
 
-        // 🔥 ЖЕЛЕЗНАЯ ЛОКАЛЬНАЯ КНОПКА СОХРАНЕНИЯ (СИНХРОНИЗАЦИЯ С ПАМЯТЬЮ ТЕЛЕФОНА)
         document.getElementById('header-save').addEventListener('click', function() {
             if (!currentRomName) return;
             var nowStr = new Date().toLocaleString('ru-RU');
@@ -704,10 +724,8 @@
                 localStorage.setItem("meta_save_" + currentRomName + "_slot_" + selectedSlotNumber, nowStr);
                 window.Telegram.WebApp.showAlert("ПРОГРЕСС DENDY В СЛОТ 0" + selectedSlotNumber + " УСПЕШНО ЗАПИСАН!");
             } else if (currentSystem === "sega" || currentSystem === "snes") {
-                // Для 16-бит файлы сохранений пишутся в IndexedDB телефона при нажатии "Сохранить состояние" во встроенном меню.
-                // Наша верхняя кнопка просто обновляет дату на плашке менеджера слотов!
                 localStorage.setItem("meta_save_" + currentRomName + "_slot_" + selectedSlotNumber, nowStr);
-                window.Telegram.WebApp.showAlert("СЛОТ СОХРАНЕНИЯ 0" + selectedSlotNumber + " ОБНОВЛЕН НА ТЕЛЕФОНЕ!");
+                window.Telegram.WebApp.showAlert("СЛОТ СОХРАНЕНИЯ 0" + selectedSlotNumber + " ОБНОВЛЕН НА ТЕЛЕФОНЕ!\n(Убедитесь, что вы также сохранили стейт во внутреннем меню эмулятора)");
             }
         });
     </script>
