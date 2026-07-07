@@ -6,6 +6,7 @@
     <title>9999 IN 1 - Ultimate Retro Arcade</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jsnes/1.2.1/jsnes.min.js"></script>
+    <script src="https://unpkg.com/dexie@3.2.4/dist/dexie.min.js"></script>
     <script src="games.js"></script>
 
     <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
@@ -165,7 +166,7 @@
 
     <div class="header-panel">
         <button id="back-to-catalog" class="head-btn">↩ МЕНЮ</button>
-        <button id="header-save" class="head-btn ingame-btn">💾 СЕЙВ В ОБЛАКО</button>
+        <button id="header-save" class="head-btn ingame-btn">💾 СОХРАНИТЬ ИГРУ</button>
         <div id="main-title" style="font-size: 8px; letter-spacing: 1px;">9999 IN 1</div>
         <button id="sound-toggle" class="head-btn muted">🔇 ЗВУК</button>
     </div>
@@ -189,7 +190,7 @@
             <div class="menu-title" id="saves-manager-title">ЗАГРУЗКА...</div>
             <div id="section-saves-manager">
                 <button class="btn-launch-new" onclick="launchGamePureNew()">▶ ИГРАТЬ С НАЧАЛА</button>
-                <div class="saves-block-title">ВЫБЕРИ СЛОТ ОБЛАКА (1 ИЗ 5):</div>
+                <div class="saves-block-title">ВЫБЕРИ СЛОТ ПАМЯТИ ТЕЛЕФОНА (1 ИЗ 5):</div>
                 <div id="cloud-saves-list-container"></div>
             </div>
         </div>
@@ -217,18 +218,18 @@
                 <button id="order-btn-submit" class="order-submit-btn" onclick="sendOrderRequest()">ОТПРАВИТЬ ЗАЯВКУ</button>
             </div>
         </div>
+    </div>
 
-        <div class="tab-bar" id="app-tab-bar">
-            <button class="tab-item active" onclick="switchTab('games', this)">
-                <span class="tab-icon">🎮</span><span>ИГРЫ</span>
-            </button>
-            <button class="tab-item" onclick="switchTab('secrets', this)">
-                <span class="tab-icon">🔑</span><span>СЕКРЕТЫ</span>
-            </button>
-            <button class="tab-item" onclick="switchTab('order', this)">
-                <span class="tab-icon">📥</span><span>ЗАКАЗ</span>
-            </button>
-        </div>
+    <div class="tab-bar" id="app-tab-bar">
+        <button class="tab-item active" onclick="switchTab('games', this)">
+            <span class="tab-icon">🎮</span><span>ИГРЫ</span>
+        </button>
+        <button class="tab-item" onclick="switchTab('secrets', this)">
+            <span class="tab-icon">🔑</span><span>СЕКРЕТЫ</span>
+        </button>
+        <button class="tab-item" onclick="switchTab('order', this)">
+            <span class="tab-icon">📥</span><span>ЗАКАЗ</span>
+        </button>
     </div>
 
     <div id="game-screen">
@@ -262,6 +263,12 @@
 
         var gasRetroUrl = "https://script.google.com/macros/s/AKfycbwBjulaVnjKN-Af3oDFFFaG4Us8n6Jgcz3BTJRL1HThFxlgMuxv_D4x1yK4Khy-BsVL/exec";
 
+        // 🔥 Инициализация автономной базы данных Dexie.js как у конкурента
+        var db = new Dexie('emu-saves-v1');
+        db.version(1).stores({
+            states: 'key, platform, romUrl, slot, timestamp, data'
+        });
+
         var baseGames = [];        
         var filteredGames = [];    
         var currentPage = 1;     
@@ -270,7 +277,6 @@
 
         var currentSelectedGameObj = null; 
         var selectedSlotNumber = "1"; 
-        var cloudSavesMap = {}; 
 
         var allSecrets = [];
 
@@ -388,9 +394,9 @@
             }
         }
 
-        function openSavesManagerScreen(gameObj) {
+        // Чистый автономный рендеринг слотов памяти из IndexedDB телефона
+        async function openSavesManagerScreen(gameObj) {
             currentSelectedGameObj = gameObj;
-            cloudSavesMap = {}; 
 
             var sections = document.getElementsByClassName('app-section');
             for(var i=0; i<sections.length; i++) { sections[i].style.display = 'none'; }
@@ -398,48 +404,30 @@
             document.getElementById('saves-manager-title').textContent = gameObj.title.toUpperCase();
 
             var listContainer = document.getElementById('cloud-saves-list-container');
-            listContainer.innerHTML = '<div style="text-align:center; font-size:7px; color:#888; padding:20px 0;">ОПРОС ОБЛАЧНЫХ СЛОТОВ...</div>';
-
-            var initData = window.Telegram.WebApp.initDataUnsafe;
-            var userId = initData.user ? initData.user.id : "test_user_888";
-
-            var script = document.createElement('script');
-            script.src = gasRetroUrl + "?action=get_saves&user_id=" + userId + "&game_file=" + encodeURIComponent(gameObj.file) + "&callback=onCloudSavesReceived";
-            document.head.appendChild(script);
-        }
-
-        function onCloudSavesReceived(data) {
-            var listContainer = document.getElementById('cloud-saves-list-container');
             listContainer.innerHTML = "";
 
-            var activeSlotsData = {};
-            if (data && data.slots) {
-                data.slots.forEach(function(item) {
-                    var sKey = item.slot_num.toString().trim();
-                    activeSlotsData[sKey] = item;
-                    cloudSavesMap[sKey] = item.save_data; 
-                });
-            }
-
+            // Опрашиваем локальную базу Dexie.js по ключам для этой игры
             for (var slot = 1; slot <= 5; slot++) {
+                var uniqueKey = `${gameObj.system}:${gameObj.file}:${slot}`;
+                var record = await db.states.get(uniqueKey);
+                
                 var card = document.createElement('div');
                 card.className = 'cloud-save-card';
-                var sString = slot.toString();
                 
-                if (activeSlotsData[sString]) {
-                    var saveItem = activeSlotsData[sString];
+                if (record) {
+                    var dateStr = new Date(record.timestamp).toLocaleString('ru-RU');
                     card.innerHTML = `
                         <div>
-                            <div class="cloud-save-info" style="color:#00ff00;">СЛОТ 0${slot} (СОХРАНЕН)</div>
-                            <div class="cloud-save-date">Запись: ${saveItem.date_time}</div>
+                            <div class="cloud-save-info" style="color:#00ff00;">СЛОТ ПАМЯТИ 0${slot}</div>
+                            <div class="cloud-save-date">Запись: ${dateStr}</div>
                         </div>
                         <button class="head-btn" style="font-size:7px; background:#0064ff;" onclick="launchGameWithCloudSlot('${slot}')">ЗАГРУЗИТЬ</button>
                     `;
                 } else {
                     card.innerHTML = `
                         <div>
-                            <div class="cloud-save-info" style="color:#666;">СЛОТ 0${slot}</div>
-                            <div class="cloud-save-date">ПУСТАЯ ЯЧЕЙКА ТАБЛИЦЫ</div>
+                            <div class="cloud-save-info" style="color:#666;">СЛОТ ПАМЯТИ 0${slot}</div>
+                            <div class="cloud-save-date">ПУСТАЯ ЯЧЕЙКА ПАМЯТИ</div>
                         </div>
                         <button class="head-btn" style="font-size:7px; background:#222; color:#777;" onclick="launchGameWithCloudSlot('${slot}')">ИГРАТЬ</button>
                     `;
@@ -590,7 +578,8 @@
             });
         }
 
-        function launchIsolatedEmulatorJS(romUrl, systemType, gameTitle) {
+        // 🔥 Работающая система сохранений Sega/SNES на базе IndexedDB без костылей и лимитов
+        async function launchIsolatedEmulatorJS(romUrl, systemType, gameTitle) {
             var container = document.getElementById('sega-display-container');
             container.innerHTML = ""; 
 
@@ -598,26 +587,35 @@
             var absoluteRomUrl = window.location.origin + window.location.pathname.replace("index.html", "") + romUrl;
             var initialVolume = audioEnabled ? 1 : 0;
 
-            var currentSaveBuffer = cloudSavesMap[selectedSlotNumber] || "";
+            // Извлекаем ArrayBuffer напрямую из базы IndexedDB телефона пользователя
+            var uniqueKey = `${systemType}:${romUrl}:${selectedSlotNumber}`;
+            var record = await db.states.get(uniqueKey);
             var injectionPayloadScript = "";
             
-            if (currentSaveBuffer && currentSaveBuffer.length > 50) {
+            if (record && record.data) {
+                // Создаем глобальный Blob-объект в оперативной памяти для прямой склейки стейта внутри iframe
+                var blob = new Blob([record.data], {type: "application/octet-stream"});
+                var blobUrl = URL.createObjectURL(blob);
+                
                 injectionPayloadScript = `
-                    // Ждем, пока EmulatorJS полностью соберет инстанс ядра
-                    window.EJS_onVirtualGamepadInited = function() {
-                        try {
-                            var binaryStr = atob("${currentSaveBuffer}");
-                            var len = binaryStr.length;
-                            var bytes = new Uint8Array(len);
-                            for (var i = 0; i < len; i++) { bytes[i] = binaryStr.charCodeAt(i); }
-                            
-                            // 🔥 Внедряем сейв через официальный метод EmulatorJS, присланный в доке
-                            if (window.EJS_emulator && window.EJS_emulator.loadState) {
-                                window.EJS_emulator.loadState(bytes);
-                                console.log("Успешный автоигрек 16-бит из облака таблицы!");
-                            }
-                        } catch(err) { console.error("Ошибка автоинжекта:", err); }
-                    };
+                    window.addEventListener('load', function() {
+                        var timerCount = 0;
+                        var checkExist = setInterval(function() {
+                           timerCount++;
+                           if (typeof window.EJS_emulator !== 'undefined' && window.EJS_emulator.loadState) {
+                              clearInterval(checkExist);
+                              
+                              // Запрашиваем бинарные данные блоба напрямую из виртуального моста памяти
+                              fetch("${blobUrl}")
+                                 .then(res => res.arrayBuffer())
+                                 .then(buffer => {
+                                    window.EJS_emulator.loadState(new Uint8Array(buffer));
+                                    console.log("Успешная мгновенная загрузка 16-бит из IndexedDB устройства!");
+                                 });
+                           }
+                           if (timerCount > 60) clearInterval(checkExist);
+                        }, 150);
+                    });
                 `;
             }
 
@@ -649,24 +647,17 @@
                 <script>
                     ${injectionPayloadScript}
 
-                    // Слушаем команду от внешней кнопки Mini App "СЕЙВ В ОБЛАКО"
+                    // Слушаем команду на сохранение прогресса
                     window.addEventListener('message', function(e) {
                         if (!e.data) return;
                         if (e.data.action === 'request_16bit_save') {
-                            // 🔥 Используем точное имя метода получения буфера из твоей доки!
                             if (typeof window.EJS_emulator !== 'undefined' && window.EJS_emulator.saveState) {
                                 window.EJS_emulator.saveState(function(res) {
-                                    // Проверяем бинарную структуру ответа ядра
                                     var bytes = res.state || res; 
                                     if (!bytes) return;
                                     
-                                    var binary = '';
-                                    var len = bytes.byteLength;
-                                    for (var i = 0; i < len; i++) { binary += String.fromCharCode(bytes[i]); }
-                                    var base64Str = btoa(binary);
-                                    
-                                    // Отправляем чистый слепок родителю для записи в Google Таблицу
-                                    window.parent.postMessage({ action: 'respond_16bit_save', data: base64Str }, '*');
+                                    // Передаем ArrayBuffer обратно родителю через независимый слепок памяти
+                                    window.parent.postMessage({ action: 'respond_16bit_save', buffer: bytes.buffer || bytes }, '*');
                                 });
                             }
                         }
@@ -711,18 +702,15 @@
                     if (req.status === 200) {
                         nes.loadROM(this.responseText);
                         if(gameLoopInterval) clearInterval(gameLoopInterval);
-                        
-                        // Запуск фреймворка через анонимную функцию сохраняет контекст (START оживает!)
                         gameLoopInterval = setInterval(function() { nes.frame(); }, 1000 / 60);
                         
-                        var slotBuffer = cloudSavesMap[selectedSlotNumber];
-                        if (slotBuffer) {
-                            setTimeout(function(){
-                                try {
-                                    nes.fromJSON(JSON.parse(slotBuffer));
-                                    window.Telegram.WebApp.showAlert("ПРОГРЕСС СЛОТА 0" + selectedSlotNumber + " ВОССТАНОВЛЕН!");
-                                }catch(err){}
-                            }, 800);
+                        // Локальное восстановление стейта Денди из localStorage (твоя стабильная схема)
+                        var localNesSave = localStorage.getItem("local_nes_save_" + currentRomName + "_slot_" + selectedSlotNumber);
+                        if (localNesSave) {
+                            try {
+                                nes.fromJSON(JSON.parse(localNesSave));
+                                window.Telegram.WebApp.showAlert("ПРОГРЕСС СЛОТА 0" + selectedSlotNumber + " ВОССТАНОВЛЕН!");
+                            }catch(err){}
                         }
                     } else { alert("ОШИБКА РОМА!"); exitToCatalog(); }
                 };
@@ -757,61 +745,49 @@
         
         document.getElementById('back-to-catalog').addEventListener('click', exitToCatalog);
 
-        function sendPackToGoogleSheetsCloud(userId, file, dateTime, payload, slot) {
-            var rawJsonPayload = {
-                action: "set_save",
-                user_id: String(userId),
-                game_file: String(file),
-                date_time: String(dateTime),
-                slot_num: String(slot), 
-                save_data: String(payload)
-            };
-
-            fetch(gasRetroUrl, {
-                method: "POST",
-                mode: "no-cors", 
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify(rawJsonPayload) 
-            })
-            .then(function() {
-                window.Telegram.WebApp.showAlert("ПРОГРЕСС СЛОТА 0" + slot + " УСПЕШНО ЗАПИСАН В ОБЛАКО!");
-                cloudSavesMap[slot] = payload; 
-            })
-            .catch(function(err) {
-                console.error("Ошибка отправки:", err);
-                alert("ОШИБКА СИНХРОНИЗАЦИИ С ОБЛАКОМ!");
-            });
-        }
-
+        // ОБРАБОТЧИК КЛИКА ВЕРХНЕЙ КНОПКИ "СОХРАНИТЬ ИГРУ"
         document.getElementById('header-save').addEventListener('click', function() {
             if (!currentRomName) return;
-            var initData = window.Telegram.WebApp.initDataUnsafe;
-            var userId = initData.user ? initData.user.id : "test_user_888";
-            var nowStr = new Date().toLocaleString('ru-RU');
 
             if (currentSystem === "nes") {
                 var rawSavePayload = JSON.stringify(nes.toJSON());
-                sendPackToGoogleSheetsCloud(userId, currentRomName, nowStr, rawSavePayload, selectedSlotNumber);
+                var nowStr = new Date().toLocaleString('ru-RU');
+                localStorage.setItem("local_nes_save_" + currentRomName + "_slot_" + selectedSlotNumber, rawSavePayload);
+                localStorage.setItem("meta_save_" + currentRomName + "_slot_" + selectedSlotNumber, nowStr);
+                window.Telegram.WebApp.showAlert("ПРОГРЕСС DENDY В СЛОТ 0" + selectedSlotNumber + " УСПЕШНО ЗАПИСАН!");
             } else if (currentSystem === "sega" || currentSystem === "snes") {
                 var iframe = document.getElementById('active-emulator-iframe');
                 if (iframe && iframe.contentWindow) {
+                    // Даем приказ фрейму эмулятора выгрузить стейт игры
                     iframe.contentWindow.postMessage({ action: 'request_16bit_save' }, '*');
                 }
             }
         });
 
-        window.addEventListener('message', function(e) {
+        // 🔥 СЛУШАТЕЛЬ ОТВЕТА ОТ ФРЕЙМА СЕГА/SNES: Запись бинарного слепка напрямую в IndexedDB устройства!
+        window.addEventListener('message', async function(e) {
             if (!e.data) return;
-            if (e.data.action === 'respond_16bit_save') {
-                var initData = window.Telegram.WebApp.initDataUnsafe;
-                var userId = initData.user ? initData.user.id : "test_user_888";
-                var nowStr = new Date().toLocaleString('ru-RU');
+            if (e.data.action === 'respond_16bit_save' && e.data.buffer) {
+                var uniqueKey = `${currentSystem}:${currentRomName}:${selectedSlotNumber}`;
                 
-                sendPackToGoogleSheetsCloud(userId, currentRomName, nowStr, e.data.data, selectedSlotNumber);
+                try {
+                    await db.states.put({
+                        key: uniqueKey,
+                        platform: currentSystem,
+                        romUrl: currentRomName,
+                        slot: selectedSlotNumber,
+                        timestamp: Date.now(),
+                        data: e.data.buffer // Dexie запишет чистый ArrayBuffer без конвертации в Base64!
+                    });
+                    window.Telegram.WebApp.showAlert("ПРОГРЕСС ИГРЫ УСПЕШНО ЗАПИСАН В ПАМЯТЬ ТЕЛЕФОНА!");
+                } catch(err) {
+                    console.error(err);
+                    alert("ОШИБКА ЗАПИСИ В INDEXEDDB!");
+                }
             }
         });
 
-        // Настройки управления: Блокировка скролла Telegram + тачи + мышь[cite: 3]
+        // Железная привязка физического управления Dendy (без скроллов WebView)
         function bindKey(elementId, nesKey) {
             var el = document.getElementById(elementId);
             if(el) {
