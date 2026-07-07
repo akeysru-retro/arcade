@@ -35,7 +35,7 @@
 
         #catalog-container {
             width: 100%; max-width: 400px; flex-grow: 1; overflow-y: auto; position: relative;
-            background-color: #000; padding-top: 55px; padding-bottom: 80px; box-sizing: border-box;
+            background-color: #000; padding-top: 65px; padding-bottom: 80px; box-sizing: border-box;
             z-index: 10; display: flex; flex-direction: column; align-items: center;
         }
         .bg-video {
@@ -147,7 +147,7 @@
         .sys-row { display: flex; justify-content: center; gap: 20px; }
         .sys-btn { background: #333; border: 2px solid #555; color: #aaa; width: 80px; height: 22px; border-radius: 4px; font-size: 8px; display: flex; align-items: center; justify-content: center; }
 
-        /* 🔥 ТАБ-БАР ЖЕСТКО ЗАФИКСИРОВАН НА ЭКРАНЕ С ВЫСШИМ ПРИОРИТЕТОМ */
+        /* 🔥 ТАБ-БАР ЖЕСТКО ЗАФИКСИРОВАН НА ЭКРАНЕ С ВЫСШИМ Z-INDEX */
         .tab-bar {
             position: fixed !important; bottom: 0 !important; left: 0; right: 0; height: 55px;
             background: #111; border-top: 3px solid #333; display: flex;
@@ -313,6 +313,7 @@
             renderGamesPage(currentPage);
         }
 
+        // ... [Остальные функции пагинации и поиска оставляем] ...
         function toggleFavFilter() {
             showOnlyFavorites = !showOnlyFavorites;
             var btn = document.getElementById('fav-filter-btn');
@@ -388,7 +389,7 @@
             }
         }
 
-        // 🔥 МЕТОД КОНКУРЕНТА: СЛОТЫ ЗАГРУЖАЮТСЯ ИЗ LOCALSTORAGE УСТРОЙСТВА МГНОВЕННО И БЕЗ СЕРВЕРА
+        // 🔥 МЕТОД КОНКУРЕНТА: СЛОТЫ МГНОВЕННО ГЕНЕРИРУЮТСЯ ИЗ ПАМЯТИ ТЕЛЕФОНА (ЛОКАЛЬНО)
         function openSavesManagerScreen(gameObj) {
             currentSelectedGameObj = gameObj;
 
@@ -410,7 +411,7 @@
                 if (metaData) {
                     card.innerHTML = `
                         <div>
-                            <div class="cloud-save-info" style="color:#00ff00;">СЛОТ 0${slot} (СОХРАНЕН)</div>
+                            <div class="cloud-save-info" style="color:#00ff00;">СЛОТ СОХРАНЕНИЯ 0${slot}</div>
                             <div class="cloud-save-date">Запись: ${metaData}</div>
                         </div>
                         <button class="head-btn" style="font-size:7px; background:#0064ff;" onclick="launchGameWithCloudSlot('${slot}')">ЗАГРУЗИТЬ</button>
@@ -418,7 +419,7 @@
                 } else {
                     card.innerHTML = `
                         <div>
-                            <div class="cloud-save-info" style="color:#666;">СЛОТ 0${slot}</div>
+                            <div class="cloud-save-info" style="color:#666;">СЛОТ СОХРАНЕНИЯ 0${slot}</div>
                             <div class="cloud-save-date">ПУСТАЯ ЯЧЕЙКА ПАМЯТИ</div>
                         </div>
                         <button class="head-btn" style="font-size:7px; background:#222; color:#777;" onclick="launchGameWithCloudSlot('${slot}')">ИГРАТЬ</button>
@@ -594,7 +595,8 @@
                     EJS_player = "#game";
                     EJS_core = "${coreType}";
                     
-                    // 🔥 ЛОКАЛЬНЫЙ МЕТОД: Уникальное имя игры изолирует сохранения в базе IndexedDB самого смартфона!
+                    // 🔥 МЕТОД КОНКУРЕНТА: Номер слота встроен прямо в EJS_gameName.
+                    // EmulatorJS сам создаст 5 изолированных IndexedDB баз данных в браузере телефона!
                     EJS_gameName = "${gameTitle.replace(/ /g, '_')}_slot_${selectedSlotNumber}"; 
                     
                     EJS_color = "#0064ff";
@@ -636,8 +638,7 @@
             } else {
                 document.getElementById('game-container').style.display = 'flex';
                 document.getElementById('gamepad').style.display = 'flex'; 
-                // 🔥 ФИКС ОПЕЧАТКИ: Сделано правильное display = none
-                document.getElementById('sega-display-container').style.display = 'none'; 
+                document.getElementById('sega-display-container').style.display = 'none';
                 
                 var req = new XMLHttpRequest();
                 req.open("GET", romUrl, true);
@@ -646,7 +647,7 @@
                     if (req.status === 200) {
                         nes.loadROM(this.responseText);
                         if(gameLoopInterval) clearInterval(gameLoopInterval);
-                        // 🔥 ФИКС ГЕЙМПАДА ДЕНДИ: Обернуто в анонимную функцию для сохранения контекста nes!
+                        // 🔥 ФИКС ГЕЙМПАДА DENDY: Обернуто в анонимную функцию, чтобы nes не терял контекст
                         gameLoopInterval = setInterval(function() { nes.frame(); }, 1000 / 60); 
                         
                         // Загрузка Денди из выбранного локального слота телефона
@@ -692,38 +693,23 @@
         
         document.getElementById('back-to-catalog').addEventListener('click', exitToCatalog);
 
-        // 🔥 ЖЕЛЕЗНАЯ ЛОКАЛЬНАЯ КНОПКА СОХРАНЕНИЯ ДЛЯ ВСЕХ СИСТЕМ
+        // 🔥 ЖЕЛЕЗНАЯ ЛОКАЛЬНАЯ КНОПКА СОХРАНЕНИЯ (СИНХРОНИЗАЦИЯ С ПАМЯТЬЮ ТЕЛЕФОНА)
         document.getElementById('header-save').addEventListener('click', function() {
             if (!currentRomName) return;
             var nowStr = new Date().toLocaleString('ru-RU');
 
             if (currentSystem === "nes") {
-                // Пишем Денди в LocalStorage смартфона
                 var rawSavePayload = JSON.stringify(nes.toJSON());
                 localStorage.setItem("local_nes_save_" + currentRomName + "_slot_" + selectedSlotNumber, rawSavePayload);
                 localStorage.setItem("meta_save_" + currentRomName + "_slot_" + selectedSlotNumber, nowStr);
                 window.Telegram.WebApp.showAlert("ПРОГРЕСС DENDY В СЛОТ 0" + selectedSlotNumber + " УСПЕШНО ЗАПИСАН!");
             } else if (currentSystem === "sega" || currentSystem === "snes") {
-                // Сега и SNES пишутся в IndexedDB смартфона через встроенную шторку эмулятора (кнопка "Сохранить состояние")
-                // Наша верхняя кнопка просто фиксирует дату для вывода в меню слотов!
+                // Для 16-бит файлы сохранений пишутся в IndexedDB телефона при нажатии "Сохранить состояние" во встроенном меню.
+                // Наша верхняя кнопка просто обновляет дату на плашке менеджера слотов!
                 localStorage.setItem("meta_save_" + currentRomName + "_slot_" + selectedSlotNumber, nowStr);
                 window.Telegram.WebApp.showAlert("СЛОТ СОХРАНЕНИЯ 0" + selectedSlotNumber + " ОБНОВЛЕН НА ТЕЛЕФОНЕ!");
             }
         });
-
-        function bindKey(elementId, nesKey) {
-            var el = document.getElementById(elementId);
-            if(el) {
-                el.addEventListener('touchstart', function(e) { e.preventDefault(); if(currentSystem === "nes") nes.buttonDown(1, nesKey); });
-                el.addEventListener('touchend', function(e) { e.preventDefault(); if(currentSystem === "nes") nes.buttonUp(1, nesKey); });
-                el.addEventListener('mousedown', function(e) { if(currentSystem === "nes") nes.buttonDown(1, nesKey); });
-                el.addEventListener('mouseup', function(e) { if(currentSystem === "nes") nes.buttonUp(1, nesKey); });
-            }
-        }
-        bindKey('up', jsnes.Controller.BUTTON_UP); bindKey('down', jsnes.Controller.BUTTON_DOWN);
-        bindKey('left', jsnes.Controller.BUTTON_LEFT); bindKey('right', jsnes.Controller.BUTTON_RIGHT);
-        bindKey('btn-a', jsnes.Controller.BUTTON_A); bindKey('btn-b', jsnes.Controller.BUTTON_B);
-        bindKey('btn-start', jsnes.Controller.BUTTON_START); bindKey('btn-select', jsnes.Controller.BUTTON_SELECT);
     </script>
 </body>
 </html>
