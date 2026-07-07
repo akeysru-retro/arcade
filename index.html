@@ -39,6 +39,10 @@
             background-color: #000; padding-top: 65px; padding-bottom: 70px; box-sizing: border-box;
             z-index: 10; display: flex; flex-direction: column; align-items: center;
         }
+        .bg-video {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            object-fit: cover; z-index: 1; pointer-events: none; opacity: 0.4;
+        }
         
         .app-section { width: 100%; z-index: 5; position: relative; display: none; }
         #section-games { display: block; }
@@ -82,8 +86,8 @@
             font-family: 'Press Start 2P', monospace; font-size: 8px; padding: 8px 12px;
             cursor: pointer; border-radius: 4px;
         }
-        .page-btn:active:not(:disabled) { background: #444; color: #ffff00; }
-        .page-btn:disabled { background: #111; border-color: #333; color: #444; cursor: not-allowed; }
+        .page-btn:active, .page-btn.active-press { background: #00aaee !important; border-color: #0055aa !important; color: #fff !important; transform: scale(0.95); }
+        .page-btn:disabled { background: #111; border-color: #333; color: #444; cursor: not-allowed; transform: none !important; }
         .page-info-text { font-size: 7px; color: #888; text-align: center; }
 
         #section-saves-manager { padding: 0 25px; box-sizing: border-box; width: 100%; }
@@ -136,7 +140,6 @@
         .main-controls { display: flex; width: 100%; justify-content: space-between; align-items: center; }
         .dpad { display: grid; grid-template-columns: repeat(3, 1fr); grid-template-rows: repeat(3, 1fr); width: 130px; height: 130px; }
         
-        /* 🔥 Визуальная обратная связь при отключенном HapticFeedback на кнопках */
         .btn { background: #222; border: 3px solid #444; color: white; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 14px; touch-action: none; transition: background 0.05s ease, transform 0.05s ease; }
         .btn:active, .btn.active-press { background: #00aaee !important; border-color: #0055aa !important; color: #fff !important; transform: scale(0.95); }
         
@@ -147,20 +150,6 @@
         .system-buttons { display: flex; flex-direction: column; gap: 10px; width: 100%; margin-top: 15px; }
         .sys-row { display: flex; justify-content: center; gap: 20px; }
         .sys-btn { background: #333; border: 2px solid #555; color: #aaa; width: 80px; height: 22px; border-radius: 4px; font-size: 8px; display: flex; align-items: center; justify-content: center; touch-action: none; }
-        .sys-btn:active, .sys-btn.active-press { background: #555 !important; color: #fff !important; }
-
-        .tab-bar {
-            position: fixed !important; bottom: 0 !important; left: 0; right: 0; height: 55px;
-            background: #111; border-top: 3px solid #333; display: flex;
-            justify-content: space-around; align-items: center; z-index: 205000 !important; box-sizing: border-box;
-        }
-        .tab-item {
-            display: flex; flex-direction: column; align-items: center; justify-content: center;
-            flex-grow: 1; height: 100%; color: #888; cursor: pointer; background: none; border: none;
-            font-family: 'Press Start 2P', monospace; font-size: 7px; gap: 6px;
-        }
-        .tab-item.active { color: #ffff00; background: #1a1a1a; }
-        .tab-icon { font-size: 14px; }
 
         .loading-overlay { display: none; position: absolute; top: 44px; left: 0; right: 0; bottom: 0; background: #000; z-index: 1500; flex-direction: column; align-items: center; justify-content: center; }
         .error-section { display: none; padding: 40px 25px; text-align: center; width: 100%; box-sizing: border-box; }
@@ -176,7 +165,10 @@
     </div>
     
     <div id="catalog-container">
-        <div style="position:absolute; top:0; left:0; width:100%; height:100%; background: radial-gradient(circle, #151515 0%, #050505 100%); z-index: 1;"></div>
+        <!-- Анимированная ретро-заставка возвращена на место -->
+        <video id="menu-bg-video" class="bg-video" loop playsinline webkit-playsinline muted>
+            <source src="background-video.mp4" type="video/mp4">
+        </video>
 
         <div id="section-games" class="app-section">
             <div class="menu-title">9999 IN 1</div>
@@ -271,11 +263,6 @@
     </div>
 
     <script>
-        window.Telegram.WebApp.ready();
-        window.Telegram.WebApp.expand();
-
-        var gasRetroUrl = "https://script.google.com/macros/s/AKfycbwBjulaVnjKN-Af3oDFFFaG4Us8n6Jgcz3BTJRL1HThFxlgMuxv_D4x1yK4Khy-BsVL/exec";
-
         var db = new Dexie('emu-saves-v1');
         db.version(1).stores({
             states: 'key, platform, gameId, slot, timestamp, data',
@@ -293,17 +280,24 @@
         var activeGameHash = ""; 
 
         var allSecrets = [];
+        var videoEl = document.getElementById('menu-bg-video');
 
-        var rawGamesList = window.MY_GAMES || [];
-        if (rawGamesList.length > 0) {
-            baseGames = rawGamesList.sort(function(a, b) {
-                var titleA = a.title.toString().toLowerCase().trim();
-                var titleB = b.title.toString().toLowerCase().trim();
-                return titleA.localeCompare(titleB, 'ru', { sensitivity: 'base' });
-            });
-            filteredGames = [].concat(baseGames); 
-            renderGamesPage(currentPage);
-        }
+        // 🔥 ИСПРАВЛЕНО: Ждем открытия Базы Данных Dexie перед загрузкой и выводом списка игр
+        db.open().then(function() {
+            var rawGamesList = window.MY_GAMES || [];
+            if (rawGamesList.length > 0) {
+                baseGames = rawGamesList.sort(function(a, b) {
+                    var titleA = a.title.toString().toLowerCase().trim();
+                    var titleB = b.title.toString().toLowerCase().trim();
+                    return titleA.localeCompare(titleB, 'ru', { sensitivity: 'base' });
+                });
+                filteredGames = [].concat(baseGames); 
+                renderGamesPage(currentPage);
+            }
+            if(videoEl) { videoEl.play().catch(function(e){}); }
+        }).catch(function(err) {
+            console.error("Dexie failed to open", err);
+        });
 
         function generateRomHash(arrayBuffer) {
             var view = new DataView(arrayBuffer);
@@ -341,7 +335,7 @@
                 var favFiles = favs.map(f => f.file);
                 filteredGames = baseGames.filter(function(game) {
                     var matchesSearch = game.title.toLowerCase().includes(query);
-                    var matchesFav = !showOnlyFavorites || favFiles.indexOf(game.file) !== -1;
+                    var matchesFav = !showOnlyFavorites || isGameFavorite(game.file);
                     return matchesSearch && matchesFav;
                 });
                 currentPage = 1; 
@@ -442,7 +436,7 @@
 
             try {
                 var res = await fetch(gameObj.file);
-                if (!res.ok) throw new Error(`HTTP ${res.status}`);
+                if (!res.ok) throw new Error();
                 var buf = await res.arrayBuffer();
                 activeGameHash = generateRomHash(buf); 
 
@@ -567,8 +561,7 @@
             document.getElementById('fav-filter-btn').classList.remove('active');
             document.getElementById('fav-filter-btn').textContent = "[ ПОКАЗАТЬ ⭐ ИЗБРАННОЕ ]";
             document.getElementById('search-games-input').value = "";
-            filteredGames = [].concat(baseGames);
-            renderGamesPage(1);
+            filterGames();
 
             var sections = document.getElementsByClassName('app-section');
             for(var i=0; i<sections.length; i++) { sections[i].style.display = 'none'; }
@@ -583,7 +576,6 @@
         var audioCtx = null; var audioEnabled = false; var bufferSize = 4096;
         var audioBuffer = new Float32Array(bufferSize); var audioBufferIndex = 0;
         var gameLoopInterval = null; var currentRomName = ""; var currentSystem = "nes";
-        var videoEl = document.getElementById('menu-bg-video');
 
         var nes = new jsnes.NES({
             onFrame: function(buffer) {
@@ -600,7 +592,6 @@
             }
         });
 
-        // 🔥 ИСПРАВЛЕНО: AudioContext создается строго по требованию и получает безусловный .resume() для iOS WebKit
         function initAudio() {
             if (audioCtx) return;
             var AudioContext = window.AudioContext || window.webkitAudioContext;
@@ -659,11 +650,6 @@
                 <script src="https://cdn.emulatorjs.org/stable/data/loader.js"><\/script>
                 <script>
                     window.addEventListener('message', function(msg) {
-                        // 🔥 ИСПРАВЛЕНО: Безусловная валидация источника сообщений внутри песочницы iframe
-                        if (msg.origin !== window.origin && msg.data.action) {
-                            // Защита структуры ядра от внешних атак
-                        }
-
                         if (msg.data.action === 'boot_wasm_core' && msg.data.rom instanceof ArrayBuffer) {
                             window.EJS_gameName = msg.data.title;
                             window.EJS_gameUrl = URL.createObjectURL(new Blob([msg.data.rom]));
@@ -682,7 +668,6 @@
                                       setTimeout(function(){
                                          try {
                                             window.EJS_emulator.loadState(new Uint8Array(msg.data.save));
-                                            console.log("Бинарный слепок успешно развернут!");
                                          } catch(err) { console.error(err); }
                                       }, 800);
                                   }
@@ -711,12 +696,11 @@
             iframe.srcdoc = iframeHtml;
             
             iframe.addEventListener('load', function() {
-                // Создаем новые срезы ArrayBuffer (через slice), чтобы не передать один буфер повторно в transferList
                 var romToSend = romBuffer.slice(0);
                 var saveToSend = saveBuffer ? saveBuffer.slice(0) : null;
 
+                // 🔥 ИСПРАВЛЕНО: Убран дублирующийся ключ action
                 var payload = { 
-                    action: 'boot_with_buffers', 
                     action: 'boot_wasm_core', 
                     rom: romToSend, 
                     title: gameTitle,
@@ -732,10 +716,10 @@
             container.appendChild(iframe);
         }
 
-        // 🔥 ИСПРАВЛЕНО: Явный перехват CORS-ошибок сети при fetch с развернутым описанием сбоя для юзера
         async function startGame(romUrl, gameTitle, system, hasSave) {
             currentRomName = romUrl;
             currentSystem = system || "nes";
+            if(videoEl) videoEl.pause();
 
             var overlay = document.getElementById('loading-overlay');
             var subtext = document.getElementById('loading-subtext');
@@ -757,7 +741,6 @@
                     record = await db.states.get(uniqueKey);
                 }
 
-                // Переключаем экраны только при успешной загрузке ромы!
                 document.getElementById('catalog-container').style.display = 'none';
                 document.getElementById('app-tab-bar').style.display = 'none';
                 document.getElementById('game-screen').style.display = 'flex';
@@ -765,7 +748,7 @@
                 document.getElementById('header-save').style.display = 'block';
                 document.getElementById('main-title').textContent = gameTitle + " [СЛОТ 0" + selectedSlotNumber + "]";
 
-                initAudio(); // iOS-инжект звука строго по событию клика юзера на слот
+                initAudio(); 
                 if (audioCtx) audioCtx.resume();
 
                 if (currentSystem === "sega" || currentSystem === "snes") {
@@ -819,6 +802,8 @@
             document.getElementById('catalog-container').style.display = 'flex';
             document.getElementById('app-tab-bar').style.display = 'flex';
             document.getElementById('main-title').textContent = '9999 IN 1';
+            
+            if(videoEl) { videoEl.play().catch(function(e){}); }
             filterGames();
         }
         
@@ -860,7 +845,6 @@
             }
         });
 
-        // 🔥 ИСПРАВЛЕНО: Безопасный перехват сообщений от фрейма с валидацией origin
         window.addEventListener('message', async function(e) {
             if (!e.data) return;
             
@@ -892,15 +876,14 @@
             }
         });
 
-        // Железная привязка физического управления Dendy с CSS-классом визуального клика
         function bindKey(elementId, nesKey) {
             var el = document.getElementById(elementId);
             if(!el) return;
 
             var startHandler = function(e) {
                 if (e.cancelable) e.preventDefault();
-                el.classList.add('active-press'); // Визуальный дубликат клика
-                if (window.Telegram && window.Telegram.WebApp.HapticFeedback && e.type === 'touchstart') {
+                el.classList.add('active-press'); 
+                if (window.Telegram && window.Telegram.WebApp && window.Telegram.WebApp.HapticFeedback && e.type === 'touchstart') {
                     window.Telegram.WebApp.HapticFeedback.impactOccurred('light');
                 }
                 if(currentSystem === "nes") nes.buttonDown(1, nesKey);
@@ -942,8 +925,6 @@
         window.addEventListener('keydown', function(e) {
             if(currentSystem === "nes" && keyMap[e.keyCode] !== undefined) {
                 nes.buttonDown(1, keyMap[e.keyCode]);
-                var elId = Object.keys(jsnes.Controller).find(k => jsnes.Controller[k] === keyMap[e.keyCode]);
-                // Логика подсвечивания кнопок от клавиатуры ПК
             }
         });
         window.addEventListener('keyup', function(e) {
