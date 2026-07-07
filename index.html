@@ -172,7 +172,6 @@
             <div class="pagination-container" id="pagination-controls"></div>
         </div>
 
-        <!-- МЕНЕДЖЕР СЛОТОВ СОХРАНЕНИЙ -->
         <div id="section-saves" class="app-section">
             <div class="menu-title" id="saves-manager-title">ЗАГРУЗКА...</div>
             <div id="section-saves-manager">
@@ -257,7 +256,7 @@
         var showOnlyFavorites = false; 
 
         var currentSelectedGameObj = null; 
-        var selectedSlotNumber = "1"; // 🔥 ИСПРАВЛЕНО: Теперь это ВСЕГДА строка, как на бэкенде
+        var selectedSlotNumber = "1"; // Фиксируем строго строку!
         var cloudSavesMap = {}; 
 
         var allSecrets = [];
@@ -403,17 +402,20 @@
             var activeSlotsData = {};
             if (data && data.slots) {
                 data.slots.forEach(function(item) {
-                    activeSlotsData[item.slot_num] = item;
-                    cloudSavesMap[item.slot_num] = item.save_data; 
+                    // 🔥 ИСПРАВЛЕНО: Принудительно кастим ключ слота в строку, чтобы сопоставить с циклом!
+                    var sKey = item.slot_num.toString().trim();
+                    activeSlotsData[sKey] = item;
+                    cloudSavesMap[sKey] = item.save_data; 
                 });
             }
 
             for (var slot = 1; slot <= 5; slot++) {
                 var card = document.createElement('div');
                 card.className = 'cloud-save-card';
+                var sString = slot.toString();
                 
-                if (activeSlotsData[slot]) {
-                    var saveItem = activeSlotsData[slot];
+                if (activeSlotsData[sString]) {
+                    var saveItem = activeSlotsData[sString];
                     card.innerHTML = `
                         <div>
                             <div class="cloud-save-info" style="color:#00ff00;">СЛОТ 0${slot} (СОХРАНЕН)</div>
@@ -435,12 +437,13 @@
         }
 
         function launchGamePureNew() {
-            selectedSlotNumber = "1"; // Сохраняем в первый по умолчанию
+            selectedSlotNumber = "1"; 
             startGame(currentSelectedGameObj.file, currentSelectedGameObj.title, currentSelectedGameObj.system);
         }
 
         function launchGameWithCloudSlot(slotNum) {
-            selectedSlotNumber = String(slotNum).trim(); // 🔥 ИСПРАВЛЕНО: Строгое приведение к строке
+            // 🔥 ИСПРАВЛЕНО: Сохраняем строго строкой на всех уровнях
+            selectedSlotNumber = String(slotNum).trim(); 
             startGame(currentSelectedGameObj.file, currentSelectedGameObj.title, currentSelectedGameObj.system);
         }
 
@@ -585,9 +588,8 @@
             var initialVolume = audioEnabled ? 1 : 0;
 
             var currentSaveBuffer = cloudSavesMap[selectedSlotNumber] || "";
-            
-            // 🔥 ЖЕСТКИЙ ПРЯМОЙ ИНЖЕКТ ДЛЯ СЕГИ/SNES ЧЕРЕЗ СКРИПТ В ТЕЛО IFRAME
             var injectionPayloadScript = "";
+            
             if (currentSaveBuffer && currentSaveBuffer.length > 50) {
                 injectionPayloadScript = `
                     window.addEventListener('load', function() {
@@ -604,10 +606,10 @@
                                     for (var i = 0; i < len; i++) { bytes[i] = binaryStr.charCodeAt(i); }
                                     window.EJS_instance.loadState(bytes);
                                     console.log("Облачное сохранение 16-бит успешно развернуто!");
-                                 } catch(err) { console.error("Ошибка десериализации байт:", err); }
+                                 } catch(err) { console.error("Ошибка автоинжекта:", err); }
                               }, 1500);
                            }
-                           if (timerCount > 60) clearInterval(checkExist); // Ограничение 9 секунд
+                           if (timerCount > 60) clearInterval(checkExist);
                         }, 150);
                     });
                 `;
@@ -641,7 +643,6 @@
                 <script>
                     ${injectionPayloadScript}
 
-                    // 🔥 ПЕРЕХВАТ СИГНАЛОВ: Эмулятор слушает команды от внешней кнопки хедера страницы
                     window.addEventListener('message', function(e) {
                         if (!e.data) return;
                         if (e.data.action === 'request_16bit_save') {
@@ -747,7 +748,7 @@
                 user_id: String(userId),
                 game_file: String(file),
                 date_time: String(dateTime),
-                slot_num: String(slot), // Гарантированно строка
+                slot_num: String(slot), 
                 save_data: String(payload)
             };
 
@@ -758,8 +759,7 @@
                 body: JSON.stringify(rawJsonPayload) 
             })
             .then(function() {
-                window.Telegram.WebApp.showAlert("ПРОГРЕСС СЛОТА 0" + slot + " ЗАПИСАН В ОБЛАКО!");
-                // Обновляем буфер локально, чтобы можно было перезаписать повторно без перезапуска страницы
+                window.Telegram.WebApp.showAlert("ПРОГРЕСС СЛОТА 0" + slot + " УСПЕШНО ЗАПИСАН В ОБЛАКО!");
                 cloudSavesMap[slot] = payload; 
             })
             .catch(function(err) {
@@ -768,6 +768,7 @@
             });
         }
 
+        // 🔥 ГЛАВНЫЙ ЕДИНСТВЕННЫЙ ОБРАБОТЧИК КЛИКА КНОПКИ СОХРАНЕНИЯ (ДУБЛИКАТЫ УДАЛЕНЫ)
         document.getElementById('header-save').addEventListener('click', function() {
             if (!currentRomName) return;
             var initData = window.Telegram.WebApp.initDataUnsafe;
@@ -778,7 +779,6 @@
                 var rawSavePayload = JSON.stringify(nes.toJSON());
                 sendPackToGoogleSheetsCloud(userId, currentRomName, nowStr, rawSavePayload, selectedSlotNumber);
             } else if (currentSystem === "sega" || currentSystem === "snes") {
-                // 🔥 Посылаем команду внутрь iframe
                 var iframe = document.getElementById('active-emulator-iframe');
                 if (iframe && iframe.contentWindow) {
                     iframe.contentWindow.postMessage({ action: 'request_16bit_save' }, '*');
@@ -786,7 +786,7 @@
             }
         });
 
-        // Слушаем бинарный base64-ответ от 16-битных ядер (Сега/SNES)
+        // 🔥 ГЛАВНЫЙ ЕДИНСТВЕННЫЙ СЛУШАТЕЛЬ ОТВЕТА ОТ 16-БИТНЫХ СИСТЕМ (ДУБЛИКАТЫ УДАЛЕНЫ)
         window.addEventListener('message', function(e) {
             if (!e.data) return;
             if (e.data.action === 'respond_16bit_save') {
@@ -794,7 +794,6 @@
                 var userId = initData.user ? initData.user.id : "test_user_888";
                 var nowStr = new Date().toLocaleString('ru-RU');
                 
-                // Пушим реальный слепок байт Сеги/SNES в выбранную строку таблицы!
                 sendPackToGoogleSheetsCloud(userId, currentRomName, nowStr, e.data.data, selectedSlotNumber);
             }
         });
