@@ -135,17 +135,30 @@
         #sega-display-container { display: none; width: 100%; max-width: 400px; height: calc(100vh - 44px); position: absolute; top: 44px; left: 0; right: 0; bottom: 0; z-index: 1000; background: #000; }
         #sega-display-container iframe { width: 100%; height: 100%; border: none; display: block; }
 
-        #gamepad { position: absolute; bottom: 0; left: 0; right: 0; z-index: 30; display: flex; flex-direction: column; width: 100%; padding: 15px; box-sizing: border-box; justify-content: space-between; border-top: 4px solid #222; background: #111; }
+        #gamepad { position: absolute; bottom: 0; left: 0; right: 0; z-index: 30; display: flex; flex-direction: column; width: 100%; padding: 15px; box-sizing: border-box; justify-content: space-between; border-top: 4px solid #222; background: #111; touch-action: none; }
         .main-controls { display: flex; width: 100%; justify-content: space-between; align-items: center; }
         .dpad { display: grid; grid-template-columns: repeat(3, 1fr); grid-template-rows: repeat(3, 1fr); width: 130px; height: 130px; }
-        .btn { background: #222; border: 3px solid #444; color: white; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 14px; }
+        .btn { background: #222; border: 3px solid #444; color: white; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 14px; touch-action: none; }
         .btn:active { background: #444; }
         #nes-buttons { display: inline-flex; gap: 15px; }
-        .round-btn { width: 60px; height: 60px; background: #cc1111; border-radius: 50%; border: 4px solid #fff; color: white; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 16px; font-family: sans-serif; box-shadow: 0 4px 0 #880000; }
+        .round-btn { width: 60px; height: 60px; background: #cc1111; border-radius: 50%; border: 4px solid #fff; color: white; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 16px; font-family: sans-serif; box-shadow: 0 4px 0 #880000; touch-action: none; }
         .round-btn:active { background: #aa0000; transform: translateY(4px); box-shadow: none; }
         .system-buttons { display: flex; flex-direction: column; gap: 10px; width: 100%; margin-top: 15px; }
         .sys-row { display: flex; justify-content: center; gap: 20px; }
-        .sys-btn { background: #333; border: 2px solid #555; color: #aaa; width: 80px; height: 22px; border-radius: 4px; font-size: 8px; display: flex; align-items: center; justify-content: center; }
+        .sys-btn { background: #333; border: 2px solid #555; color: #aaa; width: 80px; height: 22px; border-radius: 4px; font-size: 8px; display: flex; align-items: center; justify-content: center; touch-action: none; }
+
+        .tab-bar {
+            position: fixed !important; bottom: 0 !important; left: 0; right: 0; height: 55px;
+            background: #111; border-top: 3px solid #333; display: flex;
+            justify-content: space-around; align-items: center; z-index: 205000 !important; box-sizing: border-box;
+        }
+        .tab-item {
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            flex-grow: 1; height: 100%; color: #888; cursor: pointer; background: none; border: none;
+            font-family: 'Press Start 2P', monospace; font-size: 7px; gap: 6px;
+        }
+        .tab-item.active { color: #ffff00; background: #1a1a1a; }
+        .tab-icon { font-size: 14px; }
     </style>
 </head>
 <body>
@@ -256,7 +269,7 @@
         var showOnlyFavorites = false; 
 
         var currentSelectedGameObj = null; 
-        var selectedSlotNumber = "1"; // Фиксируем строго строку!
+        var selectedSlotNumber = "1"; 
         var cloudSavesMap = {}; 
 
         var allSecrets = [];
@@ -402,7 +415,6 @@
             var activeSlotsData = {};
             if (data && data.slots) {
                 data.slots.forEach(function(item) {
-                    // 🔥 ИСПРАВЛЕНО: Принудительно кастим ключ слота в строку, чтобы сопоставить с циклом!
                     var sKey = item.slot_num.toString().trim();
                     activeSlotsData[sKey] = item;
                     cloudSavesMap[sKey] = item.save_data; 
@@ -442,7 +454,6 @@
         }
 
         function launchGameWithCloudSlot(slotNum) {
-            // 🔥 ИСПРАВЛЕНО: Сохраняем строго строкой на всех уровнях
             selectedSlotNumber = String(slotNum).trim(); 
             startGame(currentSelectedGameObj.file, currentSelectedGameObj.title, currentSelectedGameObj.system);
         }
@@ -698,7 +709,9 @@
                     if (req.status === 200) {
                         nes.loadROM(this.responseText);
                         if(gameLoopInterval) clearInterval(gameLoopInterval);
-                        gameLoopInterval = setInterval(nes.frame, 1000 / 60);
+                        
+                        // Запуск фреймворка через анонимную функцию сохраняет контекст (START оживает!)
+                        gameLoopInterval = setInterval(function() { nes.frame(); }, 1000 / 60);
                         
                         var slotBuffer = cloudSavesMap[selectedSlotNumber];
                         if (slotBuffer) {
@@ -768,7 +781,6 @@
             });
         }
 
-        // 🔥 ГЛАВНЫЙ ЕДИНСТВЕННЫЙ ОБРАБОТЧИК КЛИКА КНОПКИ СОХРАНЕНИЯ (ДУБЛИКАТЫ УДАЛЕНЫ)
         document.getElementById('header-save').addEventListener('click', function() {
             if (!currentRomName) return;
             var initData = window.Telegram.WebApp.initDataUnsafe;
@@ -786,7 +798,6 @@
             }
         });
 
-        // 🔥 ГЛАВНЫЙ ЕДИНСТВЕННЫЙ СЛУШАТЕЛЬ ОТВЕТА ОТ 16-БИТНЫХ СИСТЕМ (ДУБЛИКАТЫ УДАЛЕНЫ)
         window.addEventListener('message', function(e) {
             if (!e.data) return;
             if (e.data.action === 'respond_16bit_save') {
@@ -798,19 +809,40 @@
             }
         });
 
+        // Настройки управления: Блокировка скролла Telegram + тачи + мышь[cite: 3]
         function bindKey(elementId, nesKey) {
             var el = document.getElementById(elementId);
             if(el) {
-                el.addEventListener('touchstart', function(e) { e.preventDefault(); if(currentSystem === "nes") nes.buttonDown(1, nesKey); });
-                el.addEventListener('touchend', function(e) { e.preventDefault(); if(currentSystem === "nes") nes.buttonUp(1, nesKey); });
-                el.addEventListener('mousedown', function(e) { if(currentSystem === "nes") nes.buttonDown(1, nesKey); });
-                el.addEventListener('mouseup', function(e) { if(currentSystem === "nes") nes.buttonUp(1, nesKey); });
+                el.addEventListener('touchstart', function(e) { 
+                    e.preventDefault(); 
+                    if (window.Telegram && window.Telegram.WebApp.HapticFeedback) {
+                        window.Telegram.WebApp.HapticFeedback.impactOccurred('light');
+                    }
+                    if(currentSystem === "nes") nes.buttonDown(1, nesKey); 
+                }, { passive: false });
+                
+                el.addEventListener('touchend', function(e) { 
+                    e.preventDefault(); 
+                    if(currentSystem === "nes") nes.buttonUp(1, nesKey); 
+                }, { passive: false });
+                
+                el.addEventListener('mousedown', function(e) { 
+                    if(currentSystem === "nes") nes.buttonDown(1, nesKey); 
+                });
+                el.addEventListener('mouseup', function(e) { 
+                    if(currentSystem === "nes") nes.buttonUp(1, nesKey); 
+                });
             }
         }
-        bindKey('up', jsnes.Controller.BUTTON_UP); bindKey('down', jsnes.Controller.BUTTON_DOWN);
-        bindKey('left', jsnes.Controller.BUTTON_LEFT); bindKey('right', jsnes.Controller.BUTTON_RIGHT);
-        bindKey('btn-a', jsnes.Controller.BUTTON_A); bindKey('btn-b', jsnes.Controller.BUTTON_B);
-        bindKey('btn-start', jsnes.Controller.BUTTON_START); bindKey('btn-select', jsnes.Controller.BUTTON_SELECT);
+        
+        bindKey('up', jsnes.Controller.BUTTON_UP); 
+        bindKey('down', jsnes.Controller.BUTTON_DOWN);
+        bindKey('left', jsnes.Controller.BUTTON_LEFT); 
+        bindKey('right', jsnes.Controller.BUTTON_RIGHT);
+        bindKey('btn-a', jsnes.Controller.BUTTON_A); 
+        bindKey('btn-b', jsnes.Controller.BUTTON_B);
+        bindKey('btn-start', jsnes.Controller.BUTTON_START); 
+        bindKey('btn-select', jsnes.Controller.BUTTON_SELECT);
     </script>
 </body>
 </html>
