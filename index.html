@@ -57,7 +57,7 @@
         .game-click-zone { display: flex; align-items: center; flex-grow: 1; cursor: pointer; justify-content: space-between; overflow: hidden; }
         .game-click-zone:active { color: #ffff00; }
         .game-title-text { display: flex; align-items: center; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-        .game-title-text::before { content: "? "; opacity: 0; margin-right: 8px; color: #ffff00; }
+        .game-title-text::before { content: "▶ "; opacity: 0; margin-right: 8px; color: #ffff00; }
         .game-click-zone:active .game-title-text::before { opacity: 1; }
         
         .item-system-badge { font-size: 7px; padding: 3px 6px; background: #333; border-radius: 2px; color: #fff; margin-left: 10px; font-family: sans-serif; font-weight: bold; flex-shrink: 0; }
@@ -151,10 +151,10 @@
 <body>
 
     <div class="header-panel">
-        <button id="back-to-catalog" class="head-btn">? 妙圻妖尾</button>
-        <button id="header-save" class="head-btn ingame-btn">?? 妊圻妨圾 圾 妍坎妣均妞妍</button>
+        <button id="back-to-catalog" class="head-btn">↩ МЕНЮ</button>
+        <button id="header-save" class="head-btn ingame-btn">💾 СЕЙВ В ОБЛАКО</button>
         <div id="main-title" style="font-size: 8px; letter-spacing: 1px;">9999 IN 1</div>
-        <button id="sound-toggle" class="head-btn muted">?? 妝圾孝妞</button>
+        <button id="sound-toggle" class="head-btn muted">🔇 ЗВУК</button>
     </div>
     
     <div id="catalog-container">
@@ -165,56 +165,55 @@
         <div id="section-games" class="app-section">
             <div class="menu-title">9999 IN 1</div>
             <div style="padding: 0 20px 10px 20px; width: 100%; box-sizing: border-box;">
-                <input type="text" id="search-games-input" class="form-input" style="width: 100%; box-sizing: border-box;" placeholder="妤妍妒妊妞 妒坐妓局..." oninput="filterGames()">
+                <input type="text" id="search-games-input" class="form-input" style="width: 100%; box-sizing: border-box;" placeholder="ПОИСК ИГРЫ..." oninput="filterGames()">
             </div>
-            <button id="fav-filter-btn" class="fav-filter-toggle" onclick="toggleFavFilter()">[ 妤妍妞均妝均妥屁 ? 妒妝坎妓均妖妖妍圻 ]</button>
+            <button id="fav-filter-btn" class="fav-filter-toggle" onclick="toggleFavFilter()">[ ПОКАЗАТЬ ⭐ ИЗБРАННОЕ ]</button>
             <div class="game-list" id="retro-game-list"></div>
             <div class="pagination-container" id="pagination-controls"></div>
         </div>
 
-        <!-- 妙圻妖圻坏夾圻妓 妊妣妍妥妍圾 妊妍孚妓均妖圻妖妒妨 -->
         <div id="section-saves" class="app-section">
-            <div class="menu-title" id="saves-manager-title">妝均坐妓孝妝妞均...</div>
+            <div class="menu-title" id="saves-manager-title">ЗАГРУЗКА...</div>
             <div id="section-saves-manager">
-                <button class="btn-launch-new" onclick="launchGamePureNew()">? 妒坐妓均妥屁 妊 妖均完均妣均</button>
-                <div class="saves-block-title">圾局坎圻妓妒 妊妣妍妥 妍坎妣均妞均 (1 妒妝 5):</div>
+                <button class="btn-launch-new" onclick="launchGamePureNew()">▶ ИГРАТЬ С НАЧАЛА</button>
+                <div class="saves-block-title">ВЫБЕРИ СЛОТ ОБЛАКА (1 ИЗ 5):</div>
                 <div id="cloud-saves-list-container"></div>
             </div>
         </div>
 
         <div id="section-secrets" class="app-section">
-            <div class="menu-title">妊圻妞妓圻妥局</div>
+            <div class="menu-title">СЕКРЕТЫ</div>
             <div style="padding: 0 20px 15px 20px;">
-                <input type="text" id="search-secrets-input" class="form-input" style="width: 100%; box-sizing: border-box;" placeholder="妤妍妒妊妞 妒坐妓局 妒妣妒 完妒妥均..." oninput="filterSecrets()">
+                <input type="text" id="search-secrets-input" class="form-input" style="width: 100%; box-sizing: border-box;" placeholder="ПОИСК ИГРЫ ИЛИ ЧИТА..." oninput="filterSecrets()">
             </div>
             <div id="secrets-container"></div>
         </div>
 
         <div id="section-order" class="app-section">
-            <div class="menu-title">妝均妞均妝 妒坐妓</div>
+            <div class="menu-title">ЗАКАЗ ИГР</div>
             <div class="order-container">
-                <div class="order-text">妝均妞均妝 妖妍圾妍妨 妒坐妓局 妤妣均妥妖局妨 (100 妓孝坎妣圻妨). 妖均妤妒宋妒妥圻 妖均妝圾均妖妒圻, 妒 妙局 坏妍坎均圾妒妙 圻壯 妖均 妤妍妣妞孝 坎妍妥均!</div>
+                <div class="order-text">ЗАКАЗ НОВОЙ ИГРЫ ПЛАТНЫЙ (100 РУБЛЕЙ). НАПИШИТЕ НАЗВАНИЕ, И МЫ ДОБАВИМ ЕЁ НА ПОЛКУ БОТА!</div>
                 <div class="form-group">
-                    <label class="form-label">妖均妝圾均妖妒圻 妒坐妓局:</label>
-                    <input type="text" id="order-game-title" class="form-input" placeholder="妖均妤妓妒妙圻妓: TEENAGE MUTANT TURTLES">
+                    <label class="form-label">НАЗВАНИЕ ИГРЫ:</label>
+                    <input type="text" id="order-game-title" class="form-input" placeholder="НАПРИМЕР: TEENAGE MUTANT TURTLES">
                 </div>
                 <div class="form-group">
-                    <label class="form-label">妤妣均妥孜妍妓妙均 (妞妍妖妊妍妣屁):</label>
+                    <label class="form-label">ПЛАТФОРМА (КОНСОЛЬ):</label>
                     <input type="text" id="order-game-system" class="form-input" placeholder="DENDY / SEGA / GBA">
                 </div>
-                <button id="order-btn-submit" class="order-submit-btn" onclick="sendOrderRequest()">妍妥妤妓均圾妒妥屁 妝均岐圾妞孝</button>
+                <button id="order-btn-submit" class="order-submit-btn" onclick="sendOrderRequest()">ОТПРАВИТЬ ЗАЯВКУ</button>
             </div>
         </div>
 
         <div class="tab-bar" id="app-tab-bar">
             <button class="tab-item active" onclick="switchTab('games', this)">
-                <span class="tab-icon">??</span><span>妒坐妓局</span>
+                <span class="tab-icon">🎮</span><span>ИГРЫ</span>
             </button>
             <button class="tab-item" onclick="switchTab('secrets', this)">
-                <span class="tab-icon">??</span><span>妊圻妞妓圻妥局</span>
+                <span class="tab-icon">🔑</span><span>СЕКРЕТЫ</span>
             </button>
             <button class="tab-item" onclick="switchTab('order', this)">
-                <span class="tab-icon">??</span><span>妝均妞均妝</span>
+                <span class="tab-icon">📥</span><span>ЗАКАЗ</span>
             </button>
         </div>
     </div>
@@ -227,9 +226,9 @@
         <div id="gamepad">
             <div class="main-controls">
                 <div class="dpad">
-                    <div></div><div class="btn" id="up">↖</div><div></div>
-                    <div class="btn" id="left">?</div><div></div><div class="btn" id="right">?</div>
-                    <div></div><div class="btn" id="down">�</div><div></div>
+                    <div></div><div class="btn" id="up">▲</div><div></div>
+                    <div class="btn" id="left">◀</div><div></div><div class="btn" id="right">▶</div>
+                    <div></div><div class="btn" id="down">▼</div><div></div>
                 </div>
                 <div id="nes-buttons">
                     <div class="round-btn" id="btn-b">B</div>
@@ -305,9 +304,9 @@
             showOnlyFavorites = !showOnlyFavorites;
             var btn = document.getElementById('fav-filter-btn');
             if (showOnlyFavorites) {
-                btn.classList.add('active'); btn.textContent = "[ ? 妓圻夾妒妙: 妥妍妣屁妞妍 妒妝坎妓均妖妖妍圻 ]";
+                btn.classList.add('active'); btn.textContent = "[ РЕЖИМ: ТОЛЬКО ИЗБРАННОЕ ]";
             } else {
-                btn.classList.remove('active'); btn.textContent = "[ 妤妍妞均妝均妥屁 ? 妒妝坎妓均妖妖妍圻 ]";
+                btn.classList.remove('active'); btn.textContent = "[ ПОКАЗАТЬ ⭐ ИЗБРАННОЕ ]";
             }
             filterGames();
         }
@@ -317,7 +316,7 @@
             if (!listContainer) return;
             listContainer.innerHTML = "";
             if (filteredGames.length === 0) {
-                listContainer.innerHTML = '<div style="text-align:center; font-size:8px; color:#555; padding:30px 0;">妊妤妒妊妍妞 妤孝妊妥</div>';
+                listContainer.innerHTML = '<div style="text-align:center; font-size:8px; color:#555; padding:30px 0;">СПИСОК ПУСТ</div>';
                 renderPaginationButtons(); return;
             }
             var startIndex = (page - 1) * itemsPerPage;
@@ -340,7 +339,7 @@
                         <div class="game-title-text">${num}. ${game.title}</div>
                         <span class="item-system-badge ${badgeClass}">${sysLabel}</span>
                     </div>
-                    <div class="fav-star-btn ${favClass}" onclick="toggleFavorite('${game.file}', event)">?</div>
+                    <div class="fav-star-btn ${favClass}" onclick="toggleFavorite('${game.file}', event)">⭐</div>
                 `;
                 listContainer.appendChild(item);
             });
@@ -355,14 +354,14 @@
             if (totalPages <= 1) return;
 
             var prevBtn = document.createElement('button');
-            prevBtn.className = 'page-btn'; prevBtn.disabled = (currentPage === 1); prevBtn.textContent = "? 妖均妝均坏";
+            prevBtn.className = 'page-btn'; prevBtn.disabled = (currentPage === 1); prevBtn.textContent = "◀ НАЗАД";
             prevBtn.addEventListener('click', function() { changeGamesPage(currentPage - 1); });
 
             var infoSpan = document.createElement('span');
             infoSpan.className = 'page-info-text'; infoSpan.innerHTML = `PAGE<br>${currentPage}/${totalPages}`;
 
             var nextBtn = document.createElement('button');
-            nextBtn.className = 'page-btn'; nextBtn.disabled = (currentPage === totalPages); nextBtn.textContent = "圾妤圻妓圻坏 ?";
+            nextBtn.className = 'page-btn'; nextBtn.disabled = (currentPage === totalPages); nextBtn.textContent = "ВПЕРЕД ▶";
             nextBtn.addEventListener('click', function() { changeGamesPage(currentPage + 1); });
 
             controlsContainer.appendChild(prevBtn); controlsContainer.appendChild(infoSpan); controlsContainer.appendChild(nextBtn);
@@ -386,7 +385,7 @@
             document.getElementById('saves-manager-title').textContent = gameObj.title.toUpperCase();
 
             var listContainer = document.getElementById('cloud-saves-list-container');
-            listContainer.innerHTML = '<div style="text-align:center; font-size:7px; color:#888; padding:20px 0;">妍妤妓妍妊 妍坎妣均完妖局孚 妊妣妍妥妍圾...</div>';
+            listContainer.innerHTML = '<div style="text-align:center; font-size:7px; color:#888; padding:20px 0;">ОПРОС ОБЛАЧНЫХ СЛОТОВ...</div>';
 
             var initData = window.Telegram.WebApp.initDataUnsafe;
             var userId = initData.user ? initData.user.id : "test_user_888";
@@ -416,18 +415,18 @@
                     var saveItem = activeSlotsData[slot];
                     card.innerHTML = `
                         <div>
-                            <div class="cloud-save-info" style="color:#00ff00;">妊妣妍妥 0${slot} (妊妍孚妓均妖圻妖)</div>
-                            <div class="cloud-save-date">妝忘扭我扼抆: ${saveItem.date_time}</div>
+                            <div class="cloud-save-info" style="color:#00ff00;">СЛОТ 0${slot} (СОХРАНЕН)</div>
+                            <div class="cloud-save-date">Запись: ${saveItem.date_time}</div>
                         </div>
-                        <button class="head-btn" style="font-size:7px; background:#0064ff;" onclick="launchGameWithCloudSlot(${slot})">妝均坐妓孝妝妒妥屁</button>
+                        <button class="head-btn" style="font-size:7px; background:#0064ff;" onclick="launchGameWithCloudSlot(${slot})">ЗАГРУЗИТЬ</button>
                     `;
                 } else {
                     card.innerHTML = `
                         <div>
-                            <div class="cloud-save-info" style="color:#666;">妊妣妍妥 0${slot}</div>
-                            <div class="cloud-save-date">妤孝妊妥均岐 岐完圻妨妞均 妥均坎妣妒孛局</div>
+                            <div class="cloud-save-info" style="color:#666;">СЛОТ 0${slot}</div>
+                            <div class="cloud-save-date">ПУСТАЯ ЯЧЕЙКА ТАБЛИЦЫ</div>
                         </div>
-                        <button class="head-btn" style="font-size:7px; background:#222; color:#777;" onclick="launchGameWithCloudSlot(${slot})">妒坐妓均妥屁</button>
+                        <button class="head-btn" style="font-size:7px; background:#222; color:#777;" onclick="launchGameWithCloudSlot(${slot})">ИГРАТЬ</button>
                     `;
                 }
                 listContainer.appendChild(card);
@@ -456,7 +455,7 @@
             var secretsContainer = document.getElementById('secrets-container'); if (!secretsContainer) return;
             secretsContainer.innerHTML = "";
             if (secretsArray.length === 0) {
-                secretsContainer.innerHTML = '<div style="text-align:center; font-size:8px; color:#555; padding-top:20px;">妖妒完圻坐妍 妖圻 妖均妨坏圻妖妍</div>'; return;
+                secretsContainer.innerHTML = '<div style="text-align:center; font-size:8px; color:#555; padding-top:20px;">НИЧЕГО НЕ НАЙДЕНО</div>'; return;
             }
             secretsArray.forEach(function(item) {
                 var card = document.createElement('div'); card.className = 'secret-card';
@@ -481,13 +480,13 @@
         function sendOrderRequest() {
             var titleInput = document.getElementById('order-game-title').value.trim();
             var systemInput = document.getElementById('order-game-system').value.trim();
-            if (!titleInput) { alert("圾圾圻坏妒妥圻 妖均妝圾均妖妒圻 妒坐妓局!"); return; }
+            if (!titleInput) { alert("ВВЕДИТЕ НАЗВАНИЕ ИГРЫ!"); return; }
             var initData = window.Telegram.WebApp.initDataUnsafe;
             var userId = initData.user ? initData.user.id : "";
             var username = initData.user ? initData.user.username : "no_name";
-            if (!userId) { alert("妍宋妒坎妞均 TELEGRAM ID!"); return; }
+            if (!userId) { alert("ОШИБКА TELEGRAM ID!"); return; }
             var btnSubmit = document.getElementById('order-btn-submit');
-            btnSubmit.disabled = true; btnSubmit.textContent = "妍妥妤妓均圾妞均...";
+            btnSubmit.disabled = true; btnSubmit.textContent = "ОТПРАВКА...";
 
             var requestUrl = gasRetroUrl + "?action=submit_order&title=" + encodeURIComponent(titleInput) + 
                              "&system=" + encodeURIComponent(systemInput || "Dendy") + "&user_id=" + userId + "&username=" + encodeURIComponent(username);
@@ -495,24 +494,24 @@
             fetch(requestUrl, { mode: 'no-cors' })
                 .then(function() {
                     window.Telegram.WebApp.showPopup({
-                        title: "妝均岐圾妞均 妊孜妍妓妙妒妓妍圾均妖均!",
-                        message: "妊折快找 抉找扭把忘志抖快扶 志 忱我忘抖抉忍 扼 忌抉找抉技.",
+                        title: "ЗАЯВКА СФОРМИРОВАНА!",
+                        message: "Счет отправлен в диалог с ботом.",
                         buttons: [
-                            { id: "bot", type: "default", text: "?? 妞 坎妍妥孝" },
-                            { id: "close", type: "cancel", text: "妝均妞妓局妥屁" }
+                            { id: "bot", type: "default", text: "🤖 К БОТУ" },
+                            { id: "close", type: "cancel", text: "ЗАКРЫТЬ" }
                         ]
                     }, function(buttonId) {
                         if (buttonId === "bot") { window.Telegram.WebApp.openTelegramLink("https://t.me/gameMAN888_bot"); }
                         window.Telegram.WebApp.close(); 
                     });
                 })
-                .catch(function() { alert("妍宋妒坎妞均 妊圾岐妝妒 妊 妊圻妓圾圻妓妍妙!"); btnSubmit.disabled = false; btnSubmit.textContent = "妍妥妤妓均圾妒妥屁 妝均岐圾妞孝"; });
+                .catch(function() { alert("ОШИБКА СВЯЗИ С СЕРВЕРОМ!"); btnSubmit.disabled = false; btnSubmit.textContent = "ОТПРАВИТЬ ЗАЯВКУ"; });
         }
 
         function switchTab(tabId, buttonElement) {
             showOnlyFavorites = false;
             document.getElementById('fav-filter-btn').classList.remove('active');
-            document.getElementById('fav-filter-btn').textContent = "[ 妤妍妞均妝均妥屁 ? 妒妝坎妓均妖妖妍圻 ]";
+            document.getElementById('fav-filter-btn').textContent = "[ ПОКАЗАТЬ ⭐ ИЗБРАННОЕ ]";
             document.getElementById('search-games-input').value = "";
             filteredGames = [].concat(baseGames);
             renderGamesPage(1);
@@ -566,7 +565,7 @@
         if (soundBtn) {
             soundBtn.addEventListener('click', function() {
                 initAudio(); if (audioCtx && audioCtx.state === 'suspended') audioCtx.resume();
-                audioEnabled = !audioEnabled; this.textContent = audioEnabled ? "?? 妝圾孝妞: 圾妞妣" : "?? 妝圾孝妞";
+                audioEnabled = !audioEnabled; this.textContent = audioEnabled ? "🔊 ЗВУК: ВКЛ" : "🔇 ЗВУК";
                 if(videoEl) videoEl.muted = !audioEnabled;
                 if(audioEnabled) this.classList.remove('muted'); else this.classList.add('muted');
                 if (currentSystem === "sega" || currentSystem === "snes") {
@@ -584,11 +583,9 @@
             var absoluteRomUrl = window.location.origin + window.location.pathname.replace("index.html", "") + romUrl;
             var initialVolume = audioEnabled ? 1 : 0;
 
-            // ?? 妤快把快忱忘快技 忌批扳快把 base64 志抑忌把忘扶扶抉忍抉 扼抖抉找忘 志 抖抉抗忘抖抆扶抉快 我技攸 扳把快抄技忘
             var currentSaveBuffer = cloudSavesMap[selectedSlotNumber] || "";
             var injectionPayloadScript = "";
             
-            // 圻扼抖我 志 找忘忌抖我扯快 快扼找抆 把快忘抖抆扶抑抄 戒忘扮我扳把抉志忘扶扶抑抄 扼快抄志 忱抖攸 16-忌我找 〞 我扶忪快抗找我技 快忍抉 志 攸忱把抉!
             if (currentSaveBuffer && currentSaveBuffer.length > 50) {
                 injectionPayloadScript = `
                     window.addEventListener('load', function() {
@@ -597,15 +594,12 @@
                               clearInterval(checkExist);
                               setTimeout(function(){
                                  try {
-                                    // 坏快扼快把我忘抖我戒批快技 base64 扼找把抉抗批 抉忌把忘找扶抉 志 忌我扶忘把扶抑抄 扳忘抄抖 扼找快抄找忘 攸忱把忘 WASM
                                     var binaryStr = atob("${currentSaveBuffer}");
                                     var len = binaryStr.length;
                                     var bytes = new Uint8Array(len);
                                     for (var i = 0; i < len; i++) { bytes[i] = binaryStr.charCodeAt(i); }
-                                    
-                                    // 妤把攸技抉抄 扭批扮 扳忘抄抖忘 志 志我把找批忘抖抆扶批攻 扭忘技攸找抆 RetroArch EmulatorJS
                                     window.EJS_instance.loadState(bytes);
-                                 } catch(err) { console.error("妍扮我忌抗忘 忘志找抉我扶忪快抗找忘:", err); }
+                                 } catch(err) { console.error("Ошибка автоинжекта:", err); }
                               }, 2000);
                            }
                         }, 200);
@@ -641,20 +635,15 @@
                 <script>
                     ${injectionPayloadScript}
 
-                    // 妊抖批扮忘快技 抗抉技忘扶忱批 ?request_16bit_save? 抉找 扶忘扮快抄 志快把抒扶快抄 扭忘扶快抖我
                     window.addEventListener('message', function(e) {
                         if (e.data && e.data.action === 'request_16bit_save') {
                             if (typeof window.EJS_instance !== 'undefined' && window.EJS_instance.exportState) {
-                                // 圾抑找忘扼抗我志忘快技 忌我扶忘把扶抑抄 扼扶我技抉抗 扶忘扭把攸技批攻 我戒 WASM-抗抉扶找快抗扼找忘
                                 window.EJS_instance.exportState(function(bytes) {
                                     if (!bytes) return;
-                                    // 妤快把快志抉忱我技 忌我扶忘把扶我抗 志 base64 扼找把抉抗批, 扭把我忍抉忱扶批攻 忱抖攸 Google Sheets
                                     var binary = '';
                                     var len = bytes.byteLength;
                                     for (var i = 0; i < len; i++) { binary += String.fromCharCode(bytes[i]); }
                                     var base64Str = btoa(binary);
-                                    
-                                    // 圾抑扼找把快抖我志忘快技 扼快抄志 把抉忱我找快抖攻
                                     window.parent.postMessage({ action: 'respond_16bit_save', data: base64Str }, '*');
                                 });
                             }
@@ -707,11 +696,11 @@
                             setTimeout(function(){
                                 try {
                                     nes.fromJSON(JSON.parse(slotBuffer));
-                                    window.Telegram.WebApp.showAlert("妤妓妍坐妓圻妊妊 妊妣妍妥均 0" + selectedSlotNumber + " 圾妍妊妊妥均妖妍圾妣圻妖!");
+                                    window.Telegram.WebApp.showAlert("ПРОГРЕСС СЛОТА 0" + selectedSlotNumber + " ВОССТАНОВЛЕН!");
                                 }catch(err){}
                             }, 800);
                         }
-                    } else { alert("妍宋妒坎妞均 妓妍妙均!"); exitToCatalog(); }
+                    } else { alert("ОШИБКА РОМА!"); exitToCatalog(); }
                 };
                 req.send();
             }
@@ -744,9 +733,7 @@
         
         document.getElementById('back-to-catalog').addEventListener('click', exitToCatalog);
 
-        // 🔥 УЛЬТИМАТИВНОЕ ИСПРАВЛЕНИЕ: ОТПРАВКА СЕЙВА КАК ЧИСТЫЙ JSON-ОБЪЕКТ
         function sendPackToGoogleSheetsCloud(userId, file, dateTime, payload, slot) {
-            // Формируем структурированный JSON-объект, который ждет наш GAS бэкенд
             var rawJsonPayload = {
                 action: "set_save",
                 user_id: String(userId),
@@ -758,7 +745,6 @@
 
             fetch(gasRetroUrl, {
                 method: "POST",
-                // Режим no-cors обязателен для GitHub Pages, но тело запроса должно быть JSON-строкой
                 mode: "no-cors", 
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify(rawJsonPayload) 
@@ -772,7 +758,6 @@
             });
         }
 
-        // Кнопка сохранения в хедере панели
         document.getElementById('header-save').addEventListener('click', function() {
             if (!currentRomName) return;
             var initData = window.Telegram.WebApp.initDataUnsafe;
@@ -783,7 +768,6 @@
                 var rawSavePayload = JSON.stringify(nes.toJSON());
                 sendPackToGoogleSheetsCloud(userId, currentRomName, nowStr, rawSavePayload, selectedSlotNumber);
             } else if (currentSystem === "sega" || currentSystem === "snes") {
-                // Для Сеги и SNES просим iframe выгрузить бинарный стейт
                 var iframe = document.getElementById('active-emulator-iframe');
                 if (iframe && iframe.contentWindow) {
                     iframe.contentWindow.postMessage({ action: 'request_16bit_save' }, '*');
@@ -791,9 +775,7 @@
             }
         });
 
-        // Слушаем бинарный base64-ответ от 16-битных ядер (Сега/SNES)
         window.addEventListener('message', function(e) {
-            // Игнорируем старые системные хуки, если они прилетают
             if (e.data && e.data.action === 'respond_save_string') return; 
             
             if (e.data && e.data.action === 'respond_16bit_save') {
@@ -801,40 +783,6 @@
                 var userId = initData.user ? initData.user.id : "test_user_888";
                 var nowStr = new Date().toLocaleString('ru-RU');
                 
-                // Отправляем реальный снимок Сеги/SNES в выбранный слот таблицы
-                sendPackToGoogleSheetsCloud(userId, currentRomName, nowStr, e.data.data, selectedSlotNumber);
-            }
-        });
-
-        // 妞扶抉扭抗忘 扼抉抒把忘扶快扶我攸 志 抒快忱快把快 扭忘扶快抖我
-        document.getElementById('header-save').addEventListener('click', function() {
-            if (!currentRomName) return;
-            var initData = window.Telegram.WebApp.initDataUnsafe;
-            var userId = initData.user ? initData.user.id : "test_user_888";
-            var nowStr = new Date().toLocaleString('ru-RU');
-
-            if (currentSystem === "nes") {
-                var rawSavePayload = JSON.stringify(nes.toJSON());
-                sendPackToGoogleSheetsCloud(userId, currentRomName, nowStr, rawSavePayload, selectedSlotNumber);
-            } else if (currentSystem === "sega" || currentSystem === "snes") {
-                // ?? 坏抖攸 妊快忍我/SNES 扼找批折我技扼攸 志 iframe 戒忘 把快忘抖抆扶抑技 扼抖快扭抗抉技 忌忘抄找!
-                var iframe = document.getElementById('active-emulator-iframe');
-                if (iframe && iframe.contentWindow) {
-                    iframe.contentWindow.postMessage({ action: 'request_16bit_save' }, '*');
-                }
-            }
-        });
-
-        // 妊抖批扮忘快技 抉找志快找 扼 base64-扼扶我技抗抉技 抉找 16-忌我找扶抑抒 攸忱快把
-        window.addEventListener('message', function(e) {
-            if (e.data && e.data.action === 'respond_save_string') return; // 妒忍扶抉把我把批快技 扼找忘把抑快 抒批抗我
-            
-            if (e.data && e.data.action === 'respond_16bit_save') {
-                var initData = window.Telegram.WebApp.initDataUnsafe;
-                var userId = initData.user ? initData.user.id : "test_user_888";
-                var nowStr = new Date().toLocaleString('ru-RU');
-                
-                // 妤批扮我技 把快忘抖抆扶批攻 base64-扼找把抉抗批 扼抉抒把忘扶快扶我攸 16-忌我找 志 志抑忌把忘扶扶抑抄 扼抖抉找!
                 sendPackToGoogleSheetsCloud(userId, currentRomName, nowStr, e.data.data, selectedSlotNumber);
             }
         });
