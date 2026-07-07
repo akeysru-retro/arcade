@@ -151,10 +151,10 @@
 <body>
 
     <div class="header-panel">
-        <button id="back-to-catalog" class="head-btn">? §®§¦§¯§À</button>
-        <button id="header-save" class="head-btn ingame-btn">?? §³§¦§«§£ §£ §°§¢§­§¡§¬§°</button>
+        <button id="back-to-catalog" class="head-btn">? å¦™åœ»å¦–å°¾</button>
+        <button id="header-save" class="head-btn ingame-btn">?? å¦Šåœ»å¦¨åœ¾ åœ¾ å¦åå¦£å‡å¦å¦</button>
         <div id="main-title" style="font-size: 8px; letter-spacing: 1px;">9999 IN 1</div>
-        <button id="sound-toggle" class="head-btn muted">?? §©§£§µ§¬</button>
+        <button id="sound-toggle" class="head-btn muted">?? å¦åœ¾å­å¦</button>
     </div>
     
     <div id="catalog-container">
@@ -165,56 +165,56 @@
         <div id="section-games" class="app-section">
             <div class="menu-title">9999 IN 1</div>
             <div style="padding: 0 20px 10px 20px; width: 100%; box-sizing: border-box;">
-                <input type="text" id="search-games-input" class="form-input" style="width: 100%; box-sizing: border-box;" placeholder="§±§°§ª§³§¬ §ª§¤§²§½..." oninput="filterGames()">
+                <input type="text" id="search-games-input" class="form-input" style="width: 100%; box-sizing: border-box;" placeholder="å¦¤å¦å¦’å¦Šå¦ å¦’åå¦“å±€..." oninput="filterGames()">
             </div>
-            <button id="fav-filter-btn" class="fav-filter-toggle" onclick="toggleFavFilter()">[ §±§°§¬§¡§©§¡§´§¾ ? §ª§©§¢§²§¡§¯§¯§°§¦ ]</button>
+            <button id="fav-filter-btn" class="fav-filter-toggle" onclick="toggleFavFilter()">[ å¦¤å¦å¦å‡å¦å‡å¦¥å± ? å¦’å¦åå¦“å‡å¦–å¦–å¦åœ» ]</button>
             <div class="game-list" id="retro-game-list"></div>
             <div class="pagination-container" id="pagination-controls"></div>
         </div>
 
-        <!-- §®§¦§¯§¦§¥§¨§¦§² §³§­§°§´§°§£ §³§°§·§²§¡§¯§¦§¯§ª§« -->
+        <!-- å¦™åœ»å¦–åœ»åå¤¾åœ»å¦“ å¦Šå¦£å¦å¦¥å¦åœ¾ å¦Šå¦å­šå¦“å‡å¦–åœ»å¦–å¦’å¦¨ -->
         <div id="section-saves" class="app-section">
-            <div class="menu-title" id="saves-manager-title">§©§¡§¤§²§µ§©§¬§¡...</div>
+            <div class="menu-title" id="saves-manager-title">å¦å‡åå¦“å­å¦å¦å‡...</div>
             <div id="section-saves-manager">
-                <button class="btn-launch-new" onclick="launchGamePureNew()">? §ª§¤§²§¡§´§¾ §³ §¯§¡§¹§¡§­§¡</button>
-                <div class="saves-block-title">§£§½§¢§¦§²§ª §³§­§°§´ §°§¢§­§¡§¬§¡ (1 §ª§© 5):</div>
+                <button class="btn-launch-new" onclick="launchGamePureNew()">? å¦’åå¦“å‡å¦¥å± å¦Š å¦–å‡å®Œå‡å¦£å‡</button>
+                <div class="saves-block-title">åœ¾å±€ååœ»å¦“å¦’ å¦Šå¦£å¦å¦¥ å¦åå¦£å‡å¦å‡ (1 å¦’å¦ 5):</div>
                 <div id="cloud-saves-list-container"></div>
             </div>
         </div>
 
         <div id="section-secrets" class="app-section">
-            <div class="menu-title">§³§¦§¬§²§¦§´§½</div>
+            <div class="menu-title">å¦Šåœ»å¦å¦“åœ»å¦¥å±€</div>
             <div style="padding: 0 20px 15px 20px;">
-                <input type="text" id="search-secrets-input" class="form-input" style="width: 100%; box-sizing: border-box;" placeholder="§±§°§ª§³§¬ §ª§¤§²§½ §ª§­§ª §¹§ª§´§¡..." oninput="filterSecrets()">
+                <input type="text" id="search-secrets-input" class="form-input" style="width: 100%; box-sizing: border-box;" placeholder="å¦¤å¦å¦’å¦Šå¦ å¦’åå¦“å±€ å¦’å¦£å¦’ å®Œå¦’å¦¥å‡..." oninput="filterSecrets()">
             </div>
             <div id="secrets-container"></div>
         </div>
 
         <div id="section-order" class="app-section">
-            <div class="menu-title">§©§¡§¬§¡§© §ª§¤§²</div>
+            <div class="menu-title">å¦å‡å¦å‡å¦ å¦’åå¦“</div>
             <div class="order-container">
-                <div class="order-text">§©§¡§¬§¡§© §¯§°§£§°§« §ª§¤§²§½ §±§­§¡§´§¯§½§« (100 §²§µ§¢§­§¦§«). §¯§¡§±§ª§º§ª§´§¦ §¯§¡§©§£§¡§¯§ª§¦, §ª §®§½ §¥§°§¢§¡§£§ª§® §¦§§ §¯§¡ §±§°§­§¬§µ §¢§°§´§¡!</div>
+                <div class="order-text">å¦å‡å¦å‡å¦ å¦–å¦åœ¾å¦å¦¨ å¦’åå¦“å±€ å¦¤å¦£å‡å¦¥å¦–å±€å¦¨ (100 å¦“å­åå¦£åœ»å¦¨). å¦–å‡å¦¤å¦’å®‹å¦’å¦¥åœ» å¦–å‡å¦åœ¾å‡å¦–å¦’åœ», å¦’ å¦™å±€ åå¦åå‡åœ¾å¦’å¦™ åœ»å£¯ å¦–å‡ å¦¤å¦å¦£å¦å­ åå¦å¦¥å‡!</div>
                 <div class="form-group">
-                    <label class="form-label">§¯§¡§©§£§¡§¯§ª§¦ §ª§¤§²§½:</label>
-                    <input type="text" id="order-game-title" class="form-input" placeholder="§¯§¡§±§²§ª§®§¦§²: TEENAGE MUTANT TURTLES">
+                    <label class="form-label">å¦–å‡å¦åœ¾å‡å¦–å¦’åœ» å¦’åå¦“å±€:</label>
+                    <input type="text" id="order-game-title" class="form-input" placeholder="å¦–å‡å¦¤å¦“å¦’å¦™åœ»å¦“: TEENAGE MUTANT TURTLES">
                 </div>
                 <div class="form-group">
-                    <label class="form-label">§±§­§¡§´§¶§°§²§®§¡ (§¬§°§¯§³§°§­§¾):</label>
+                    <label class="form-label">å¦¤å¦£å‡å¦¥å­œå¦å¦“å¦™å‡ (å¦å¦å¦–å¦Šå¦å¦£å±):</label>
                     <input type="text" id="order-game-system" class="form-input" placeholder="DENDY / SEGA / GBA">
                 </div>
-                <button id="order-btn-submit" class="order-submit-btn" onclick="sendOrderRequest()">§°§´§±§²§¡§£§ª§´§¾ §©§¡§Á§£§¬§µ</button>
+                <button id="order-btn-submit" class="order-submit-btn" onclick="sendOrderRequest()">å¦å¦¥å¦¤å¦“å‡åœ¾å¦’å¦¥å± å¦å‡å²åœ¾å¦å­</button>
             </div>
         </div>
 
         <div class="tab-bar" id="app-tab-bar">
             <button class="tab-item active" onclick="switchTab('games', this)">
-                <span class="tab-icon">??</span><span>§ª§¤§²§½</span>
+                <span class="tab-icon">??</span><span>å¦’åå¦“å±€</span>
             </button>
             <button class="tab-item" onclick="switchTab('secrets', this)">
-                <span class="tab-icon">??</span><span>§³§¦§¬§²§¦§´§½</span>
+                <span class="tab-icon">??</span><span>å¦Šåœ»å¦å¦“åœ»å¦¥å±€</span>
             </button>
             <button class="tab-item" onclick="switchTab('order', this)">
-                <span class="tab-icon">??</span><span>§©§¡§¬§¡§©</span>
+                <span class="tab-icon">??</span><span>å¦å‡å¦å‡å¦</span>
             </button>
         </div>
     </div>
@@ -227,9 +227,9 @@
         <div id="gamepad">
             <div class="main-controls">
                 <div class="dpad">
-                    <div></div><div class="btn" id="up">¡ø</div><div></div>
+                    <div></div><div class="btn" id="up">â†–</div><div></div>
                     <div class="btn" id="left">?</div><div></div><div class="btn" id="right">?</div>
-                    <div></div><div class="btn" id="down">¨‹</div><div></div>
+                    <div></div><div class="btn" id="down">ï¿½</div><div></div>
                 </div>
                 <div id="nes-buttons">
                     <div class="round-btn" id="btn-b">B</div>
@@ -305,9 +305,9 @@
             showOnlyFavorites = !showOnlyFavorites;
             var btn = document.getElementById('fav-filter-btn');
             if (showOnlyFavorites) {
-                btn.classList.add('active'); btn.textContent = "[ ? §²§¦§¨§ª§®: §´§°§­§¾§¬§° §ª§©§¢§²§¡§¯§¯§°§¦ ]";
+                btn.classList.add('active'); btn.textContent = "[ ? å¦“åœ»å¤¾å¦’å¦™: å¦¥å¦å¦£å±å¦å¦ å¦’å¦åå¦“å‡å¦–å¦–å¦åœ» ]";
             } else {
-                btn.classList.remove('active'); btn.textContent = "[ §±§°§¬§¡§©§¡§´§¾ ? §ª§©§¢§²§¡§¯§¯§°§¦ ]";
+                btn.classList.remove('active'); btn.textContent = "[ å¦¤å¦å¦å‡å¦å‡å¦¥å± ? å¦’å¦åå¦“å‡å¦–å¦–å¦åœ» ]";
             }
             filterGames();
         }
@@ -317,7 +317,7 @@
             if (!listContainer) return;
             listContainer.innerHTML = "";
             if (filteredGames.length === 0) {
-                listContainer.innerHTML = '<div style="text-align:center; font-size:8px; color:#555; padding:30px 0;">§³§±§ª§³§°§¬ §±§µ§³§´</div>';
+                listContainer.innerHTML = '<div style="text-align:center; font-size:8px; color:#555; padding:30px 0;">å¦Šå¦¤å¦’å¦Šå¦å¦ å¦¤å­å¦Šå¦¥</div>';
                 renderPaginationButtons(); return;
             }
             var startIndex = (page - 1) * itemsPerPage;
@@ -355,14 +355,14 @@
             if (totalPages <= 1) return;
 
             var prevBtn = document.createElement('button');
-            prevBtn.className = 'page-btn'; prevBtn.disabled = (currentPage === 1); prevBtn.textContent = "? §¯§¡§©§¡§¥";
+            prevBtn.className = 'page-btn'; prevBtn.disabled = (currentPage === 1); prevBtn.textContent = "? å¦–å‡å¦å‡å";
             prevBtn.addEventListener('click', function() { changeGamesPage(currentPage - 1); });
 
             var infoSpan = document.createElement('span');
             infoSpan.className = 'page-info-text'; infoSpan.innerHTML = `PAGE<br>${currentPage}/${totalPages}`;
 
             var nextBtn = document.createElement('button');
-            nextBtn.className = 'page-btn'; nextBtn.disabled = (currentPage === totalPages); nextBtn.textContent = "§£§±§¦§²§¦§¥ ?";
+            nextBtn.className = 'page-btn'; nextBtn.disabled = (currentPage === totalPages); nextBtn.textContent = "åœ¾å¦¤åœ»å¦“åœ»å ?";
             nextBtn.addEventListener('click', function() { changeGamesPage(currentPage + 1); });
 
             controlsContainer.appendChild(prevBtn); controlsContainer.appendChild(infoSpan); controlsContainer.appendChild(nextBtn);
@@ -386,7 +386,7 @@
             document.getElementById('saves-manager-title').textContent = gameObj.title.toUpperCase();
 
             var listContainer = document.getElementById('cloud-saves-list-container');
-            listContainer.innerHTML = '<div style="text-align:center; font-size:7px; color:#888; padding:20px 0;">§°§±§²§°§³ §°§¢§­§¡§¹§¯§½§· §³§­§°§´§°§£...</div>';
+            listContainer.innerHTML = '<div style="text-align:center; font-size:7px; color:#888; padding:20px 0;">å¦å¦¤å¦“å¦å¦Š å¦åå¦£å‡å®Œå¦–å±€å­š å¦Šå¦£å¦å¦¥å¦åœ¾...</div>';
 
             var initData = window.Telegram.WebApp.initDataUnsafe;
             var userId = initData.user ? initData.user.id : "test_user_888";
@@ -416,18 +416,18 @@
                     var saveItem = activeSlotsData[slot];
                     card.innerHTML = `
                         <div>
-                            <div class="cloud-save-info" style="color:#00ff00;">§³§­§°§´ 0${slot} (§³§°§·§²§¡§¯§¦§¯)</div>
-                            <div class="cloud-save-date">§©§Ñ§á§Ú§ã§î: ${saveItem.date_time}</div>
+                            <div class="cloud-save-info" style="color:#00ff00;">å¦Šå¦£å¦å¦¥ 0${slot} (å¦Šå¦å­šå¦“å‡å¦–åœ»å¦–)</div>
+                            <div class="cloud-save-date">å¦å¿˜æ‰­æˆ‘æ‰¼æŠ†: ${saveItem.date_time}</div>
                         </div>
-                        <button class="head-btn" style="font-size:7px; background:#0064ff;" onclick="launchGameWithCloudSlot(${slot})">§©§¡§¤§²§µ§©§ª§´§¾</button>
+                        <button class="head-btn" style="font-size:7px; background:#0064ff;" onclick="launchGameWithCloudSlot(${slot})">å¦å‡åå¦“å­å¦å¦’å¦¥å±</button>
                     `;
                 } else {
                     card.innerHTML = `
                         <div>
-                            <div class="cloud-save-info" style="color:#666;">§³§­§°§´ 0${slot}</div>
-                            <div class="cloud-save-date">§±§µ§³§´§¡§Á §Á§¹§¦§«§¬§¡ §´§¡§¢§­§ª§¸§½</div>
+                            <div class="cloud-save-info" style="color:#666;">å¦Šå¦£å¦å¦¥ 0${slot}</div>
+                            <div class="cloud-save-date">å¦¤å­å¦Šå¦¥å‡å² å²å®Œåœ»å¦¨å¦å‡ å¦¥å‡åå¦£å¦’å­›å±€</div>
                         </div>
-                        <button class="head-btn" style="font-size:7px; background:#222; color:#777;" onclick="launchGameWithCloudSlot(${slot})">§ª§¤§²§¡§´§¾</button>
+                        <button class="head-btn" style="font-size:7px; background:#222; color:#777;" onclick="launchGameWithCloudSlot(${slot})">å¦’åå¦“å‡å¦¥å±</button>
                     `;
                 }
                 listContainer.appendChild(card);
@@ -456,7 +456,7 @@
             var secretsContainer = document.getElementById('secrets-container'); if (!secretsContainer) return;
             secretsContainer.innerHTML = "";
             if (secretsArray.length === 0) {
-                secretsContainer.innerHTML = '<div style="text-align:center; font-size:8px; color:#555; padding-top:20px;">§¯§ª§¹§¦§¤§° §¯§¦ §¯§¡§«§¥§¦§¯§°</div>'; return;
+                secretsContainer.innerHTML = '<div style="text-align:center; font-size:8px; color:#555; padding-top:20px;">å¦–å¦’å®Œåœ»åå¦ å¦–åœ» å¦–å‡å¦¨ååœ»å¦–å¦</div>'; return;
             }
             secretsArray.forEach(function(item) {
                 var card = document.createElement('div'); card.className = 'secret-card';
@@ -481,13 +481,13 @@
         function sendOrderRequest() {
             var titleInput = document.getElementById('order-game-title').value.trim();
             var systemInput = document.getElementById('order-game-system').value.trim();
-            if (!titleInput) { alert("§£§£§¦§¥§ª§´§¦ §¯§¡§©§£§¡§¯§ª§¦ §ª§¤§²§½!"); return; }
+            if (!titleInput) { alert("åœ¾åœ¾åœ»åå¦’å¦¥åœ» å¦–å‡å¦åœ¾å‡å¦–å¦’åœ» å¦’åå¦“å±€!"); return; }
             var initData = window.Telegram.WebApp.initDataUnsafe;
             var userId = initData.user ? initData.user.id : "";
             var username = initData.user ? initData.user.username : "no_name";
-            if (!userId) { alert("§°§º§ª§¢§¬§¡ TELEGRAM ID!"); return; }
+            if (!userId) { alert("å¦å®‹å¦’åå¦å‡ TELEGRAM ID!"); return; }
             var btnSubmit = document.getElementById('order-btn-submit');
-            btnSubmit.disabled = true; btnSubmit.textContent = "§°§´§±§²§¡§£§¬§¡...";
+            btnSubmit.disabled = true; btnSubmit.textContent = "å¦å¦¥å¦¤å¦“å‡åœ¾å¦å‡...";
 
             var requestUrl = gasRetroUrl + "?action=submit_order&title=" + encodeURIComponent(titleInput) + 
                              "&system=" + encodeURIComponent(systemInput || "Dendy") + "&user_id=" + userId + "&username=" + encodeURIComponent(username);
@@ -495,24 +495,24 @@
             fetch(requestUrl, { mode: 'no-cors' })
                 .then(function() {
                     window.Telegram.WebApp.showPopup({
-                        title: "§©§¡§Á§£§¬§¡ §³§¶§°§²§®§ª§²§°§£§¡§¯§¡!",
-                        message: "§³§é§Ö§ä §à§ä§á§â§Ñ§Ó§İ§Ö§ß §Ó §Õ§Ú§Ñ§İ§à§Ô §ã §Ò§à§ä§à§Ş.",
+                        title: "å¦å‡å²åœ¾å¦å‡ å¦Šå­œå¦å¦“å¦™å¦’å¦“å¦åœ¾å‡å¦–å‡!",
+                        message: "å¦ŠæŠ˜å¿«æ‰¾ æŠ‰æ‰¾æ‰­æŠŠå¿˜å¿—æŠ–å¿«æ‰¶ å¿— å¿±æˆ‘å¿˜æŠ–æŠ‰å¿ æ‰¼ å¿ŒæŠ‰æ‰¾æŠ‰æŠ€.",
                         buttons: [
-                            { id: "bot", type: "default", text: "?? §¬ §¢§°§´§µ" },
-                            { id: "close", type: "cancel", text: "§©§¡§¬§²§½§´§¾" }
+                            { id: "bot", type: "default", text: "?? å¦ åå¦å¦¥å­" },
+                            { id: "close", type: "cancel", text: "å¦å‡å¦å¦“å±€å¦¥å±" }
                         ]
                     }, function(buttonId) {
                         if (buttonId === "bot") { window.Telegram.WebApp.openTelegramLink("https://t.me/gameMAN888_bot"); }
                         window.Telegram.WebApp.close(); 
                     });
                 })
-                .catch(function() { alert("§°§º§ª§¢§¬§¡ §³§£§Á§©§ª §³ §³§¦§²§£§¦§²§°§®!"); btnSubmit.disabled = false; btnSubmit.textContent = "§°§´§±§²§¡§£§ª§´§¾ §©§¡§Á§£§¬§µ"; });
+                .catch(function() { alert("å¦å®‹å¦’åå¦å‡ å¦Šåœ¾å²å¦å¦’ å¦Š å¦Šåœ»å¦“åœ¾åœ»å¦“å¦å¦™!"); btnSubmit.disabled = false; btnSubmit.textContent = "å¦å¦¥å¦¤å¦“å‡åœ¾å¦’å¦¥å± å¦å‡å²åœ¾å¦å­"; });
         }
 
         function switchTab(tabId, buttonElement) {
             showOnlyFavorites = false;
             document.getElementById('fav-filter-btn').classList.remove('active');
-            document.getElementById('fav-filter-btn').textContent = "[ §±§°§¬§¡§©§¡§´§¾ ? §ª§©§¢§²§¡§¯§¯§°§¦ ]";
+            document.getElementById('fav-filter-btn').textContent = "[ å¦¤å¦å¦å‡å¦å‡å¦¥å± ? å¦’å¦åå¦“å‡å¦–å¦–å¦åœ» ]";
             document.getElementById('search-games-input').value = "";
             filteredGames = [].concat(baseGames);
             renderGamesPage(1);
@@ -566,7 +566,7 @@
         if (soundBtn) {
             soundBtn.addEventListener('click', function() {
                 initAudio(); if (audioCtx && audioCtx.state === 'suspended') audioCtx.resume();
-                audioEnabled = !audioEnabled; this.textContent = audioEnabled ? "?? §©§£§µ§¬: §£§¬§­" : "?? §©§£§µ§¬";
+                audioEnabled = !audioEnabled; this.textContent = audioEnabled ? "?? å¦åœ¾å­å¦: åœ¾å¦å¦£" : "?? å¦åœ¾å­å¦";
                 if(videoEl) videoEl.muted = !audioEnabled;
                 if(audioEnabled) this.classList.remove('muted'); else this.classList.add('muted');
                 if (currentSystem === "sega" || currentSystem === "snes") {
@@ -584,11 +584,11 @@
             var absoluteRomUrl = window.location.origin + window.location.pathname.replace("index.html", "") + romUrl;
             var initialVolume = audioEnabled ? 1 : 0;
 
-            // ?? §±§Ö§â§Ö§Õ§Ñ§Ö§Ş §Ò§å§æ§Ö§â base64 §Ó§í§Ò§â§Ñ§ß§ß§à§Ô§à §ã§İ§à§ä§Ñ §Ó §İ§à§Ü§Ñ§İ§î§ß§à§Ö §Ú§Ş§ñ §æ§â§Ö§Û§Ş§Ñ
+            // ?? å¦¤å¿«æŠŠå¿«å¿±å¿˜å¿«æŠ€ å¿Œæ‰¹æ‰³å¿«æŠŠ base64 å¿—æŠ‘å¿ŒæŠŠå¿˜æ‰¶æ‰¶æŠ‰å¿æŠ‰ æ‰¼æŠ–æŠ‰æ‰¾å¿˜ å¿— æŠ–æŠ‰æŠ—å¿˜æŠ–æŠ†æ‰¶æŠ‰å¿« æˆ‘æŠ€æ”¸ æ‰³æŠŠå¿«æŠ„æŠ€å¿˜
             var currentSaveBuffer = cloudSavesMap[selectedSlotNumber] || "";
             var injectionPayloadScript = "";
             
-            // §¦§ã§İ§Ú §Ó §ä§Ñ§Ò§İ§Ú§è§Ö §Ö§ã§ä§î §â§Ö§Ñ§İ§î§ß§í§Û §Ù§Ñ§ê§Ú§æ§â§à§Ó§Ñ§ß§ß§í§Û §ã§Ö§Û§Ó §Õ§İ§ñ 16-§Ò§Ú§ä ¡ª §Ú§ß§Ø§Ö§Ü§ä§Ú§Ş §Ö§Ô§à §Ó §ñ§Õ§â§à!
+            // åœ»æ‰¼æŠ–æˆ‘ å¿— æ‰¾å¿˜å¿ŒæŠ–æˆ‘æ‰¯å¿« å¿«æ‰¼æ‰¾æŠ† æŠŠå¿«å¿˜æŠ–æŠ†æ‰¶æŠ‘æŠ„ æˆ’å¿˜æ‰®æˆ‘æ‰³æŠŠæŠ‰å¿—å¿˜æ‰¶æ‰¶æŠ‘æŠ„ æ‰¼å¿«æŠ„å¿— å¿±æŠ–æ”¸ 16-å¿Œæˆ‘æ‰¾ ã€ æˆ‘æ‰¶å¿ªå¿«æŠ—æ‰¾æˆ‘æŠ€ å¿«å¿æŠ‰ å¿— æ”¸å¿±æŠŠæŠ‰!
             if (currentSaveBuffer && currentSaveBuffer.length > 50) {
                 injectionPayloadScript = `
                     window.addEventListener('load', function() {
@@ -597,15 +597,15 @@
                               clearInterval(checkExist);
                               setTimeout(function(){
                                  try {
-                                    // §¥§Ö§ã§Ö§â§Ú§Ñ§İ§Ú§Ù§å§Ö§Ş base64 §ã§ä§â§à§Ü§å §à§Ò§â§Ñ§ä§ß§à §Ó §Ò§Ú§ß§Ñ§â§ß§í§Û §æ§Ñ§Û§İ §ã§ä§Ö§Û§ä§Ñ §ñ§Õ§â§Ñ WASM
+                                    // åå¿«æ‰¼å¿«æŠŠæˆ‘å¿˜æŠ–æˆ‘æˆ’æ‰¹å¿«æŠ€ base64 æ‰¼æ‰¾æŠŠæŠ‰æŠ—æ‰¹ æŠ‰å¿ŒæŠŠå¿˜æ‰¾æ‰¶æŠ‰ å¿— å¿Œæˆ‘æ‰¶å¿˜æŠŠæ‰¶æŠ‘æŠ„ æ‰³å¿˜æŠ„æŠ– æ‰¼æ‰¾å¿«æŠ„æ‰¾å¿˜ æ”¸å¿±æŠŠå¿˜ WASM
                                     var binaryStr = atob("${currentSaveBuffer}");
                                     var len = binaryStr.length;
                                     var bytes = new Uint8Array(len);
                                     for (var i = 0; i < len; i++) { bytes[i] = binaryStr.charCodeAt(i); }
                                     
-                                    // §±§â§ñ§Ş§à§Û §á§å§ê §æ§Ñ§Û§İ§Ñ §Ó §Ó§Ú§â§ä§å§Ñ§İ§î§ß§å§ğ §á§Ñ§Ş§ñ§ä§î RetroArch EmulatorJS
+                                    // å¦¤æŠŠæ”¸æŠ€æŠ‰æŠ„ æ‰­æ‰¹æ‰® æ‰³å¿˜æŠ„æŠ–å¿˜ å¿— å¿—æˆ‘æŠŠæ‰¾æ‰¹å¿˜æŠ–æŠ†æ‰¶æ‰¹æ”» æ‰­å¿˜æŠ€æ”¸æ‰¾æŠ† RetroArch EmulatorJS
                                     window.EJS_instance.loadState(bytes);
-                                 } catch(err) { console.error("§°§ê§Ú§Ò§Ü§Ñ §Ñ§Ó§ä§à§Ú§ß§Ø§Ö§Ü§ä§Ñ:", err); }
+                                 } catch(err) { console.error("å¦æ‰®æˆ‘å¿ŒæŠ—å¿˜ å¿˜å¿—æ‰¾æŠ‰æˆ‘æ‰¶å¿ªå¿«æŠ—æ‰¾å¿˜:", err); }
                               }, 2000);
                            }
                         }, 200);
@@ -641,20 +641,20 @@
                 <script>
                     ${injectionPayloadScript}
 
-                    // §³§İ§å§ê§Ñ§Ö§Ş §Ü§à§Ş§Ñ§ß§Õ§å ?request_16bit_save? §à§ä §ß§Ñ§ê§Ö§Û §Ó§Ö§â§ç§ß§Ö§Û §á§Ñ§ß§Ö§İ§Ú
+                    // å¦ŠæŠ–æ‰¹æ‰®å¿˜å¿«æŠ€ æŠ—æŠ‰æŠ€å¿˜æ‰¶å¿±æ‰¹ ?request_16bit_save? æŠ‰æ‰¾ æ‰¶å¿˜æ‰®å¿«æŠ„ å¿—å¿«æŠŠæŠ’æ‰¶å¿«æŠ„ æ‰­å¿˜æ‰¶å¿«æŠ–æˆ‘
                     window.addEventListener('message', function(e) {
                         if (e.data && e.data.action === 'request_16bit_save') {
                             if (typeof window.EJS_instance !== 'undefined' && window.EJS_instance.exportState) {
-                                // §£§í§ä§Ñ§ã§Ü§Ú§Ó§Ñ§Ö§Ş §Ò§Ú§ß§Ñ§â§ß§í§Û §ã§ß§Ú§Ş§à§Ü §ß§Ñ§á§â§ñ§Ş§å§ğ §Ú§Ù WASM-§Ü§à§ß§ä§Ö§Ü§ã§ä§Ñ
+                                // åœ¾æŠ‘æ‰¾å¿˜æ‰¼æŠ—æˆ‘å¿—å¿˜å¿«æŠ€ å¿Œæˆ‘æ‰¶å¿˜æŠŠæ‰¶æŠ‘æŠ„ æ‰¼æ‰¶æˆ‘æŠ€æŠ‰æŠ— æ‰¶å¿˜æ‰­æŠŠæ”¸æŠ€æ‰¹æ”» æˆ‘æˆ’ WASM-æŠ—æŠ‰æ‰¶æ‰¾å¿«æŠ—æ‰¼æ‰¾å¿˜
                                 window.EJS_instance.exportState(function(bytes) {
                                     if (!bytes) return;
-                                    // §±§Ö§â§Ö§Ó§à§Õ§Ú§Ş §Ò§Ú§ß§Ñ§â§ß§Ú§Ü §Ó base64 §ã§ä§â§à§Ü§å, §á§â§Ú§Ô§à§Õ§ß§å§ğ §Õ§İ§ñ Google Sheets
+                                    // å¦¤å¿«æŠŠå¿«å¿—æŠ‰å¿±æˆ‘æŠ€ å¿Œæˆ‘æ‰¶å¿˜æŠŠæ‰¶æˆ‘æŠ— å¿— base64 æ‰¼æ‰¾æŠŠæŠ‰æŠ—æ‰¹, æ‰­æŠŠæˆ‘å¿æŠ‰å¿±æ‰¶æ‰¹æ”» å¿±æŠ–æ”¸ Google Sheets
                                     var binary = '';
                                     var len = bytes.byteLength;
                                     for (var i = 0; i < len; i++) { binary += String.fromCharCode(bytes[i]); }
                                     var base64Str = btoa(binary);
                                     
-                                    // §£§í§ã§ä§â§Ö§İ§Ú§Ó§Ñ§Ö§Ş §ã§Ö§Û§Ó §â§à§Õ§Ú§ä§Ö§İ§ğ
+                                    // åœ¾æŠ‘æ‰¼æ‰¾æŠŠå¿«æŠ–æˆ‘å¿—å¿˜å¿«æŠ€ æ‰¼å¿«æŠ„å¿— æŠŠæŠ‰å¿±æˆ‘æ‰¾å¿«æŠ–æ”»
                                     window.parent.postMessage({ action: 'respond_16bit_save', data: base64Str }, '*');
                                 });
                             }
@@ -707,11 +707,11 @@
                             setTimeout(function(){
                                 try {
                                     nes.fromJSON(JSON.parse(slotBuffer));
-                                    window.Telegram.WebApp.showAlert("§±§²§°§¤§²§¦§³§³ §³§­§°§´§¡ 0" + selectedSlotNumber + " §£§°§³§³§´§¡§¯§°§£§­§¦§¯!");
+                                    window.Telegram.WebApp.showAlert("å¦¤å¦“å¦åå¦“åœ»å¦Šå¦Š å¦Šå¦£å¦å¦¥å‡ 0" + selectedSlotNumber + " åœ¾å¦å¦Šå¦Šå¦¥å‡å¦–å¦åœ¾å¦£åœ»å¦–!");
                                 }catch(err){}
                             }, 800);
                         }
-                    } else { alert("§°§º§ª§¢§¬§¡ §²§°§®§¡!"); exitToCatalog(); }
+                    } else { alert("å¦å®‹å¦’åå¦å‡ å¦“å¦å¦™å‡!"); exitToCatalog(); }
                 };
                 req.send();
             }
@@ -744,8 +744,9 @@
         
         document.getElementById('back-to-catalog').addEventListener('click', exitToCatalog);
 
-        // ?? §®§°§»§¯§¡§Á JSON-§±§°§´§°§¬§°§£§¡§Á §±§¦§²§¦§¥§¡§¹§¡ §³§¦§«§£§°§£ (§ª§³§±§²§¡§£§­§¦§¯§½ §£§³§¦ §³§¥§£§ª§¤§ª §³§­§°§´§°§£)
+        // ğŸ”¥ Ğ£Ğ›Ğ¬Ğ¢Ğ˜ĞœĞĞ¢Ğ˜Ğ’ĞĞĞ• Ğ˜Ğ¡ĞŸĞ ĞĞ’Ğ›Ğ•ĞĞ˜Ğ•: ĞĞ¢ĞŸĞ ĞĞ’ĞšĞ Ğ¡Ğ•Ğ™Ğ’Ğ ĞšĞĞš Ğ§Ğ˜Ğ¡Ğ¢Ğ«Ğ™ JSON-ĞĞ‘ĞªĞ•ĞšĞ¢
         function sendPackToGoogleSheetsCloud(userId, file, dateTime, payload, slot) {
+            // Ğ¤Ğ¾Ñ€Ğ¼Ğ¸Ñ€ÑƒĞµĞ¼ ÑÑ‚Ñ€ÑƒĞºÑ‚ÑƒÑ€Ğ¸Ñ€Ğ¾Ğ²Ğ°Ğ½Ğ½Ñ‹Ğ¹ JSON-Ğ¾Ğ±ÑŠĞµĞºÑ‚, ĞºĞ¾Ñ‚Ğ¾Ñ€Ñ‹Ğ¹ Ğ¶Ğ´ĞµÑ‚ Ğ½Ğ°Ñˆ GAS Ğ±ÑĞºĞµĞ½Ğ´
             var rawJsonPayload = {
                 action: "set_save",
                 user_id: String(userId),
@@ -757,19 +758,21 @@
 
             fetch(gasRetroUrl, {
                 method: "POST",
-                mode: "no-cors",
+                // Ğ ĞµĞ¶Ğ¸Ğ¼ no-cors Ğ¾Ğ±ÑĞ·Ğ°Ñ‚ĞµĞ»ĞµĞ½ Ğ´Ğ»Ñ GitHub Pages, Ğ½Ğ¾ Ñ‚ĞµĞ»Ğ¾ Ğ·Ğ°Ğ¿Ñ€Ğ¾ÑĞ° Ğ´Ğ¾Ğ»Ğ¶Ğ½Ğ¾ Ğ±Ñ‹Ñ‚ÑŒ JSON-ÑÑ‚Ñ€Ğ¾ĞºĞ¾Ğ¹
+                mode: "no-cors", 
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify(rawJsonPayload) // §°§ä§á§â§Ñ§Ó§İ§ñ§Ö§Ş §é§Ú§ã§ä§í§Û §ã§ä§â§å§Ü§ä§å§â§Ú§â§à§Ó§Ñ§ß§ß§í§Û JSON!
+                body: JSON.stringify(rawJsonPayload) 
             })
             .then(function() {
-                window.Telegram.WebApp.showAlert("§±§²§°§¤§²§¦§³§³ §³§­§°§´§¡ 0" + slot + " §©§¡§±§ª§³§¡§¯ §£ §°§¢§­§¡§¬§°!");
+                window.Telegram.WebApp.showAlert("ĞŸĞ ĞĞ“Ğ Ğ•Ğ¡Ğ¡ Ğ¡Ğ›ĞĞ¢Ğ 0" + slot + " Ğ£Ğ¡ĞŸĞ•Ğ¨ĞĞ Ğ—ĞĞŸĞ˜Ğ¡ĞĞ Ğ’ ĞĞ‘Ğ›ĞĞšĞ!");
             })
             .catch(function(err) {
-                alert("§°§º§ª§¢§¬§¡ §³§ª§¯§·§²§°§¯§ª§©§¡§¸§ª§ª!");
+                console.error("ĞÑˆĞ¸Ğ±ĞºĞ° Ğ¾Ñ‚Ğ¿Ñ€Ğ°Ğ²ĞºĞ¸:", err);
+                alert("ĞĞ¨Ğ˜Ğ‘ĞšĞ Ğ¡Ğ˜ĞĞ¥Ğ ĞĞĞ˜Ğ—ĞĞ¦Ğ˜Ğ˜ Ğ¡ ĞĞ‘Ğ›ĞĞšĞĞœ!");
             });
         }
 
-        // §¬§ß§à§á§Ü§Ñ §ã§à§ç§â§Ñ§ß§Ö§ß§Ú§ñ §Ó §ç§Ö§Õ§Ö§â§Ö §á§Ñ§ß§Ö§İ§Ú
+        // ĞšĞ½Ğ¾Ğ¿ĞºĞ° ÑĞ¾Ñ…Ñ€Ğ°Ğ½ĞµĞ½Ğ¸Ñ Ğ² Ñ…ĞµĞ´ĞµÑ€Ğµ Ğ¿Ğ°Ğ½ĞµĞ»Ğ¸
         document.getElementById('header-save').addEventListener('click', function() {
             if (!currentRomName) return;
             var initData = window.Telegram.WebApp.initDataUnsafe;
@@ -780,7 +783,7 @@
                 var rawSavePayload = JSON.stringify(nes.toJSON());
                 sendPackToGoogleSheetsCloud(userId, currentRomName, nowStr, rawSavePayload, selectedSlotNumber);
             } else if (currentSystem === "sega" || currentSystem === "snes") {
-                // ?? §¥§İ§ñ §³§Ö§Ô§Ú/SNES §ã§ä§å§é§Ú§Ş§ã§ñ §Ó iframe §Ù§Ñ §â§Ö§Ñ§İ§î§ß§í§Ş §ã§İ§Ö§á§Ü§à§Ş §Ò§Ñ§Û§ä!
+                // Ğ”Ğ»Ñ Ğ¡ĞµĞ³Ğ¸ Ğ¸ SNES Ğ¿Ñ€Ğ¾ÑĞ¸Ğ¼ iframe Ğ²Ñ‹Ğ³Ñ€ÑƒĞ·Ğ¸Ñ‚ÑŒ Ğ±Ğ¸Ğ½Ğ°Ñ€Ğ½Ñ‹Ğ¹ ÑÑ‚ĞµĞ¹Ñ‚
                 var iframe = document.getElementById('active-emulator-iframe');
                 if (iframe && iframe.contentWindow) {
                     iframe.contentWindow.postMessage({ action: 'request_16bit_save' }, '*');
@@ -788,16 +791,50 @@
             }
         });
 
-        // §³§İ§å§ê§Ñ§Ö§Ş §à§ä§Ó§Ö§ä §ã base64-§ã§ß§Ú§Ş§Ü§à§Ş §à§ä 16-§Ò§Ú§ä§ß§í§ç §ñ§Õ§Ö§â
+        // Ğ¡Ğ»ÑƒÑˆĞ°ĞµĞ¼ Ğ±Ğ¸Ğ½Ğ°Ñ€Ğ½Ñ‹Ğ¹ base64-Ğ¾Ñ‚Ğ²ĞµÑ‚ Ğ¾Ñ‚ 16-Ğ±Ğ¸Ñ‚Ğ½Ñ‹Ñ… ÑĞ´ĞµÑ€ (Ğ¡ĞµĞ³Ğ°/SNES)
         window.addEventListener('message', function(e) {
-            if (e.data && e.data.action === 'respond_save_string') return; // §ª§Ô§ß§à§â§Ú§â§å§Ö§Ş §ã§ä§Ñ§â§í§Ö §ç§å§Ü§Ú
+            // Ğ˜Ğ³Ğ½Ğ¾Ñ€Ğ¸Ñ€ÑƒĞµĞ¼ ÑÑ‚Ğ°Ñ€Ñ‹Ğµ ÑĞ¸ÑÑ‚ĞµĞ¼Ğ½Ñ‹Ğµ Ñ…ÑƒĞºĞ¸, ĞµÑĞ»Ğ¸ Ğ¾Ğ½Ğ¸ Ğ¿Ñ€Ğ¸Ğ»ĞµÑ‚Ğ°ÑÑ‚
+            if (e.data && e.data.action === 'respond_save_string') return; 
             
             if (e.data && e.data.action === 'respond_16bit_save') {
                 var initData = window.Telegram.WebApp.initDataUnsafe;
                 var userId = initData.user ? initData.user.id : "test_user_888";
                 var nowStr = new Date().toLocaleString('ru-RU');
                 
-                // §±§å§ê§Ú§Ş §â§Ö§Ñ§İ§î§ß§å§ğ base64-§ã§ä§â§à§Ü§å §ã§à§ç§â§Ñ§ß§Ö§ß§Ú§ñ 16-§Ò§Ú§ä §Ó §Ó§í§Ò§â§Ñ§ß§ß§í§Û §ã§İ§à§ä!
+                // ĞÑ‚Ğ¿Ñ€Ğ°Ğ²Ğ»ÑĞµĞ¼ Ñ€ĞµĞ°Ğ»ÑŒĞ½Ñ‹Ğ¹ ÑĞ½Ğ¸Ğ¼Ğ¾Ğº Ğ¡ĞµĞ³Ğ¸/SNES Ğ² Ğ²Ñ‹Ğ±Ñ€Ğ°Ğ½Ğ½Ñ‹Ğ¹ ÑĞ»Ğ¾Ñ‚ Ñ‚Ğ°Ğ±Ğ»Ğ¸Ñ†Ñ‹
+                sendPackToGoogleSheetsCloud(userId, currentRomName, nowStr, e.data.data, selectedSlotNumber);
+            }
+        });
+
+        // å¦æ‰¶æŠ‰æ‰­æŠ—å¿˜ æ‰¼æŠ‰æŠ’æŠŠå¿˜æ‰¶å¿«æ‰¶æˆ‘æ”¸ å¿— æŠ’å¿«å¿±å¿«æŠŠå¿« æ‰­å¿˜æ‰¶å¿«æŠ–æˆ‘
+        document.getElementById('header-save').addEventListener('click', function() {
+            if (!currentRomName) return;
+            var initData = window.Telegram.WebApp.initDataUnsafe;
+            var userId = initData.user ? initData.user.id : "test_user_888";
+            var nowStr = new Date().toLocaleString('ru-RU');
+
+            if (currentSystem === "nes") {
+                var rawSavePayload = JSON.stringify(nes.toJSON());
+                sendPackToGoogleSheetsCloud(userId, currentRomName, nowStr, rawSavePayload, selectedSlotNumber);
+            } else if (currentSystem === "sega" || currentSystem === "snes") {
+                // ?? åæŠ–æ”¸ å¦Šå¿«å¿æˆ‘/SNES æ‰¼æ‰¾æ‰¹æŠ˜æˆ‘æŠ€æ‰¼æ”¸ å¿— iframe æˆ’å¿˜ æŠŠå¿«å¿˜æŠ–æŠ†æ‰¶æŠ‘æŠ€ æ‰¼æŠ–å¿«æ‰­æŠ—æŠ‰æŠ€ å¿Œå¿˜æŠ„æ‰¾!
+                var iframe = document.getElementById('active-emulator-iframe');
+                if (iframe && iframe.contentWindow) {
+                    iframe.contentWindow.postMessage({ action: 'request_16bit_save' }, '*');
+                }
+            }
+        });
+
+        // å¦ŠæŠ–æ‰¹æ‰®å¿˜å¿«æŠ€ æŠ‰æ‰¾å¿—å¿«æ‰¾ æ‰¼ base64-æ‰¼æ‰¶æˆ‘æŠ€æŠ—æŠ‰æŠ€ æŠ‰æ‰¾ 16-å¿Œæˆ‘æ‰¾æ‰¶æŠ‘æŠ’ æ”¸å¿±å¿«æŠŠ
+        window.addEventListener('message', function(e) {
+            if (e.data && e.data.action === 'respond_save_string') return; // å¦’å¿æ‰¶æŠ‰æŠŠæˆ‘æŠŠæ‰¹å¿«æŠ€ æ‰¼æ‰¾å¿˜æŠŠæŠ‘å¿« æŠ’æ‰¹æŠ—æˆ‘
+            
+            if (e.data && e.data.action === 'respond_16bit_save') {
+                var initData = window.Telegram.WebApp.initDataUnsafe;
+                var userId = initData.user ? initData.user.id : "test_user_888";
+                var nowStr = new Date().toLocaleString('ru-RU');
+                
+                // å¦¤æ‰¹æ‰®æˆ‘æŠ€ æŠŠå¿«å¿˜æŠ–æŠ†æ‰¶æ‰¹æ”» base64-æ‰¼æ‰¾æŠŠæŠ‰æŠ—æ‰¹ æ‰¼æŠ‰æŠ’æŠŠå¿˜æ‰¶å¿«æ‰¶æˆ‘æ”¸ 16-å¿Œæˆ‘æ‰¾ å¿— å¿—æŠ‘å¿ŒæŠŠå¿˜æ‰¶æ‰¶æŠ‘æŠ„ æ‰¼æŠ–æŠ‰æ‰¾!
                 sendPackToGoogleSheetsCloud(userId, currentRomName, nowStr, e.data.data, selectedSlotNumber);
             }
         });
