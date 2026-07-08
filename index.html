@@ -6,7 +6,6 @@
     <title>9999 IN 1 - Ultimate Retro Arcade</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jsnes/1.2.1/jsnes.min.js"></script>
-    <!-- Подключаем Dexie.js для неубиваемых офлайн-сохранений -->
     <script src="https://unpkg.com/dexie@3.2.4/dist/dexie.min.js"></script>
     <script src="games.js"></script>
 
@@ -249,12 +248,13 @@
 
         var gasRetroUrl = "https://script.google.com/macros/s/AKfycbwBjulaVnjKN-Af3oDFFFaG4Us8n6Jgcz3BTJRL1HThFxlgMuxv_D4x1yK4Khy-BsVL/exec";
 
-        // 🔥 Инициализируем локальную базу Dexie.js для моментальных офлайн-сохранений[cite: 5]
+        // Разворачиваем базу IndexedDB для автономной локальной памяти
         var db = new Dexie('emu-saves-v1');
         db.version(1).stores({
             states: 'key, platform, romUrl, slot, timestamp, data'
         });
 
+        // 🔥 ЖЕСТКО ВЕРНУЛИ 5 ИГР НА СТРАНИЦУ
         var baseGames = [];        
         var filteredGames = [];    
         var currentPage = 1;     
@@ -263,7 +263,7 @@
 
         var currentSelectedGameObj = null; 
         var selectedSlotNumber = "1"; 
-        var localSavesMap = {}; // Карта локальных сейвов в памяти
+        var localSavesMap = {}; 
 
         var allSecrets = [];
         var videoEl = document.getElementById('menu-bg-video');
@@ -279,6 +279,27 @@
             renderGamesPage(currentPage);
         }
         if(videoEl) { videoEl.muted = true; videoEl.play().catch(function(e){}); }
+
+        document.addEventListener('visibilitychange', function() {
+            if (document.hidden) {
+                if (currentSystem === "nes" && gameLoopInterval) {
+                    clearInterval(gameLoopInterval);
+                    gameLoopInterval = null;
+                }
+                var iframe = document.getElementById('active-emulator-iframe');
+                if (iframe && iframe.contentWindow) {
+                    iframe.contentWindow.postMessage({ action: 'pause_emulator' }, '*');
+                }
+            } else {
+                if (currentSystem === "nes" && !gameLoopInterval) {
+                    gameLoopInterval = setInterval(function() { nes.frame(); }, 1000 / 60);
+                }
+                var iframe = document.getElementById('active-emulator-iframe');
+                if (iframe && iframe.contentWindow) {
+                    iframe.contentWindow.postMessage({ action: 'resume_emulator' }, '*');
+                }
+            }
+        });
 
         function isGameFavorite(file) {
             var favs = JSON.parse(localStorage.getItem('retro_favs') || "[]");
@@ -383,7 +404,6 @@
             }
         }
 
-        // 🔥 МГНОВЕННЫЙ ОПРОС СЛОТОВ ИЗ INDEXEDDB ТЕЛЕФОНА[cite: 5]
         async function openSavesManagerScreen(gameObj) {
             currentSelectedGameObj = gameObj;
             localSavesMap = {}; 
@@ -398,7 +418,7 @@
 
             for (var slot = 1; slot <= 5; slot++) {
                 var uniqueKey = `${gameObj.system}:${gameObj.file}:${slot}`;
-                var record = await db.states.get(uniqueKey); // Ищем запись в Dexie[cite: 5]
+                var record = await db.states.get(uniqueKey);
                 
                 var card = document.createElement('div');
                 card.className = 'cloud-save-card';
@@ -437,7 +457,6 @@
             startGame(currentSelectedGameObj.file, currentSelectedGameObj.title, currentSelectedGameObj.system);
         }
 
-        // 🔥 Работа с Секретами через GAS полностью сохранена
         (function loadRetroSecrets() {
             var script = document.createElement('script');
             script.src = gasRetroUrl + "?action=get_secrets&callback=renderSecrets";
@@ -472,7 +491,6 @@
             displaySecretsList(filtered);
         }
 
-        // 🔥 Работа с Заказом игр через GAS полностью сохранена[cite: 3]
         function sendOrderRequest() {
             var titleInput = document.getElementById('order-game-title').value.trim();
             var systemInput = document.getElementById('order-game-system').value.trim();
@@ -594,10 +612,10 @@
                                     var bytes = new Uint8Array(len);
                                     for (var i = 0; i < len; i++) { bytes[i] = binaryStr.charCodeAt(i); }
                                     window.EJS_instance.loadState(bytes);
-                                    console.log("Локальное сохранение 16-бит успешно развернуто!");
                                  } catch(err) { 
-                                    console.error("Ошибка автоинжекта:", err); 
+                                    console.error(err); 
                                  } finally {
+                                    // 🔥 ЖЕЛЕЗНЫЙ ХУК: Снимаем заставку лоадера сразу после обработки стейта
                                     window.parent.postMessage({ action: 'hide_loader' }, '*');
                                  }
                               }, 1500);
@@ -723,17 +741,14 @@
                                     var saveObj = JSON.parse(slotBuffer);
                                     nes.fromJSON(saveObj);
                                     window.Telegram.WebApp.showAlert("ПРОГРЕСС СЛОТА 0" + selectedSlotNumber + " ВОССТАНОВЛЕН!");
-                                } catch(err) {
-                                    console.error("NES save load error:", err);
-                                }
+                                } catch(err) {}
                             }, 800);
                         }
                     } else { alert("ОШИБКА РОМА!"); exitToCatalog(); }
                 };
                 req.onerror = function() {
                     document.getElementById('loading-overlay').style.display = 'none';
-                    alert("ОШИБКА СЕТИ ПРИ ЗАГРУЗКЕ РОМА!");
-                    exitToCatalog();
+                    alert("ОШИБКА СЕТИ!"); exitToCatalog();
                 };
                 req.send();
             }
@@ -767,7 +782,6 @@
         
         document.getElementById('back-to-catalog').addEventListener('click', exitToCatalog);
 
-        // 🔥 МГНОВЕННОЕ ЛОКАЛЬНОЕ СОХРАНЕНИЕ В INDEXEDDB (БЕЗ УЧАСТИЯ СЕТИ И ЛИМИТОВ)[cite: 5, 11]
         async function saveToLocalDatabase(payload) {
             var uniqueKey = `${currentSystem}:${currentRomName}:${selectedSlotNumber}`;
             try {
@@ -782,8 +796,7 @@
                 window.Telegram.WebApp.showAlert("ПРОГРЕСС УСПЕШНО ЗАПИСАН В ПАМЯТЬ ТЕЛЕФОНА!");
                 localSavesMap[selectedSlotNumber] = payload;
             } catch (err) {
-                console.error("IndexedDB Save Error:", err);
-                alert("Ошибка сохранения: проверьте свободное место на телефоне.");
+                alert("Ошибка сохранения: проверьте свободное место.");
             } finally {
                 var saveBtn = document.getElementById('header-save');
                 saveBtn.disabled = false; saveBtn.textContent = "💾 СОХРАНИТЬ ИГРУ";
@@ -822,6 +835,7 @@
         window.addEventListener('message', function(e) {
             if (!e.data || typeof e.data !== 'object') return;
 
+            // Снятие лоадера на Сеге/SNES
             if (e.data.action === 'hide_loader') {
                 document.getElementById('loading-overlay').style.display = 'none';
             }
