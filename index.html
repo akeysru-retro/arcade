@@ -6,6 +6,7 @@
     <title>9999 IN 1 - Ultimate Retro Arcade</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jsnes/1.2.1/jsnes.min.js"></script>
+    <!-- 🔥 ЖЕСТКИЙ ФИКС: Подключаем Dexie, без которого падал весь скрипт! -->
     <script src="https://unpkg.com/dexie@3.2.4/dist/dexie.min.js"></script>
     <script src="games.js"></script>
 
@@ -15,7 +16,6 @@
             background-color: #000; color: #fff; margin: 0; padding: 0;
             font-family: 'Press Start 2P', monospace;
             height: 100vh; overflow: hidden; user-select: none;
-            -webkit-touch-callout: none; -webkit-user-select: none;
         }
         body {
             display: flex; flex-direction: column; align-items: center; justify-content: flex-start;
@@ -127,6 +127,31 @@
         }
         .order-submit-btn:active { transform: translateY(4px); box-shadow: none; }
 
+        #game-screen { display: none; width: 100%; max-width: 400px; flex-grow: 1; background: #000; position: relative; z-index: 20; height: 100vh; padding-top: 44px; box-sizing: border-box; }
+        
+        /* 🔥 ФИКС ВЕРСТКИ: Растягиваем контейнер и холст Денди на максимум */
+        #game-container { 
+            width: 100%; height: calc(100vh - 230px); background: #000; 
+            position: relative; display: flex; justify-content: center; align-items: center; overflow: hidden; box-sizing: border-box;
+        }
+        #nes-canvas { width: 100%; height: 100%; object-fit: contain; display: block; image-rendering: pixelated; }
+
+        #sega-display-container { display: none; width: 100%; max-width: 400px; height: calc(100vh - 44px); position: absolute; top: 44px; left: 0; right: 0; bottom: 0; z-index: 1000; background: #000; }
+        #sega-display-container iframe { width: 100%; height: 100%; border: none; display: block; }
+
+        /* Геймпад по умолчанию скрыт */
+        #gamepad { display: none; position: absolute; bottom: 0; left: 0; right: 0; z-index: 30; flex-direction: column; width: 100%; padding: 15px; box-sizing: border-box; justify-content: space-between; border-top: 4px solid #222; background: #111; touch-action: none; }
+        .main-controls { display: flex; width: 100%; justify-content: space-between; align-items: center; }
+        .dpad { display: grid; grid-template-columns: repeat(3, 1fr); grid-template-rows: repeat(3, 1fr); width: 130px; height: 130px; }
+        .btn { background: #222; border: 3px solid #444; color: white; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 14px; touch-action: none; }
+        .btn:active { background: #444; }
+        #nes-buttons { display: inline-flex; gap: 15px; }
+        .round-btn { width: 60px; height: 60px; background: #cc1111; border-radius: 50%; border: 4px solid #fff; color: white; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 16px; font-family: sans-serif; box-shadow: 0 4px 0 #880000; touch-action: none; }
+        .round-btn:active { background: #aa0000; transform: translateY(4px); box-shadow: none; }
+        .system-buttons { display: flex; flex-direction: column; gap: 10px; width: 100%; margin-top: 15px; }
+        .sys-row { display: flex; justify-content: center; gap: 20px; }
+        .sys-btn { background: #333; border: 2px solid #555; color: #aaa; width: 80px; height: 22px; border-radius: 4px; font-size: 8px; display: flex; align-items: center; justify-content: center; touch-action: none; }
+
         .tab-bar {
             position: fixed !important; bottom: 0 !important; left: 0; right: 0; height: 55px;
             background: #111; border-top: 3px solid #333; display: flex;
@@ -141,31 +166,6 @@
         .tab-icon { font-size: 14px; }
 
         .loading-overlay { display: none; position: absolute; top: 44px; left: 0; right: 0; bottom: 0; background: #000; z-index: 1500; flex-direction: column; align-items: center; justify-content: center; }
-
-        #game-screen { display: none; width: 100%; max-width: 400px; flex-grow: 1; background: #000; position: relative; z-index: 20; height: 100vh; padding-top: 44px; box-sizing: border-box; }
-        
-        /* 🔥 ИСПРАВЛЕНО: Растягиваем контейнер игры на всю доступную область экрана */
-        #game-container { 
-            width: 100%; height: calc(100vh - 230px); background: #000; 
-            position: relative; display: flex; justify-content: center; align-items: center; overflow: hidden; box-sizing: border-box;
-        }
-        /* 🔥 ИСПРАВЛЕНО: Растягиваем canvas на 100% высоты и ширины родителя для крупной картинки */
-        #nes-canvas { width: 100%; height: 100%; object-fit: contain; display: block; image-rendering: pixelated; }
-
-        #sega-display-container { display: none; width: 100%; max-width: 400px; height: calc(100vh - 44px); position: absolute; top: 44px; left: 0; right: 0; bottom: 0; z-index: 1000; background: #000; }
-        #sega-display-container iframe { width: 100%; height: 100%; border: none; display: block; }
-
-        #gamepad { display: none; position: absolute; bottom: 0; left: 0; right: 0; z-index: 30; flex-direction: column; width: 100%; padding: 15px; box-sizing: border-box; justify-content: space-between; border-top: 4px solid #222; background: #111; touch-action: none; }
-        .main-controls { display: flex; width: 100%; justify-content: space-between; align-items: center; }
-        .dpad { display: grid; grid-template-columns: repeat(3, 1fr); grid-template-rows: repeat(3, 1fr); width: 130px; height: 130px; }
-        .btn { background: #222; border: 3px solid #444; color: white; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 14px; touch-action: none; }
-        .btn:active { background: #444; }
-        #nes-buttons { display: inline-flex; gap: 15px; }
-        .round-btn { width: 60px; height: 60px; background: #cc1111; border-radius: 50%; border: 4px solid #fff; color: white; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 16px; font-family: sans-serif; box-shadow: 0 4px 0 #880000; touch-action: none; }
-        .round-btn:active { background: #aa0000; transform: translateY(4px); box-shadow: none; }
-        .system-buttons { display: flex; flex-direction: column; gap: 10px; width: 100%; margin-top: 15px; }
-        .sys-row { display: flex; justify-content: center; gap: 20px; }
-        .sys-btn { background: #333; border: 2px solid #555; color: #aaa; width: 80px; height: 22px; border-radius: 4px; font-size: 8px; display: flex; align-items: center; justify-content: center; touch-action: none; }
     </style>
 </head>
 <body>
@@ -238,12 +238,42 @@
         </div>
     </div>
 
+    <div id="loading-overlay" class="loading-overlay">
+        <div style="font-size:10px; color:#ffff00; margin-bottom:15px; letter-spacing:1px; text-align:center;">ЗАГРУЗКА ЭМУЛЯТОРА...</div>
+    </div>
+
+    <div id="game-screen">
+        <div id="game-container">
+            <canvas id="nes-canvas" width="256" height="240"></canvas>
+        </div>
+        <div id="sega-display-container"></div>
+        <div id="gamepad">
+            <div class="main-controls">
+                <div class="dpad">
+                    <div></div><div class="btn" id="up">▲</div><div></div>
+                    <div class="btn" id="left">◀</div><div></div><div class="btn" id="right">▶</div>
+                    <div></div><div class="btn" id="down">▼</div><div></div>
+                </div>
+                <div id="nes-buttons">
+                    <div class="round-btn" id="btn-b">B</div>
+                    <div class="round-btn" id="btn-a">A</div>
+                </div>
+            </div>
+            <div class="system-buttons">
+                <div class="sys-row">
+                    <div class="sys-btn" id="btn-select">SELECT</div><div class="sys-btn" id="btn-start">START</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <script>
         window.Telegram.WebApp.ready();
         window.Telegram.WebApp.expand();
 
         var gasRetroUrl = "https://script.google.com/macros/s/AKfycbwBjulaVnjKN-Af3oDFFFaG4Us8n6Jgcz3BTJRL1HThFxlgMuxv_D4x1yK4Khy-BsVL/exec";
 
+        // Разворачиваем базу Dexie.js для автономной локальной памяти[cite: 5]
         var db = new Dexie('emu-saves-v1');
         db.version(1).stores({
             states: 'key, platform, romUrl, slot, timestamp, data'
@@ -412,7 +442,7 @@
 
             for (var slot = 1; slot <= 5; slot++) {
                 var uniqueKey = `${gameObj.system}:${gameObj.file}:${slot}`;
-                var record = await db.states.get(uniqueKey);
+                var record = await db.states.get(uniqueKey); // Ищем запись в локальной Dexie[cite: 5]
                 
                 var card = document.createElement('div');
                 card.className = 'cloud-save-card';
@@ -592,12 +622,12 @@
             var injectionPayloadScript = "";
             
             if (currentSaveBuffer && currentSaveBuffer.length > 50) {
+                // 🔥 СТРОГО ПРИВЯЗАНО К EJS_instance ИЗ ТВОЕГО БЭКАПА[cite: 17]
                 injectionPayloadScript = `
                     window.addEventListener('load', function() {
                         var timerCount = 0;
                         var checkExist = setInterval(function() {
                            timerCount++;
-                           // 🔥 ИСПРАВЛЕНО: Возвращен оригинальный инстанс управления EJS_instance из бэкапа
                            if (typeof window.EJS_instance !== 'undefined' && window.EJS_instance.loadState) {
                               clearInterval(checkExist);
                               setTimeout(function(){
@@ -661,7 +691,6 @@
                         if (!e.data || typeof e.data !== 'object') return;
 
                         if (e.data.action === 'request_16bit_save') {
-                            // 🔥 ИСПРАВЛЕНО: Возвращен оригинальный инстанс EJS_instance для экспорта стейта
                             if (typeof window.EJS_instance !== 'undefined' && typeof window.EJS_instance.exportState === 'function') {
                                 window.EJS_instance.exportState(function(bytes) {
                                     if (!bytes || bytes.byteLength === 0) {
@@ -778,6 +807,7 @@
         
         document.getElementById('back-to-catalog').addEventListener('click', exitToCatalog);
 
+        // 🔥 СОХРАНЕНИЕ СТРОГО НА ЖЕЛЕЗО ТЕЛЕФОНА (INDEXEDDB)[cite: 5]
         async function saveToLocalDatabase(payload) {
             var uniqueKey = `${currentSystem}:${currentRomName}:${selectedSlotNumber}`;
             try {
@@ -836,6 +866,7 @@
             }
         });
 
+        // Железная логика кнопок геймпада из бэкапа[cite: 17]
         function bindKey(elementId, nesKey) {
             var el = document.getElementById(elementId);
             if(el) {
