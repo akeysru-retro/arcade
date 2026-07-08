@@ -39,7 +39,7 @@
             background-color: #000; padding-top: 65px; padding-bottom: 70px; box-sizing: border-box;
             z-index: 10; display: flex; flex-direction: column; align-items: center;
         }
-        /* 🔥 Старое оформление главной заставки возвращено в полную яркость без затемнения */
+        /* 🔥 Видео-заставка возвращена в 100% оригинальную яркость без затемнений */
         .bg-video {
             position: absolute; top: 0; left: 0; width: 100%; height: 100%;
             object-fit: cover; z-index: 1; pointer-events: none;
@@ -295,7 +295,7 @@
         }
         if(videoEl) { videoEl.muted = true; videoEl.play().catch(function(e){}); }
 
-        // 🔥 Жизненный цикл фокуса приложения (Защита звука и циклов при сворачивании)[cite: 11]
+        // 🔥 Жизненный цикл фокуса приложения (Защита звука и циклов при сворачивании)[cite: 12]
         document.addEventListener('visibilitychange', function() {
             if (document.hidden) {
                 if (currentSystem === "nes" && gameLoopInterval) {
@@ -482,7 +482,7 @@
             }
         }
 
-        // Обеспечиваем обновление номера слота до фактического старта игры[cite: 11]
+        // Кнопка сохранения: убеждаемся, что слот берется актуальный до старта[cite: 12]
         function launchGamePureNew() {
             selectedSlotNumber = "1"; 
             startGame(currentSelectedGameObj.file, currentSelectedGameObj.title, currentSelectedGameObj.system);
@@ -693,9 +693,9 @@
                     EJS_Header = true; 
                 <\/script>
                 <script src="https://cdn.emulatorjs.org/stable/data/loader.js"><\/script>
-                <!-- 🔥 ИСПРАВЛЕНО: Полная и надежная логика сохранения, паузы и возобновления ядра по мануалу коллеги -->
+                <!-- 🔥 ИСПРАВЛЕНО: Интеграция методов паузы, возобновления и надежного побайтового экспорта Base64 -->
                 <script>
-                    \${injectionPayloadScript}
+                    ${injectionPayloadScript}
 
                     window.addEventListener('message', function(e) {
                         if (!e.data || typeof e.data !== 'object') return;
@@ -784,7 +784,7 @@
                         gameLoopInterval = setInterval(function() { nes.frame(); }, 1000 / 60);
                         
                         var slotBuffer = cloudSavesMap[selectedSlotNumber];
-                        // 🔥 ИСПРАВЛЕНО: Безопасное разворачивание стейта Dendy в блоке try/catch
+                        // 🔥 ИСПРАВЛЕНО: Безопасное разворачивание стейта Dendy в блоке try/catch[cite: 12]
                         if (slotBuffer) {
                             setTimeout(function(){
                                 try {
@@ -836,39 +836,43 @@
         
         document.getElementById('back-to-catalog').addEventListener('click', exitToCatalog);
 
+        // 🔥 ИСПРАВЛЕНО: Отправка данных сохранений через надежный структурированный FormData мост (Решает проблему no-cors блокировки JSON)[cite: 12]
         function sendPackToGoogleSheetsCloud(userId, file, dateTime, payload, slot) {
-            console.log('sendPackToGoogleSheetsCloud:', { userId, file, dateTime, slot, payloadLength: payload.length });
+            console.log('sendPackToGoogleSheetsCloud:', { userId, file, slot, payloadLength: payload.length });
 
-            var rawJsonPayload = {
-                action: "set_save",
-                user_id: String(userId),
-                game_file: String(file),
-                date_time: String(dateTime),
-                slot_num: String(slot), 
-                save_data: String(payload)
-            };
+            var form = new FormData();
+            form.append('action', 'set_save');
+            form.append('user_id', String(userId));
+            form.append('game_file', String(file));
+            form.append('date_time', String(dateTime));
+            form.append('slot_num', String(slot));
+            form.append('save_data', String(payload));
 
-            fetch(gasRetroUrl, {
-                method: "POST",
-                mode: "no-cors", 
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify(rawJsonPayload) 
+            fetch(gasRetroUrl, { 
+                method: 'POST', 
+                body: form 
             })
-            .then(function() {
-                window.Telegram.WebApp.showAlert("ПРОГРЕСС СЛОТА 0" + slot + " УСПЕШНО ЗАПИСАН В ОБЛАКО!");
-                cloudSavesMap[slot] = payload; 
+            .then(function(r) {
+                if (r.ok || r.status === 0) { // status 0 обрабатывается для no-cors окружений
+                    window.Telegram.WebApp.showAlert("ПРОГРЕСС СЛОТА 0" + slot + " УСПЕШНО ЗАПИСАН В ОБЛАКО!");
+                    cloudSavesMap[slot] = payload;
+                } else {
+                    console.error('GAS вернул ошибку:', r.status);
+                    alert('Ошибка сохранения в облаке (HTTP ' + r.status + ')');
+                }
             })
             .catch(function(err) {
                 console.error("Ошибка отправки:", err);
-                alert("ОШИБКА СИНХРОНИЗАЦИИ С ОБЛАКОМ!");
+                alert("Ошибка синхронизации с облаком!");
             });
         }
 
+        // 🔥 ИСПРАВЛЕНО: Интеграция 8-секундного таймера ожидания ответа экспорта памяти из iframe[cite: 12]
         document.getElementById('header-save').addEventListener('click', function() {
             if (!currentRomName) return;
             var initData = window.Telegram.WebApp.initDataUnsafe;
-            var userId = initData.user ? initData.user.id : "test_user_888";
-            var nowStr = new Date().toISOString(); // Перешли на формат ISO
+            var userId = initData && initData.user && initData.user.id ? initData.user.id : "test_user_888";
+            var nowStr = new Date().toISOString(); // Форматирование переведено на ISO стандарт
 
             if (currentSystem === "nes") {
                 var rawSavePayload = JSON.stringify(nes.toJSON());
@@ -877,27 +881,34 @@
                 var iframe = document.getElementById('active-emulator-iframe');
                 if (iframe && iframe.contentWindow) {
                     iframe.contentWindow.postMessage({ action: 'request_16bit_save' }, '*');
+
+                    // Запуск контроля таймаута: если за 8 секунд фрейм не ответил — выкидываем предупреждение
+                    var timeoutId = setTimeout(function() {
+                        alert("Не удалось получить сохранение из эмулятора. Попробуйте ещё раз.");
+                    }, 8000);
+
+                    window.addEventListener('message', function onSaveResponse(e) {
+                        if (!e.data || e.data.action !== 'respond_16bit_save') return;
+                        clearTimeout(timeoutId);
+                        window.removeEventListener('message', onSaveResponse);
+
+                        if (!e.data.data) {
+                            alert("Сохранение пустое или не удалось экспортировать.");
+                            return;
+                        }
+                        sendPackToGoogleSheetsCloud(userId, currentRomName, nowStr, e.data.data, selectedSlotNumber);
+                    }, { once: true });
                 }
             }
         });
 
-        // 🔥 ИСПРАВЛЕНО: Тотальное логирование входящих сообщений и перевод даты в ISO формат
         window.addEventListener('message', function(e) {
             console.log('parent received message:', e.data); 
 
             if (!e.data || typeof e.data !== 'object') return;
 
-            if (e.data.action === 'respond_16bit_save') {
-                if (!e.data.data) {
-                    console.warn('respond_16bit_save: нет данных сохранения!');
-                    return;
-                }
-                var initData = window.Telegram.WebApp.initDataUnsafe;
-                var userId = initData && initData.user && initData.user.id ? initData.user.id : "test_user_888";
-                var nowStr = new Date().toISOString(); 
-
-                sendPackToGoogleSheetsCloud(userId, currentRomName, nowStr, e.data.data, selectedSlotNumber);
-            } else if (e.data.action === 'hide_loader') {
+            // hide_loader обрабатывается в общем потоке входящих пакетов
+            if (e.data.action === 'hide_loader') {
                 document.getElementById('loading-overlay').style.display = 'none';
             }
         });
