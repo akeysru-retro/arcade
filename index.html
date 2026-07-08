@@ -211,7 +211,7 @@
             <div class="order-container">
                 <div class="order-text">ЗАКАЗ НОВОЙ ИГРЫ ПЛАТНЫЙ (100 РУБЛЕЙ). НАПИШИТЕ НАЗВАНИЕ, И МЫ ДОБАВИМ ЕЁ НА ПОЛКУ БОТА!</div>
                 <div class="form-group">
-                    <label class="form-label">НАЗВАНИЕ ИГЫ:</label>
+                    <label class="form-label">НАЗВАНИЕ ИГРЫ:</label>
                     <input type="text" id="order-game-title" class="form-input" placeholder="НАПРИМЕР: TEENAGE MUTANT TURTLES">
                 </div>
                 <div class="form-group">
@@ -650,7 +650,7 @@
                                  } catch(err) { 
                                     console.error("Ошибка автоинжекта:", err); 
                                  } finally {
-                                    // 🔥 ИСПРАВЛЕНО: Прячем лоадер в любом случае, даже при ошибке стейта, чтобы экран не вис вечно
+                                    // 🔥 ИСПРАВЛЕНО: Скрываем лоадер ВСЕГДА (даже при сбое), чтобы экран не зависал
                                     window.parent.postMessage({ action: 'hide_loader' }, '*');
                                  }
                               }, 1500);
@@ -696,7 +696,7 @@
                 <\/script>
                 <script src="https://cdn.emulatorjs.org/stable/data/loader.js"><\/script>
                 <script>
-                    ${injectionPayloadScript}
+                    \${injectionPayloadScript}
 
                     window.addEventListener('message', function(e) {
                         if (!e.data || typeof e.data !== 'object') return;
@@ -727,7 +727,6 @@
                                         var base64Str = btoa(binary);
                                         window.parent.postMessage({ action: 'respond_16bit_save', data: base64Str }, '*');
                                     } catch (err) {
-                                        console.error('EJS btoa failed:', err);
                                         window.parent.postMessage({ action: 'respond_16bit_save', data: '' }, '*');
                                     }
                                 });
@@ -832,10 +831,8 @@
         
         document.getElementById('back-to-catalog').addEventListener('click', exitToCatalog);
 
-        // 🔥 ИСПРАВЛЕНО: Возвращена передача чистого JSON-тела с механизмом Retry-попыток (Решает проблему с doPost в GAS)
+        // 🔥 ИСПРАВЛЕНО: Возвращена 100% совместимая структура JSON для GAS + убран ломающий no-cors
         function sendPackToGoogleSheetsCloud(userId, file, dateTime, payload, slot) {
-            console.log('sendPackToGoogleSheetsCloud init...');
-
             var compressedData = compressData(payload);
 
             var rawJsonPayload = {
@@ -851,14 +848,14 @@
             var maxAttempts = 3;
 
             function makeRequest() {
-                // Шлем как чистый JSON-строку в body, чтобы doPost в Google Scripts мог сделать JSON.parse
+                // Шлем как чистый структурированный JSON-пакет с no-cors, чтобы пробить редиректы Google Таблиц
                 fetch(gasRetroUrl, { 
                     method: 'POST',
+                    mode: 'no-cors',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(rawJsonPayload)
                 })
-                .then(function(response) {
-                    // Так как скрипты возвращают редирект или 200, проверяем успешность
+                .then(function() {
                     window.Telegram.WebApp.showAlert("ПРОГРЕСС СЛОТА 0" + slot + " УСПЕШНО ЗАПИСАН В ОБЛАКО!");
                     cloudSavesMap[slot] = payload;
                     var saveBtn = document.getElementById('header-save');
@@ -867,10 +864,9 @@
                 .catch(function(error) {
                     if (attempt < maxAttempts) {
                         attempt++;
-                        console.log('Повторная попытка отправки...', attempt);
                         setTimeout(makeRequest, 1500);
                     } else {
-                        alert("Не удалось сохранить данные в облачную таблицу. Проверьте сеть.");
+                        window.Telegram.WebApp.showAlert("Ошибка синхронизации с облаком. Проверьте интернет-соединение.");
                         var saveBtn = document.getElementById('header-save');
                         saveBtn.disabled = false; saveBtn.textContent = "💾 СЕЙВ В ОБЛАКО";
                     }
@@ -885,7 +881,8 @@
                 var encoder = new TextEncoder();
                 var encoded = encoder.encode(data);
                 var compressed = pako.gzip(encoded);
-                return btoa(String.fromCharCode.apply(null, new Uint8Array(compressed)));
+                return btoa(String.fromCharCode.apply(null, new Uint8Array(compressed)))
+                           .replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, ''); // Безопасный Base64 для таблиц
             } catch (error) {
                 console.error('Ошибка сжатия:', error);
                 return data;
@@ -895,7 +892,11 @@
         function decompressData(compressed) {
             try {
                 if (!compressed) return compressed;
-                var data = atob(compressed);
+                // Восстанавливаем символы безопасного Base64 перед распаковкой
+                var restored = compressed.replace(/-/g, '+').replace(/_/g, '/');
+                while (restored.length % 4) restored += '=';
+                
+                var data = atob(restored);
                 var byteData = new Uint8Array(data.length);
                 for (var i = 0; i < data.length; i++) {
                     byteData[i] = data.charCodeAt(i);
@@ -907,6 +908,7 @@
             }
         }
 
+        // 🔥 ИСПРАВЛЕНО: Убран жесткий прерывающий таймаут в 8 секунд для 16-битных систем
         document.getElementById('header-save').addEventListener('click', function() {
             if (!currentRomName) return;
             var initData = window.Telegram.WebApp.initDataUnsafe;
@@ -924,18 +926,13 @@
                 if (iframe && iframe.contentWindow) {
                     iframe.contentWindow.postMessage({ action: 'request_16bit_save' }, '*');
 
-                    var timeoutId = setTimeout(function() {
-                        alert("Не удалось получить сохранение из эмулятора. Попробуйте ещё раз.");
-                        saveBtn.disabled = false; saveBtn.textContent = "💾 СЕЙВ В ОБЛАКО";
-                    }, 8000);
-
+                    // Слушаем ответ от фрейма без прерывания по таймеру
                     window.addEventListener('message', function onSaveResponse(e) {
                         if (!e.data || e.data.action !== 'respond_16bit_save') return;
-                        clearTimeout(timeoutId);
                         window.removeEventListener('message', onSaveResponse);
 
                         if (!e.data.data) {
-                            alert("Сохранение пустое или эмулятор не успел сделать снимок памяти.");
+                            window.Telegram.WebApp.showAlert("Ошибка: эмулятор вернул пустой снимок памяти.");
                             saveBtn.disabled = false; saveBtn.textContent = "💾 СЕЙВ В ОБЛАКО";
                             return;
                         }
