@@ -40,7 +40,6 @@
             background-color: #000; padding-top: 65px; padding-bottom: 70px; box-sizing: border-box;
             z-index: 10; display: flex; flex-direction: column; align-items: center;
         }
-        /* 🔥 Возвращено оригинальное оформление главной заставки в полную яркость (без затемнений) */
         .bg-video {
             position: absolute; top: 0; left: 0; width: 100%; height: 100%;
             object-fit: cover; z-index: 1; pointer-events: none;
@@ -141,10 +140,10 @@
         #gamepad { position: absolute; bottom: 0; left: 0; right: 0; z-index: 30; display: flex; flex-direction: column; width: 100%; padding: 15px; box-sizing: border-box; justify-content: space-between; border-top: 4px solid #222; background: #111; touch-action: none; }
         .main-controls { display: flex; width: 100%; justify-content: space-between; align-items: center; }
         .dpad { display: grid; grid-template-columns: repeat(3, 1fr); grid-template-rows: repeat(3, 1fr); width: 130px; height: 130px; }
-        .btn { background: #222; border: 3px solid #444; color: white; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 14px; }
+        .btn { background: #222; border: 3px solid #444; color: white; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 14px; touch-action: none; }
         .btn:active { background: #444; }
         #nes-buttons { display: inline-flex; gap: 15px; }
-        .round-btn { width: 60px; height: 60px; background: #cc1111; border-radius: 50%; border: 4px solid #fff; color: white; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 16px; font-family: sans-serif; box-shadow: 0 4px 0 #880000; }
+        .round-btn { width: 60px; height: 60px; background: #cc1111; border-radius: 50%; border: 4px solid #fff; color: white; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 16px; font-family: sans-serif; box-shadow: 0 4px 0 #880000; touch-action: none; }
         .round-btn:active { background: #aa0000; transform: translateY(4px); box-shadow: none; }
         .system-buttons { display: flex; flex-direction: column; gap: 10px; width: 100%; margin-top: 15px; }
         .sys-row { display: flex; justify-content: center; gap: 20px; }
@@ -296,7 +295,6 @@
         }
         if(videoEl) { videoEl.muted = true; videoEl.play().catch(function(e){}); }
 
-        // Пауза эмуляторов при выходе из фокуса
         document.addEventListener('visibilitychange', function() {
             if (document.hidden) {
                 if (currentSystem === "nes" && gameLoopInterval) {
@@ -451,7 +449,6 @@
             if (data && data.slots) {
                 data.slots.forEach(function(item) {
                     var sKey = item.slot_num.toString().trim();
-                    // 🔥 Распаковываем данные при чтении из облака, если они сжаты pako
                     activeSlotsData[sKey] = item;
                     cloudSavesMap[sKey] = decompressData(item.save_data); 
                 });
@@ -695,7 +692,7 @@
                 <\/script>
                 <script src="https://cdn.emulatorjs.org/stable/data/loader.js"><\/script>
                 <script>
-                    ${injectionPayloadScript}
+                    \${injectionPayloadScript}
 
                     window.addEventListener('message', function(e) {
                         if (!e.data || typeof e.data !== 'object') return;
@@ -835,67 +832,81 @@
         
         document.getElementById('back-to-catalog').addEventListener('click', exitToCatalog);
 
-        // 🔥 ИСПРАВЛЕНО: Функция отправки FormData со встроенным механизмом повторных попыток
+        // 🔥 ИСПРАВЛЕНО: Асинхронное сжатие pako на промисах + циклическая отправка FormData с повторными попытками
         function sendPackToGoogleSheetsCloud(userId, file, dateTime, payload, slot) {
-            console.log('sendPackToGoogleSheetsCloud:', { userId, file, slot, payloadLength: payload.length });
+            console.log('Попытка сжатия и отправки сохранения...');
 
-            // Сжимаем сейв перед отправкой в Gzip
-            var compressedData = compressData(payload);
+            // Вызываем асинхронное сжатие
+            compressDataAsync(payload)
+                .then(function(compressedData) {
+                    var form = new FormData();
+                    form.append('action', 'set_save');
+                    form.append('user_id', String(userId));
+                    form.append('game_file', String(file));
+                    form.append('date_time', String(dateTime));
+                    form.append('slot_num', String(slot));
+                    form.append('save_data', String(compressedData));
 
-            var form = new FormData();
-            form.append('action', 'set_save');
-            form.append('user_id', String(userId));
-            form.append('game_file', String(file));
-            form.append('date_time', String(dateTime));
-            form.append('slot_num', String(slot));
-            form.append('save_data', String(compressedData));
+                    var attempt = 0;
+                    var maxAttempts = 3;
 
-            var attempt = 0;
-            var maxAttempts = 3;
-
-            function makeRequest() {
-                fetch(gasRetroUrl, { 
-                    method: 'POST', 
-                    body: form 
-                })
-                .then(function(response) {
-                    if (response.ok) {
-                        window.Telegram.WebApp.showAlert("ПРОГРЕСС СЛОТА 0" + slot + " УСПЕШНО ЗАПИСАН В ОБЛАКО!");
-                        cloudSavesMap[slot] = payload;
-                    } else {
-                        if (attempt < maxAttempts) {
-                            attempt++;
-                            console.log('Повторная попытка отправки...', attempt);
-                            makeRequest();
-                        } else {
-                            alert('Ошибка сохранения в облаке таблицы.');
-                        }
+                    function makeRequest() {
+                        fetch(gasRetroUrl, { 
+                            method: 'POST', 
+                            body: form 
+                        })
+                        .then(function(response) {
+                            if (response.ok) {
+                                window.Telegram.WebApp.showAlert("ПРОГРЕСС СЛОТА 0" + slot + " УСПЕШНО ЗАПИСАН В ОБЛАКО!");
+                                cloudSavesMap[slot] = payload;
+                                var saveBtn = document.getElementById('header-save');
+                                saveBtn.disabled = false; saveBtn.textContent = "💾 СЕЙВ В ОБЛАКО";
+                            } else {
+                                if (attempt < maxAttempts) {
+                                    attempt++;
+                                    console.log('Повторная попытка отправки...', attempt);
+                                    makeRequest();
+                                } else {
+                                    alert('Ошибка сохранения в облаке таблицы после серии попыток.');
+                                    var saveBtn = document.getElementById('header-save');
+                                    saveBtn.disabled = false; saveBtn.textContent = "💾 СЕЙВ В ОБЛАКО";
+                                }
+                            }
+                        })
+                        .catch(function(error) {
+                            if (attempt < maxAttempts) {
+                                attempt++;
+                                makeRequest();
+                            } else {
+                                alert("Не удалось сохранить данные — проверьте интернет-соединение.");
+                                var saveBtn = document.getElementById('header-save');
+                                saveBtn.disabled = false; saveBtn.textContent = "💾 СЕЙВ В ОБЛАКО";
+                            }
+                        });
                     }
+
+                    makeRequest();
                 })
-                .catch(function(error) {
-                    if (attempt < maxAttempts) {
-                        attempt++;
-                        makeRequest();
-                    } else {
-                        alert("Не удалось сохранить данные — проверьте интернет-соединение.");
-                    }
+                .catch(function(err) {
+                    console.error("Ошибка асинхронного сжатия:", err);
+                    var saveBtn = document.getElementById('header-save');
+                    saveBtn.disabled = false; saveBtn.textContent = "💾 СЕЙВ В ОБЛАКО";
                 });
-            }
-
-            makeRequest();
         }
 
-        // 🔥 Новые функции сжатия/распаковки данных через библиотеку pako (Gzip)
-        function compressData(data) {
-            try {
-                var encoder = new TextEncoder();
-                var encoded = encoder.encode(data);
-                var compressed = pako.gzip(encoded);
-                return btoa(String.fromCharCode.apply(null, new Uint8Array(compressed)));
-            } catch (error) {
-                console.error('Ошибка сжатия:', error);
-                return data;
-            }
+        // Асинхронное сжатие через Promise, чтобы разгрузить WebView поток во время упаковки
+        function compressDataAsync(data) {
+            return new Promise(function(resolve, reject) {
+                try {
+                    var encoder = new TextEncoder();
+                    var encoded = encoder.encode(data);
+                    var compressed = pako.gzip(encoded);
+                    var base64Str = btoa(String.fromCharCode.apply(null, new Uint8Array(compressed)));
+                    resolve(base64Str);
+                } catch (error) {
+                    reject(error);
+                }
+            });
         }
 
         function decompressData(compressed) {
@@ -913,12 +924,14 @@
             }
         }
 
-        // 🔥 Обработчик сохранения с контролем 8-секундного таймаута
         document.getElementById('header-save').addEventListener('click', function() {
             if (!currentRomName) return;
             var initData = window.Telegram.WebApp.initDataUnsafe;
             var userId = initData && initData.user && initData.user.id ? initData.user.id : "test_user_888";
             var nowStr = new Date().toISOString();
+
+            var saveBtn = document.getElementById('header-save');
+            saveBtn.disabled = true; saveBtn.textContent = "ЗАПИСЬ...";
 
             if (currentSystem === "nes") {
                 var rawSavePayload = JSON.stringify(nes.toJSON());
@@ -930,6 +943,7 @@
 
                     var timeoutId = setTimeout(function() {
                         alert("Не удалось получить сохранение из эмулятора. Попробуйте ещё раз.");
+                        saveBtn.disabled = false; saveBtn.textContent = "💾 СЕЙВ В ОБЛАКО";
                     }, 8000);
 
                     window.addEventListener('message', function onSaveResponse(e) {
@@ -939,6 +953,7 @@
 
                         if (!e.data.data) {
                             alert("Сохранение пустое или не удалось экспортировать.");
+                            saveBtn.disabled = false; saveBtn.textContent = "💾 СЕЙВ В ОБЛАКО";
                             return;
                         }
                         sendPackToGoogleSheetsCloud(userId, currentRomName, nowStr, e.data.data, selectedSlotNumber);
