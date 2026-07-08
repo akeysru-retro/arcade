@@ -142,7 +142,19 @@
 
         .loading-overlay { display: none; position: absolute; top: 44px; left: 0; right: 0; bottom: 0; background: #000; z-index: 1500; flex-direction: column; align-items: center; justify-content: center; }
 
-        /* 🔥 ИСПРАВЛЕНО: Геймпад по умолчанию скрыт и не вылезает в меню! */
+        #game-screen { display: none; width: 100%; max-width: 400px; flex-grow: 1; background: #000; position: relative; z-index: 20; height: 100vh; padding-top: 44px; box-sizing: border-box; }
+        
+        /* 🔥 ИСПРАВЛЕНО: game-container теперь растягивает игру на всю доступную ширину и высоту */
+        #game-container { 
+            width: 100%; height: calc(100vh - 250px); background: #000; 
+            position: relative; display: flex; justify-content: center; align-items: center; overflow: hidden; box-sizing: border-box;
+        }
+        /* 🔥 ИСПРАВЛЕНО: nes-canvas теперь занимает 100% ширины и высоты контейнера для крупного отображения */
+        #nes-canvas { width: 100%; height: 100%; object-fit: contain; display: block; image-rendering: pixelated; }
+
+        #sega-display-container { display: none; width: 100%; max-width: 400px; height: calc(100vh - 44px); position: absolute; top: 44px; left: 0; right: 0; bottom: 0; z-index: 1000; background: #000; }
+        #sega-display-container iframe { width: 100%; height: 100%; border: none; display: block; }
+
         #gamepad { display: none; position: absolute; bottom: 0; left: 0; right: 0; z-index: 30; flex-direction: column; width: 100%; padding: 15px; box-sizing: border-box; justify-content: space-between; border-top: 4px solid #222; background: #111; touch-action: none; }
         .main-controls { display: flex; width: 100%; justify-content: space-between; align-items: center; }
         .dpad { display: grid; grid-template-columns: repeat(3, 1fr); grid-template-rows: repeat(3, 1fr); width: 130px; height: 130px; }
@@ -220,8 +232,8 @@
             <button class="tab-item" onclick="switchTab('secrets', this)">
                 <span class="tab-icon">🔑</span><span>СЕКРЕТЫ</span>
             </button>
-            <button class="tab-item" onclick="switchTab('order', this)">
-                <span class="tab-icon">📥</span><span>ЗАКАЗ</span>
+            <button class="tab-item" onclick="window.location.reload();">
+                <span class="tab-icon">🔄</span><span>ОБНОВИТЬ</span>
             </button>
         </div>
     </div>
@@ -502,37 +514,6 @@
             displaySecretsList(filtered);
         }
 
-        function sendOrderRequest() {
-            var titleInput = document.getElementById('order-game-title').value.trim();
-            var systemInput = document.getElementById('order-game-system').value.trim();
-            if (!titleInput) { alert("ВВЕДИТЕ НАЗВАНИЕ ИГРЫ!"); return; }
-            var initData = window.Telegram.WebApp.initDataUnsafe;
-            var userId = initData.user ? initData.user.id : "";
-            var username = initData.user ? initData.user.username : "no_name";
-            if (!userId) { alert("ОШИБКА TELEGRAM ID!"); return; }
-            var btnSubmit = document.getElementById('order-btn-submit');
-            btnSubmit.disabled = true; btnSubmit.textContent = "ОТПРАВКА...";
-
-            var requestUrl = gasRetroUrl + "?action=submit_order&title=" + encodeURIComponent(titleInput) + 
-                             "&system=" + encodeURIComponent(systemInput || "Dendy") + "&user_id=" + userId + "&username=" + encodeURIComponent(username);
-
-            fetch(requestUrl, { mode: 'no-cors' })
-                .then(function() {
-                    window.Telegram.WebApp.showPopup({
-                        title: "ЗАЯВКА СФОРМИРОВАНА!",
-                        message: "Счет отправлен в диалог с ботом.",
-                        buttons: [
-                            { id: "bot", type: "default", text: "🤖 К БОТУ" },
-                            { id: "close", type: "cancel", text: "ЗАКРЫТЬ" }
-                        ]
-                    }, function(buttonId) {
-                        if (buttonId === "bot") { window.Telegram.WebApp.openTelegramLink("https://t.me/gameMAN888_bot"); }
-                        window.Telegram.WebApp.close(); 
-                    });
-                })
-                .catch(function() { alert("ОШИБКА СВЯЗИ С СЕРВЕРОМ!"); btnSubmit.disabled = false; btnSubmit.textContent = "ОТПРАВИТЬ ЗАЯВКУ"; });
-        }
-
         function switchTab(tabId, buttonElement) {
             showOnlyFavorites = false;
             document.getElementById('fav-filter-btn').classList.remove('active');
@@ -626,13 +607,14 @@
                                  } catch(err) { 
                                     console.error(err); 
                                  } finally {
-                                    window.parent.postMessage({ action: 'hide_loader' }, '*');
+                                    // 🔥 ИСПРАВЛЕНО: Прямой и гарантированный вызов снятия лоадера
+                                    window.parent.postMessage('hide_loader_direct', '*');
                                  }
                               }, 1500);
                            }
                            if (timerCount > 60) {
                               clearInterval(checkExist);
-                              window.parent.postMessage({ action: 'hide_loader' }, '*');
+                              window.parent.postMessage('hide_loader_direct', '*');
                            }
                         }, 150);
                     });
@@ -640,7 +622,7 @@
             } else {
                 injectionPayloadScript = `
                     window.addEventListener('load', function() {
-                        setTimeout(function(){ window.parent.postMessage({ action: 'hide_loader' }, '*'); }, 2000);
+                        setTimeout(function(){ window.parent.postMessage('hide_loader_direct', '*'); }, 2000);
                     });
                 `;
             }
@@ -674,7 +656,7 @@
                     \${injectionPayloadScript}
 
                     window.addEventListener('message', function(e) {
-                        if (!e.data || typeof e.data !== 'object') return;
+                        if (!e.data) return;
 
                         if (e.data.action === 'request_16bit_save') {
                             if (typeof window.EJS_instance !== 'undefined' && typeof window.EJS_instance.exportState === 'function') {
@@ -725,13 +707,13 @@
             if (currentSystem === "sega" || currentSystem === "snes") {
                 document.getElementById('loading-overlay').style.display = 'flex'; 
                 document.getElementById('game-container').style.display = 'none';
-                document.getElementById('gamepad').style.display = 'none'; // Скрываем геймпад для 16-бит
+                document.getElementById('gamepad').style.display = 'none'; 
                 document.getElementById('sega-display-container').style.display = 'block';
                 launchIsolatedEmulatorJS(romUrl, currentSystem, gameTitle);
             } else {
                 document.getElementById('loading-overlay').style.display = 'flex';
                 document.getElementById('game-container').style.display = 'flex';
-                document.getElementById('gamepad').style.display = 'flex'; // 🔥 ВКЛЮЧАЕМ геймпад только внутри игрового экрана Денди
+                document.getElementById('gamepad').style.display = 'flex'; 
                 document.getElementById('sega-display-container').style.display = 'none';
                 
                 var req = new XMLHttpRequest();
@@ -777,7 +759,7 @@
             }
 
             document.getElementById('game-screen').style.display = 'none';
-            document.getElementById('gamepad').style.display = 'none'; // 🔥 Скрываем геймпад обратно при выходе в меню
+            document.getElementById('gamepad').style.display = 'none'; 
             document.getElementById('back-to-catalog').style.display = 'none';
             document.getElementById('header-save').style.display = 'none';
             
@@ -843,10 +825,9 @@
             }
         });
 
+        // 🔥 ИСПРАВЛЕНО: Безусловный перехват событий скрытия лоадера
         window.addEventListener('message', function(e) {
-            if (!e.data || typeof e.data !== 'object') return;
-
-            if (e.data.action === 'hide_loader') {
+            if (e.data === 'hide_loader_direct' || (e.data && e.data.action === 'hide_loader')) {
                 document.getElementById('loading-overlay').style.display = 'none';
             }
         });
