@@ -141,6 +141,19 @@
         .tab-icon { font-size: 14px; }
 
         .loading-overlay { display: none; position: absolute; top: 44px; left: 0; right: 0; bottom: 0; background: #000; z-index: 1500; flex-direction: column; align-items: center; justify-content: center; }
+
+        /* 🔥 ИСПРАВЛЕНО: Геймпад по умолчанию скрыт и не вылезает в меню! */
+        #gamepad { display: none; position: absolute; bottom: 0; left: 0; right: 0; z-index: 30; flex-direction: column; width: 100%; padding: 15px; box-sizing: border-box; justify-content: space-between; border-top: 4px solid #222; background: #111; touch-action: none; }
+        .main-controls { display: flex; width: 100%; justify-content: space-between; align-items: center; }
+        .dpad { display: grid; grid-template-columns: repeat(3, 1fr); grid-template-rows: repeat(3, 1fr); width: 130px; height: 130px; }
+        .btn { background: #222; border: 3px solid #444; color: white; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 14px; touch-action: none; }
+        .btn:active { background: #444; }
+        #nes-buttons { display: inline-flex; gap: 15px; }
+        .round-btn { width: 60px; height: 60px; background: #cc1111; border-radius: 50%; border: 4px solid #fff; color: white; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 16px; font-family: sans-serif; box-shadow: 0 4px 0 #880000; touch-action: none; }
+        .round-btn:active { background: #aa0000; transform: translateY(4px); box-shadow: none; }
+        .system-buttons { display: flex; flex-direction: column; gap: 10px; width: 100%; margin-top: 15px; }
+        .sys-row { display: flex; justify-content: center; gap: 20px; }
+        .sys-btn { background: #333; border: 2px solid #555; color: #aaa; width: 80px; height: 22px; border-radius: 4px; font-size: 8px; display: flex; align-items: center; justify-content: center; touch-action: none; }
     </style>
 </head>
 <body>
@@ -248,13 +261,11 @@
 
         var gasRetroUrl = "https://script.google.com/macros/s/AKfycbwBjulaVnjKN-Af3oDFFFaG4Us8n6Jgcz3BTJRL1HThFxlgMuxv_D4x1yK4Khy-BsVL/exec";
 
-        // Разворачиваем базу IndexedDB для автономной локальной памяти
         var db = new Dexie('emu-saves-v1');
         db.version(1).stores({
             states: 'key, platform, romUrl, slot, timestamp, data'
         });
 
-        // 🔥 ЖЕСТКО ВЕРНУЛИ 5 ИГР НА СТРАНИЦУ
         var baseGames = [];        
         var filteredGames = [];    
         var currentPage = 1;     
@@ -615,7 +626,6 @@
                                  } catch(err) { 
                                     console.error(err); 
                                  } finally {
-                                    // 🔥 ЖЕЛЕЗНЫЙ ХУК: Снимаем заставку лоадера сразу после обработки стейта
                                     window.parent.postMessage({ action: 'hide_loader' }, '*');
                                  }
                               }, 1500);
@@ -715,13 +725,13 @@
             if (currentSystem === "sega" || currentSystem === "snes") {
                 document.getElementById('loading-overlay').style.display = 'flex'; 
                 document.getElementById('game-container').style.display = 'none';
-                document.getElementById('gamepad').style.display = 'none'; 
+                document.getElementById('gamepad').style.display = 'none'; // Скрываем геймпад для 16-бит
                 document.getElementById('sega-display-container').style.display = 'block';
                 launchIsolatedEmulatorJS(romUrl, currentSystem, gameTitle);
             } else {
                 document.getElementById('loading-overlay').style.display = 'flex';
                 document.getElementById('game-container').style.display = 'flex';
-                document.getElementById('gamepad').style.display = 'flex'; 
+                document.getElementById('gamepad').style.display = 'flex'; // 🔥 ВКЛЮЧАЕМ геймпад только внутри игрового экрана Денди
                 document.getElementById('sega-display-container').style.display = 'none';
                 
                 var req = new XMLHttpRequest();
@@ -767,6 +777,7 @@
             }
 
             document.getElementById('game-screen').style.display = 'none';
+            document.getElementById('gamepad').style.display = 'none'; // 🔥 Скрываем геймпад обратно при выходе в меню
             document.getElementById('back-to-catalog').style.display = 'none';
             document.getElementById('header-save').style.display = 'none';
             
@@ -835,7 +846,6 @@
         window.addEventListener('message', function(e) {
             if (!e.data || typeof e.data !== 'object') return;
 
-            // Снятие лоадера на Сеге/SNES
             if (e.data.action === 'hide_loader') {
                 document.getElementById('loading-overlay').style.display = 'none';
             }
