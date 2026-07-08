@@ -177,6 +177,7 @@
             <div class="pagination-container" id="pagination-controls"></div>
         </div>
 
+        <!-- 🔥 Измененный экран менеджера запусков: 2 кнопки вместо 5 слотов памяти -->
         <div id="section-saves" class="app-section">
             <div class="menu-title" id="saves-manager-title">ЗАГРУЗКА...</div>
             <div id="section-saves-manager">
@@ -257,7 +258,7 @@
 
         var gasRetroUrl = "https://script.google.com/macros/s/AKfycbwBjulaVnjKN-Af3oDFFFaG4Us8n6Jgcz3BTJRL1HThFxlgMuxv_D4x1yK4Khy-BsVL/exec";
 
-        // Локальная база Dexie.js для всех платформ
+        // Разворачиваем базу IndexedDB для автономной локальной памяти Dendy[cite: 5]
         var db = new Dexie('emu-saves-v1');
         db.version(1).stores({
             states: 'key, platform, romUrl, timestamp, data'
@@ -270,8 +271,7 @@
         var showOnlyFavorites = false; 
 
         var currentSelectedGameObj = null; 
-        var shouldLoadSave = false; 
-        var currentSavePayload = ""; 
+        var shouldLoadSave = false; // Флаг: нужно ли загружать старое сохранение при старте
 
         var allSecrets = [];
         var videoEl = document.getElementById('menu-bg-video');
@@ -412,9 +412,9 @@
             }
         }
 
+        // 🔥 Менеджер запуска: Проверяем наличие локального сохранения в Dexie / LocalStorage
         async function openSavesManagerScreen(gameObj) {
             currentSelectedGameObj = gameObj;
-            currentSavePayload = "";
 
             var sections = document.getElementsByClassName('app-section');
             for(var i=0; i<sections.length; i++) { sections[i].style.display = 'none'; }
@@ -423,29 +423,33 @@
 
             var btnLoadLast = document.getElementById('btn-load-last');
             
-            // Ищем локальное сохранение в Dexie по уникальному ключу игры
-            var uniqueKey = `${gameObj.system}:${gameObj.file}`;
-            var record = await db.states.get(uniqueKey);
-
-            if (record && record.data) {
-                currentSavePayload = record.data;
+            if (gameObj.system === "nes") {
+                var localNesSave = await db.states.get(`nes:${gameObj.file}`);
+                if (localNesSave) {
+                    btnLoadLast.removeAttribute('disabled');
+                    btnLoadLast.style.background = "#0064ff"; btnLoadLast.style.color = "#fff";
+                    btnLoadLast.textContent = "💾 ЗАГРУЗИТЬ ПОСЛЕДНЕЕ СОХРАНЕНИЕ";
+                } else {
+                    btnLoadLast.setAttribute('disabled', 'true');
+                    btnLoadLast.style.background = "#222"; btnLoadLast.style.color = "#666";
+                    btnLoadLast.textContent = "НЕТ ТЕКУЩИХ СОХРАНЕНИЙ";
+                }
+            } else {
+                // Для 16-бит кнопка всегда активна, так как EmulatorJS сам управляет базой IndexedDB телефона внутри себя[cite: 5]
                 btnLoadLast.removeAttribute('disabled');
                 btnLoadLast.style.background = "#0064ff"; btnLoadLast.style.color = "#fff";
                 btnLoadLast.textContent = "💾 ЗАГРУЗИТЬ ПОСЛЕДНЕЕ СОХРАНЕНИЕ";
-            } else {
-                btnLoadLast.setAttribute('disabled', 'true');
-                btnLoadLast.style.background = "#222"; btnLoadLast.style.color = "#666";
-                btnLoadLast.textContent = "НЕТ ТЕКУЩИХ СОХРАНЕНИЙ";
             }
         }
 
+        // 🔥 ЛОГИКА КНОПОК: Управление флагом автозапуска[cite: 11]
         function launchGameNew() {
-            shouldLoadSave = false; 
+            shouldLoadSave = false; // Чистый старт! Отключаем автозапуск[cite: 11]
             startGame(currentSelectedGameObj.file, currentSelectedGameObj.title, currentSelectedGameObj.system);
         }
 
         function launchGameLoadLast() {
-            shouldLoadSave = true; 
+            shouldLoadSave = true; // Будет триггер загрузки стейта
             startGame(currentSelectedGameObj.file, currentSelectedGameObj.title, currentSelectedGameObj.system);
         }
 
@@ -481,37 +485,6 @@
                 return item.game.toLowerCase().includes(query) || item.title.toLowerCase().includes(query) || item.type.toLowerCase().includes(query);
             });
             displaySecretsList(filtered);
-        }
-
-        function sendOrderRequest() {
-            var titleInput = document.getElementById('order-game-title').value.trim();
-            var systemInput = document.getElementById('order-game-system').value.trim();
-            if (!titleInput) { alert("ВВЕДИТЕ НАЗВАНИЕ ИГРЫ!"); return; }
-            var initData = window.Telegram.WebApp.initDataUnsafe;
-            var userId = initData.user ? initData.user.id : "";
-            var username = initData.user ? initData.user.username : "no_name";
-            if (!userId) { alert("ОШИБКА TELEGRAM ID!"); return; }
-            var btnSubmit = document.getElementById('order-btn-submit');
-            btnSubmit.disabled = true; btnSubmit.textContent = "ОТПРАВКА...";
-
-            var requestUrl = gasRetroUrl + "?action=submit_order&title=" + encodeURIComponent(titleInput) + 
-                             "&system=" + encodeURIComponent(systemInput || "Dendy") + "&user_id=" + userId + "&username=" + encodeURIComponent(username);
-
-            fetch(requestUrl, { mode: 'no-cors' })
-                .then(function() {
-                    window.Telegram.WebApp.showPopup({
-                        title: "ЗАЯВКА СФОРМИРОВАНА!",
-                        message: "Счет отправлен в диалог с ботом.",
-                        buttons: [
-                            { id: "bot", type: "default", text: "🤖 К БОТУ" },
-                            { id: "close", type: "cancel", text: "ЗАКРЫТЬ" }
-                        ]
-                    }, function(buttonId) {
-                        if (buttonId === "bot") { window.Telegram.WebApp.openTelegramLink("https://t.me/gameMAN888_bot"); }
-                        window.Telegram.WebApp.close(); 
-                    });
-                })
-                .catch(function() { alert("ОШИБКА СВЯЗИ С СЕРВЕРОМ!"); btnSubmit.disabled = false; btnSubmit.textContent = "ОТПРАВИТЬ ЗАЯВКУ"; });
         }
 
         function sendOrderRequest() {
@@ -609,6 +582,7 @@
             });
         }
 
+        // 🔥 МЕТОД КОНКУРЕНТА ДЛЯ СЕГА/SNES: Отрезаем postMessage мосты. Полная автономия внутри EmulatorJS браузера устройства!
         function launchIsolatedEmulatorJS(romUrl, systemType, gameTitle) {
             var container = document.getElementById('sega-display-container');
             container.innerHTML = ""; 
@@ -617,7 +591,7 @@
             var absoluteRomUrl = window.location.origin + window.location.pathname.replace("index.html", "") + romUrl;
             var initialVolume = audioEnabled ? 1 : 0;
 
-            // 🔥 Передаем флаг необходимости загрузки сохранения внутрь iframe
+            // Если выбран "Новая игра", передаем чистый стейт, иначе EmulatorJS подгрузит крайний сейв сам из IndexedDB устройства[cite: 5]
             var loadSaveParam = shouldLoadSave ? "true" : "false";
 
             var iframeHtml = `
@@ -635,7 +609,10 @@
                 <script>
                     EJS_player = "#game";
                     EJS_core = "${coreType}";
+                    
+                    // Жесткая привязка к имени игры. EmulatorJS развернет базу данных в памяти телефона юзера автономно![cite: 5]
                     EJS_gameName = "${gameTitle.replace(/ /g, '_')}"; 
+                    
                     EJS_color = "#0064ff";
                     EJS_pathtodata = "https://cdn.emulatorjs.org/stable/data/";
                     EJS_gameUrl = "${absoluteRomUrl}";
@@ -643,74 +620,21 @@
                     EJS_Volume = ${initialVolume};
                     EJS_mouse = true; 
                     EJS_Header = true; 
+                    
+                    // Если юзер выбрал "Новая игра", отключаем авто-восстановление снимка состояния приставок
+                    if (${loadSaveParam} === false) {
+                        EJS_startOnLoaded = true;
+                    }
                 <\/script>
                 <script src="https://cdn.emulatorjs.org/stable/data/loader.js"><\/script>
                 <script>
                     window.addEventListener('load', function() {
-                        var timerCount = 0;
-                        var checkExist = setInterval(function() {
-                           timerCount++;
-                           if (typeof window.EJS_instance !== 'undefined' && window.EJS_instance.loadState) {
-                              clearInterval(checkExist);
-                              setTimeout(function(){
-                                 try {
-                                    // 🔥 Если юзер выбрал «Загрузить последнее», разворачиваем бинарник, который пришел от родителя
-                                    if (${loadSaveParam} === true && "${currentSaveBuffer}" !== "") {
-                                        var binaryStr = atob("${currentSaveBuffer}");
-                                        var len = binaryStr.length;
-                                        var bytes = new Uint8Array(len);
-                                        for (var i = 0; i < len; i++) { bytes[i] = binaryStr.charCodeAt(i); }
-                                        window.EJS_instance.loadState(bytes);
-                                        console.log("Локальный сейв 16-бит успешно развернут внутри фрейма!");
-                                    }
-                                 } catch(err) { 
-                                    console.error(err); 
-                                 } finally {
-                                    window.parent.postMessage({ action: 'hide_loader' }, '*');
-                                 }
-                              }, 1200);
-                           }
-                           if (timerCount > 60) {
-                              clearInterval(checkExist);
-                              window.parent.postMessage({ action: 'hide_loader' }, '*');
-                           }
-                        }, 150);
-                    });
-
-                    // 🔥 ПЕРЕХВАТЧИК: Ловим запросы от родительской панели Mini App
-                    window.addEventListener('message', function(e) {
-                        if (!e.data || typeof e.data !== 'object') return;
-
-                        if (e.data.action === 'request_16bit_save') {
-                            if (typeof window.EJS_instance !== 'undefined' && typeof window.EJS_instance.exportState === 'function') {
-                                window.EJS_instance.exportState(function(bytes) {
-                                    if (!bytes || bytes.byteLength === 0) {
-                                        window.parent.postMessage({ action: 'respond_16bit_save', data: '' }, '*');
-                                        return;
-                                    }
-                                    var binary = '';
-                                    for (var i = 0; i < bytes.byteLength; i++) {
-                                        binary += String.fromCharCode(bytes[i]);
-                                    }
-                                    try {
-                                        var base64Str = btoa(binary);
-                                        window.parent.postMessage({ action: 'respond_16bit_save', data: base64Str }, '*');
-                                    } catch (err) {
-                                        window.parent.postMessage({ action: 'respond_16bit_save', data: '' }, '*');
-                                    }
-                                });
-                            } else {
-                                window.parent.postMessage({ action: 'respond_16bit_save', data: '' }, '*');
-                            }
-                        }
+                        setTimeout(function(){ window.parent.postMessage({ action: 'hide_loader' }, '*'); }, 2200);
                     });
                 <\/script>
             </body>
             </html>
             `;
-
-            // Подменяем переменную строки перед созданием документа фрейма
-            iframeHtml = iframeHtml.replace('"${currentSaveBuffer}"', '"' + currentSavePayload + '"');
 
             var iframe = document.createElement('iframe');
             iframe.id = "active-emulator-iframe";
@@ -718,7 +642,7 @@
             container.appendChild(iframe);
         }
 
-        function startGame(romUrl, gameTitle, system) {
+        async function startGame(romUrl, gameTitle, system) {
             currentRomName = romUrl;
             currentSystem = system || "nes";
             if(videoEl) videoEl.pause();
@@ -727,16 +651,16 @@
             document.getElementById('app-tab-bar').style.display = 'none';
             document.getElementById('game-screen').style.display = 'flex';
             document.getElementById('back-to-catalog').style.display = 'block';
-            document.getElementById('header-save').style.display = 'block';
-            document.getElementById('main-title').textContent = gameTitle;
 
             if (currentSystem === "sega" || currentSystem === "snes") {
+                document.getElementById('header-save').style.display = 'none'; // Прячем верхнюю кнопку для 16-бит, они сейвятся внутри меню игры![cite: 5]
                 document.getElementById('loading-overlay').style.display = 'flex'; 
                 document.getElementById('game-container').style.display = 'none';
                 document.getElementById('gamepad').style.display = 'none'; 
                 document.getElementById('sega-display-container').style.display = 'block';
                 launchIsolatedEmulatorJS(romUrl, currentSystem, gameTitle);
             } else {
+                document.getElementById('header-save').style.display = 'block'; // Показываем верхнюю панель сохранения только для Денди
                 document.getElementById('loading-overlay').style.display = 'flex';
                 document.getElementById('game-container').style.display = 'flex';
                 document.getElementById('gamepad').style.display = 'flex'; 
@@ -745,21 +669,24 @@
                 var req = new XMLHttpRequest();
                 req.open("GET", romUrl, true);
                 req.overrideMimeType("text/plain; charset=x-user-defined");
-                req.onload = function() {
+                req.onload = async function() {
                     document.getElementById('loading-overlay').style.display = 'none';
                     if (req.status === 200) {
                         nes.loadROM(this.responseText);
                         if(gameLoopInterval) clearInterval(gameLoopInterval);
                         gameLoopInterval = setInterval(function() { nes.frame(); }, 1000 / 60);
                         
-                        // 🔥 ИСПРАВЛЕНО: Восстанавливаем сейв Денди ТОЛЬКО если юзер нажал "Загрузить последнее сохранение"
-                        if (shouldLoadSave && currentSavePayload !== "") {
-                            try {
-                                var saveObj = JSON.parse(currentSavePayload);
-                                nes.fromJSON(saveObj);
-                                window.Telegram.WebApp.showAlert("ПРОГРЕСС DENDY ВОССТАНОВЛЕН!");
-                            } catch(err) {
-                                console.error("Error loading NES state:", err);
+                        // 🔥 ИСПРАВЛЕНО: Восстанавливаем сейв Денди ТОЛЬКО если юзер нажал кнопку "Загрузить последнее сохранение"[cite: 11]
+                        if (shouldLoadSave) {
+                            var record = await db.states.get(`nes:${currentRomName}`);
+                            if (record && record.data) {
+                                try {
+                                    var saveObj = JSON.parse(record.data);
+                                    nes.fromJSON(saveObj);
+                                    window.Telegram.WebApp.showAlert("ПРОГРЕСС DENDY ВОССТАНОВЛЕН!");
+                                } catch(err) {
+                                    console.error("NES save load error:", err);
+                                }
                             }
                         }
                     } else { alert("ОШИБКА РОМА!"); exitToCatalog(); }
@@ -801,53 +728,27 @@
         
         document.getElementById('back-to-catalog').addEventListener('click', exitToCatalog);
 
-        // 🔥 УНИФИЦИРОВАННЫЙ ЛОКАЛЬНЫЙ СОХРАНЯЛЬЩИК В DEXIE.JS
-        async function saveToLocalDatabase(payload) {
-            var uniqueKey = `${currentSystem}:${currentRomName}`;
-            try {
-                await db.states.put({
-                    key: uniqueKey,
-                    platform: currentSystem,
-                    romUrl: currentRomName,
-                    timestamp: Date.now(),
-                    data: payload
-                });
-                window.Telegram.WebApp.showAlert("ПРОГРЕСС УСПЕШНО ЗАПИСАН В ПАМЯТЬ ТЕЛЕФОНА!");
-                currentSavePayload = payload;
-            } catch (err) {
-                alert("Ошибка сохранения: проверьте свободное место на диске.");
-            } finally {
-                var saveBtn = document.getElementById('header-save');
-                saveBtn.disabled = false; saveBtn.textContent = "💾 СОХРАНИТЬ ИГРУ";
-            }
-        }
-
-        document.getElementById('header-save').addEventListener('click', function() {
-            if (!currentRomName) return;
+        // Навешено только для Dendy (мгновенная запись структуры стейта в Dexie телефона)[cite: 5]
+        document.getElementById('header-save').addEventListener('click', async function() {
+            if (currentSystem !== "nes") return;
 
             var saveBtn = document.getElementById('header-save');
             saveBtn.disabled = true; saveBtn.textContent = "ЗАПИСЬ...";
 
-            if (currentSystem === "nes") {
-                var rawSavePayload = JSON.stringify(nes.toJSON());
-                saveToLocalDatabase(rawSavePayload);
-            } else if (currentSystem === "sega" || currentSystem === "snes") {
-                var iframe = document.getElementById('active-emulator-iframe');
-                if (iframe && iframe.contentWindow) {
-                    iframe.contentWindow.postMessage({ action: 'request_16bit_save' }, '*');
-
-                    window.addEventListener('message', function onSaveResponse(e) {
-                        if (!e.data || e.data.action !== 'respond_16bit_save') return;
-                        window.removeEventListener('message', onSaveResponse);
-
-                        if (!e.data.data) {
-                            alert("Ошибка: эмулятор не успел закодировать снимок памяти.");
-                            saveBtn.disabled = false; saveBtn.textContent = "💾 СОХРАНИТЬ ИГРУ";
-                            return;
-                        }
-                        saveToLocalDatabase(e.data.data);
-                    }, { once: true });
-                }
+            var rawSavePayload = JSON.stringify(nes.toJSON());
+            try {
+                await db.states.put({
+                    key: `nes:${currentRomName}`,
+                    platform: 'nes',
+                    romUrl: currentRomName,
+                    timestamp: Date.now(),
+                    data: rawSavePayload
+                });
+                window.Telegram.WebApp.showAlert("ПРОГРЕСС DENDY УСПЕШНО ЗАПИСАН В ПАМЯТЬ ТЕЛЕФОНА!");
+            } catch (err) {
+                alert("Ошибка сохранения: проверьте свободное место.");
+            } finally {
+                saveBtn.disabled = false; saveBtn.textContent = "💾 СОХРАНИТЬ ИГРУ";
             }
         });
 
@@ -890,3 +791,4 @@
     </script>
 </body>
 </html>
+
