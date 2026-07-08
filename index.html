@@ -6,6 +6,7 @@
     <title>9999 IN 1 - Ultimate Retro Arcade</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jsnes/1.2.1/jsnes.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pako/2.1.0/pako.min.js"></script>
     <script src="games.js"></script>
 
     <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
@@ -39,7 +40,7 @@
             background-color: #000; padding-top: 65px; padding-bottom: 70px; box-sizing: border-box;
             z-index: 10; display: flex; flex-direction: column; align-items: center;
         }
-        /* 🔥 Видео-заставка возвращена в 100% оригинальную яркость без затемнений */
+        /* 🔥 Возвращено оригинальное оформление главной заставки в полную яркость (без затемнений) */
         .bg-video {
             position: absolute; top: 0; left: 0; width: 100%; height: 100%;
             object-fit: cover; z-index: 1; pointer-events: none;
@@ -140,10 +141,10 @@
         #gamepad { position: absolute; bottom: 0; left: 0; right: 0; z-index: 30; display: flex; flex-direction: column; width: 100%; padding: 15px; box-sizing: border-box; justify-content: space-between; border-top: 4px solid #222; background: #111; touch-action: none; }
         .main-controls { display: flex; width: 100%; justify-content: space-between; align-items: center; }
         .dpad { display: grid; grid-template-columns: repeat(3, 1fr); grid-template-rows: repeat(3, 1fr); width: 130px; height: 130px; }
-        .btn { background: #222; border: 3px solid #444; color: white; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 14px; touch-action: none; }
+        .btn { background: #222; border: 3px solid #444; color: white; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 14px; }
         .btn:active { background: #444; }
         #nes-buttons { display: inline-flex; gap: 15px; }
-        .round-btn { width: 60px; height: 60px; background: #cc1111; border-radius: 50%; border: 4px solid #fff; color: white; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 16px; font-family: sans-serif; box-shadow: 0 4px 0 #880000; touch-action: none; }
+        .round-btn { width: 60px; height: 60px; background: #cc1111; border-radius: 50%; border: 4px solid #fff; color: white; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 16px; font-family: sans-serif; box-shadow: 0 4px 0 #880000; }
         .round-btn:active { background: #aa0000; transform: translateY(4px); box-shadow: none; }
         .system-buttons { display: flex; flex-direction: column; gap: 10px; width: 100%; margin-top: 15px; }
         .sys-row { display: flex; justify-content: center; gap: 20px; }
@@ -295,7 +296,7 @@
         }
         if(videoEl) { videoEl.muted = true; videoEl.play().catch(function(e){}); }
 
-        // 🔥 Жизненный цикл фокуса приложения (Защита звука и циклов при сворачивании)[cite: 12]
+        // Пауза эмуляторов при выходе из фокуса
         document.addEventListener('visibilitychange', function() {
             if (document.hidden) {
                 if (currentSystem === "nes" && gameLoopInterval) {
@@ -450,8 +451,9 @@
             if (data && data.slots) {
                 data.slots.forEach(function(item) {
                     var sKey = item.slot_num.toString().trim();
+                    // 🔥 Распаковываем данные при чтении из облака, если они сжаты pako
                     activeSlotsData[sKey] = item;
-                    cloudSavesMap[sKey] = item.save_data; 
+                    cloudSavesMap[sKey] = decompressData(item.save_data); 
                 });
             }
 
@@ -482,7 +484,6 @@
             }
         }
 
-        // Кнопка сохранения: убеждаемся, что слот берется актуальный до старта[cite: 12]
         function launchGamePureNew() {
             selectedSlotNumber = "1"; 
             startGame(currentSelectedGameObj.file, currentSelectedGameObj.title, currentSelectedGameObj.system);
@@ -693,7 +694,6 @@
                     EJS_Header = true; 
                 <\/script>
                 <script src="https://cdn.emulatorjs.org/stable/data/loader.js"><\/script>
-                <!-- 🔥 ИСПРАВЛЕНО: Интеграция методов паузы, возобновления и надежного побайтового экспорта Base64 -->
                 <script>
                     ${injectionPayloadScript}
 
@@ -784,7 +784,6 @@
                         gameLoopInterval = setInterval(function() { nes.frame(); }, 1000 / 60);
                         
                         var slotBuffer = cloudSavesMap[selectedSlotNumber];
-                        // 🔥 ИСПРАВЛЕНО: Безопасное разворачивание стейта Dendy в блоке try/catch[cite: 12]
                         if (slotBuffer) {
                             setTimeout(function(){
                                 try {
@@ -836,9 +835,12 @@
         
         document.getElementById('back-to-catalog').addEventListener('click', exitToCatalog);
 
-        // 🔥 ИСПРАВЛЕНО: Отправка данных сохранений через надежный структурированный FormData мост (Решает проблему no-cors блокировки JSON)[cite: 12]
+        // 🔥 ИСПРАВЛЕНО: Функция отправки FormData со встроенным механизмом повторных попыток
         function sendPackToGoogleSheetsCloud(userId, file, dateTime, payload, slot) {
             console.log('sendPackToGoogleSheetsCloud:', { userId, file, slot, payloadLength: payload.length });
+
+            // Сжимаем сейв перед отправкой в Gzip
+            var compressedData = compressData(payload);
 
             var form = new FormData();
             form.append('action', 'set_save');
@@ -846,33 +848,77 @@
             form.append('game_file', String(file));
             form.append('date_time', String(dateTime));
             form.append('slot_num', String(slot));
-            form.append('save_data', String(payload));
+            form.append('save_data', String(compressedData));
 
-            fetch(gasRetroUrl, { 
-                method: 'POST', 
-                body: form 
-            })
-            .then(function(r) {
-                if (r.ok || r.status === 0) { // status 0 обрабатывается для no-cors окружений
-                    window.Telegram.WebApp.showAlert("ПРОГРЕСС СЛОТА 0" + slot + " УСПЕШНО ЗАПИСАН В ОБЛАКО!");
-                    cloudSavesMap[slot] = payload;
-                } else {
-                    console.error('GAS вернул ошибку:', r.status);
-                    alert('Ошибка сохранения в облаке (HTTP ' + r.status + ')');
-                }
-            })
-            .catch(function(err) {
-                console.error("Ошибка отправки:", err);
-                alert("Ошибка синхронизации с облаком!");
-            });
+            var attempt = 0;
+            var maxAttempts = 3;
+
+            function makeRequest() {
+                fetch(gasRetroUrl, { 
+                    method: 'POST', 
+                    body: form 
+                })
+                .then(function(response) {
+                    if (response.ok) {
+                        window.Telegram.WebApp.showAlert("ПРОГРЕСС СЛОТА 0" + slot + " УСПЕШНО ЗАПИСАН В ОБЛАКО!");
+                        cloudSavesMap[slot] = payload;
+                    } else {
+                        if (attempt < maxAttempts) {
+                            attempt++;
+                            console.log('Повторная попытка отправки...', attempt);
+                            makeRequest();
+                        } else {
+                            alert('Ошибка сохранения в облаке таблицы.');
+                        }
+                    }
+                })
+                .catch(function(error) {
+                    if (attempt < maxAttempts) {
+                        attempt++;
+                        makeRequest();
+                    } else {
+                        alert("Не удалось сохранить данные — проверьте интернет-соединение.");
+                    }
+                });
+            }
+
+            makeRequest();
         }
 
-        // 🔥 ИСПРАВЛЕНО: Интеграция 8-секундного таймера ожидания ответа экспорта памяти из iframe[cite: 12]
+        // 🔥 Новые функции сжатия/распаковки данных через библиотеку pako (Gzip)
+        function compressData(data) {
+            try {
+                var encoder = new TextEncoder();
+                var encoded = encoder.encode(data);
+                var compressed = pako.gzip(encoded);
+                return btoa(String.fromCharCode.apply(null, new Uint8Array(compressed)));
+            } catch (error) {
+                console.error('Ошибка сжатия:', error);
+                return data;
+            }
+        }
+
+        function decompressData(compressed) {
+            try {
+                if (!compressed) return compressed;
+                var data = atob(compressed);
+                var byteData = new Uint8Array(data.length);
+                for (var i = 0; i < data.length; i++) {
+                    byteData[i] = data.charCodeAt(i);
+                }
+                return pako.ungzip(byteData, { to: 'string' });
+            } catch (error) {
+                console.error('Ошибка распаковки:', error);
+                return compressed;
+            }
+        }
+
+        // 🔥 Обработчик сохранения с контролем 8-секундного таймаута
         document.getElementById('header-save').addEventListener('click', function() {
             if (!currentRomName) return;
             var initData = window.Telegram.WebApp.initDataUnsafe;
             var userId = initData && initData.user && initData.user.id ? initData.user.id : "test_user_888";
-            var nowStr = new Date().toISOString(); // Форматирование переведено на ISO стандарт
+            var nowStr = new Date().toISOString();
 
             if (currentSystem === "nes") {
                 var rawSavePayload = JSON.stringify(nes.toJSON());
@@ -882,7 +928,6 @@
                 if (iframe && iframe.contentWindow) {
                     iframe.contentWindow.postMessage({ action: 'request_16bit_save' }, '*');
 
-                    // Запуск контроля таймаута: если за 8 секунд фрейм не ответил — выкидываем предупреждение
                     var timeoutId = setTimeout(function() {
                         alert("Не удалось получить сохранение из эмулятора. Попробуйте ещё раз.");
                     }, 8000);
@@ -907,7 +952,6 @@
 
             if (!e.data || typeof e.data !== 'object') return;
 
-            // hide_loader обрабатывается в общем потоке входящих пакетов
             if (e.data.action === 'hide_loader') {
                 document.getElementById('loading-overlay').style.display = 'none';
             }
