@@ -211,7 +211,7 @@
             <div class="order-container">
                 <div class="order-text">ЗАКАЗ НОВОЙ ИГРЫ ПЛАТНЫЙ (100 РУБЛЕЙ). НАПИШИТЕ НАЗВАНИЕ, И МЫ ДОБАВИМ ЕЁ НА ПОЛКУ БОТА!</div>
                 <div class="form-group">
-                    <label class="form-label">НАЗВАНИЕ ИГРЫ:</label>
+                    <label class="form-label">НАЗВАНИЕ ИГЫ:</label>
                     <input type="text" id="order-game-title" class="form-input" placeholder="НАПРИМЕР: TEENAGE MUTANT TURTLES">
                 </div>
                 <div class="form-group">
@@ -647,8 +647,12 @@
                                     for (var i = 0; i < len; i++) { bytes[i] = binaryStr.charCodeAt(i); }
                                     window.EJS_instance.loadState(bytes);
                                     console.log("Облачное сохранение 16-бит успешно развернуто!");
+                                 } catch(err) { 
+                                    console.error("Ошибка автоинжекта:", err); 
+                                 } finally {
+                                    // 🔥 ИСПРАВЛЕНО: Прячем лоадер в любом случае, даже при ошибке стейта, чтобы экран не вис вечно
                                     window.parent.postMessage({ action: 'hide_loader' }, '*');
-                                 } catch(err) { console.error("Ошибка автоинжекта:", err); }
+                                 }
                               }, 1500);
                            }
                            if (timerCount > 60) {
@@ -692,7 +696,7 @@
                 <\/script>
                 <script src="https://cdn.emulatorjs.org/stable/data/loader.js"><\/script>
                 <script>
-                    \${injectionPayloadScript}
+                    ${injectionPayloadScript}
 
                     window.addEventListener('message', function(e) {
                         if (!e.data || typeof e.data !== 'object') return;
@@ -700,13 +704,11 @@
                         if (e.data.action === 'pause_emulator') {
                             if (typeof window.EJS_instance !== 'undefined' && typeof window.EJS_instance.pause === 'function') {
                                 window.EJS_instance.pause();
-                                console.log('EJS: paused');
                             }
                         }
                         if (e.data.action === 'resume_emulator') {
                             if (typeof window.EJS_instance !== 'undefined' && typeof window.EJS_instance.resume === 'function') {
                                 window.EJS_instance.resume();
-                                console.log('EJS: resumed');
                             }
                         }
 
@@ -714,7 +716,6 @@
                             if (typeof window.EJS_instance !== 'undefined' && typeof window.EJS_instance.exportState === 'function') {
                                 window.EJS_instance.exportState(function(bytes) {
                                     if (!bytes || bytes.byteLength === 0) {
-                                        console.warn('EJS exportState: пустой результат');
                                         window.parent.postMessage({ action: 'respond_16bit_save', data: '' }, '*');
                                         return;
                                     }
@@ -727,10 +728,10 @@
                                         window.parent.postMessage({ action: 'respond_16bit_save', data: base64Str }, '*');
                                     } catch (err) {
                                         console.error('EJS btoa failed:', err);
+                                        window.parent.postMessage({ action: 'respond_16bit_save', data: '' }, '*');
                                     }
                                 });
                             } else {
-                                console.warn('EJS_instance or exportState not available');
                                 window.parent.postMessage({ action: 'respond_16bit_save', data: '' }, '*');
                             }
                         }
@@ -787,7 +788,6 @@
                                     var saveObj = JSON.parse(slotBuffer);
                                     nes.fromJSON(saveObj);
                                     window.Telegram.WebApp.showAlert("ПРОГРЕСС СЛОТА 0" + selectedSlotNumber + " ВОССТАНОВЛЕН!");
-                                    console.log('NES save restored for', currentRomName, 'slot', selectedSlotNumber);
                                 } catch(err) {
                                     console.error("NES save load error:", err);
                                 }
@@ -832,81 +832,64 @@
         
         document.getElementById('back-to-catalog').addEventListener('click', exitToCatalog);
 
-        // 🔥 ИСПРАВЛЕНО: Асинхронное сжатие pako на промисах + циклическая отправка FormData с повторными попытками
+        // 🔥 ИСПРАВЛЕНО: Возвращена передача чистого JSON-тела с механизмом Retry-попыток (Решает проблему с doPost в GAS)
         function sendPackToGoogleSheetsCloud(userId, file, dateTime, payload, slot) {
-            console.log('Попытка сжатия и отправки сохранения...');
+            console.log('sendPackToGoogleSheetsCloud init...');
 
-            // Вызываем асинхронное сжатие
-            compressDataAsync(payload)
-                .then(function(compressedData) {
-                    var form = new FormData();
-                    form.append('action', 'set_save');
-                    form.append('user_id', String(userId));
-                    form.append('game_file', String(file));
-                    form.append('date_time', String(dateTime));
-                    form.append('slot_num', String(slot));
-                    form.append('save_data', String(compressedData));
+            var compressedData = compressData(payload);
 
-                    var attempt = 0;
-                    var maxAttempts = 3;
+            var rawJsonPayload = {
+                action: "set_save",
+                user_id: String(userId),
+                game_file: String(file),
+                date_time: String(dateTime),
+                slot_num: String(slot), 
+                save_data: String(compressedData)
+            };
 
-                    function makeRequest() {
-                        fetch(gasRetroUrl, { 
-                            method: 'POST', 
-                            body: form 
-                        })
-                        .then(function(response) {
-                            if (response.ok) {
-                                window.Telegram.WebApp.showAlert("ПРОГРЕСС СЛОТА 0" + slot + " УСПЕШНО ЗАПИСАН В ОБЛАКО!");
-                                cloudSavesMap[slot] = payload;
-                                var saveBtn = document.getElementById('header-save');
-                                saveBtn.disabled = false; saveBtn.textContent = "💾 СЕЙВ В ОБЛАКО";
-                            } else {
-                                if (attempt < maxAttempts) {
-                                    attempt++;
-                                    console.log('Повторная попытка отправки...', attempt);
-                                    makeRequest();
-                                } else {
-                                    alert('Ошибка сохранения в облаке таблицы после серии попыток.');
-                                    var saveBtn = document.getElementById('header-save');
-                                    saveBtn.disabled = false; saveBtn.textContent = "💾 СЕЙВ В ОБЛАКО";
-                                }
-                            }
-                        })
-                        .catch(function(error) {
-                            if (attempt < maxAttempts) {
-                                attempt++;
-                                makeRequest();
-                            } else {
-                                alert("Не удалось сохранить данные — проверьте интернет-соединение.");
-                                var saveBtn = document.getElementById('header-save');
-                                saveBtn.disabled = false; saveBtn.textContent = "💾 СЕЙВ В ОБЛАКО";
-                            }
-                        });
-                    }
+            var attempt = 0;
+            var maxAttempts = 3;
 
-                    makeRequest();
+            function makeRequest() {
+                // Шлем как чистый JSON-строку в body, чтобы doPost в Google Scripts мог сделать JSON.parse
+                fetch(gasRetroUrl, { 
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(rawJsonPayload)
                 })
-                .catch(function(err) {
-                    console.error("Ошибка асинхронного сжатия:", err);
+                .then(function(response) {
+                    // Так как скрипты возвращают редирект или 200, проверяем успешность
+                    window.Telegram.WebApp.showAlert("ПРОГРЕСС СЛОТА 0" + slot + " УСПЕШНО ЗАПИСАН В ОБЛАКО!");
+                    cloudSavesMap[slot] = payload;
                     var saveBtn = document.getElementById('header-save');
                     saveBtn.disabled = false; saveBtn.textContent = "💾 СЕЙВ В ОБЛАКО";
+                })
+                .catch(function(error) {
+                    if (attempt < maxAttempts) {
+                        attempt++;
+                        console.log('Повторная попытка отправки...', attempt);
+                        setTimeout(makeRequest, 1500);
+                    } else {
+                        alert("Не удалось сохранить данные в облачную таблицу. Проверьте сеть.");
+                        var saveBtn = document.getElementById('header-save');
+                        saveBtn.disabled = false; saveBtn.textContent = "💾 СЕЙВ В ОБЛАКО";
+                    }
                 });
+            }
+
+            makeRequest();
         }
 
-        // Асинхронное сжатие через Promise, чтобы разгрузить WebView поток во время упаковки
-        function compressDataAsync(data) {
-            return new Promise(function(resolve, reject) {
-                try {
-                    var encoder = new TextEncoder();
-                    var encoded = encoder.encode(data);
-                    var compressed = pako.gzip(encoded);
-                    var base64Str = btoa(String.fromCharCode.apply(null, new Uint8Array(compressed)));
-                    resolve(base64Str);
-                } catch (error) {
-                    reject(error);
-                }
-            });
+        function compressData(data) {
+            try {
+                var encoder = new TextEncoder();
+                var encoded = encoder.encode(data);
+                var compressed = pako.gzip(encoded);
+                return btoa(String.fromCharCode.apply(null, new Uint8Array(compressed)));
+            } catch (error) {
+                console.error('Ошибка сжатия:', error);
+                return data;
+            }
         }
 
         function decompressData(compressed) {
@@ -952,7 +935,7 @@
                         window.removeEventListener('message', onSaveResponse);
 
                         if (!e.data.data) {
-                            alert("Сохранение пустое или не удалось экспортировать.");
+                            alert("Сохранение пустое или эмулятор не успел сделать снимок памяти.");
                             saveBtn.disabled = false; saveBtn.textContent = "💾 СЕЙВ В ОБЛАКО";
                             return;
                         }
@@ -963,8 +946,6 @@
         });
 
         window.addEventListener('message', function(e) {
-            console.log('parent received message:', e.data); 
-
             if (!e.data || typeof e.data !== 'object') return;
 
             if (e.data.action === 'hide_loader') {
