@@ -156,36 +156,108 @@ function launchGame(loadFromSave) {
     };
 }
 
-// 5. ИНИЦИАЛИЗАЦИЯ И РАБОТА ЭМУЛЯТОРА
+// Переменная для хранения текущего экземпляра эмулятора
+let emuInstance = null;
+
+// 5. ИНИЦИАЛИЗАЦИЯ И РАБОТА НАСТОЯЩЕГО ЭМУЛЯТОРА
 function startEmulator(game, loadFromSave) {
     document.getElementById("emulator-layer").classList.remove("hidden");
     const container = document.getElementById("emulator-container");
-    
-    // Тут будет интеграция с EmulatorJS. Пока создаем симуляцию игрового окна.
-    container.innerHTML = `
-        <div style="width:100%; height:100%; display:flex; flex-direction:column; justify-content:center; align-items:center; background:#002200;">
-            <p style="color:#00ff00; margin-bottom:10px;">ЗАПУЩЕН ЭМУЛЯТОР ${game.platform}</p>
-            <p style="font-size:10px; color:#fff;">ИГРА: ${game.title}</p>
-            <p style="font-size:8px; color:#888; margin-top:20px;">
-                ${loadFromSave ? "Загружено последнее сохранение с устройства" : "Начата новая игра"}
-            </p>
-        </div>
-    `;
-    
-    // Если EmulatorJS инициализирован, мы передаем ему game.rom_url
-    // И если loadFromSave === true, скармливаем ему строку из localStorage.getItem(`save_${game.id}`)
+    container.innerHTML = ""; // Очищаем контейнер
+
+    // Создаем внутренний контейнер для EmulatorJS
+    const emuDiv = document.createElement("div");
+    emuDiv.id = "game-player";
+    emuDiv.style.width = "100%";
+    emuDiv.style.height = "100%";
+    container.appendChild(emuDiv);
+
+    // Мапим названия твоих платформ под стандарты EmulatorJS
+    const platformMap = {
+        'NES': 'nes',
+        'SNES': 'snes',
+        'SEGA': 'segaMD',
+        '32X': 'sega32X',
+        'SMS': 'segaMS',
+        'TG16': 'pcEngine',
+        'GB': 'gb',
+        'GBC': 'gbc',
+        'GBA': 'gba',
+        'ZX': 'zxSpectrum'
+    };
+
+    const systemCode = platformMap[game.platform.toUpperCase()] || 'nes';
+
+    // Конфигурация EmulatorJS
+    window.EmuJS = {
+        System: systemCode,
+        GameUrl: game.rom_url,
+        Language: "en",
+        IsMobile: tg.platform === "mobile" || tg.platform === "android" || tg.platform === "ios",
+        ContainerId: "game-player",
+        // Настройки путей к базам ядер на CDN
+        BiosUrl: "", 
+        ContentUrl: "https://cdn.emulatorjs.org/stable/data/",
+        
+        // Коллбэк, который срабатывает, когда эмулятор полностью загрузился и готов
+        OnStart: function() {
+            console.log("Эмулятор запущен!");
+            
+            // Если юзер выбрал "Загрузить последнее сохранение"
+            if (loadFromSave) {
+                const savedState = localStorage.getItem(`save_${game.id}`);
+                if (savedState) {
+                    try {
+                        // Превращаем строку обратно в массив байт и скармливаем эмулятору
+                        const stateArray = new Uint8Array(JSON.parse(savedState));
+                        window.EmuJS.LoadState(stateArray);
+                    } catch (e) {
+                        console.error("Ошибка десериализации сейва:", e);
+                    }
+                }
+            }
+        }
+    };
+
+    // Динамически загружаем сам скрипт эмулятора с CDN
+    const script = document.createElement("script");
+    script.src = "https://cdn.emulatorjs.org/stable/data/loader.js";
+    script.id = "emu-loader-script";
+    document.body.appendChild(script);
 }
 
+// ФУНКЦИЯ МГНОВЕННОГО СОХРАНЕНИЯ НА УСТРОЙСТВО
 function saveGameState() {
-    if (!state.selectedGame) return;
+    if (!state.selectedGame || !window.EmuJS || typeof window.EmuJS.SaveState !== "function") {
+        alert("Эмулятор еще не готов или функция сохранения недоступна");
+        return;
+    }
+
+    // Запрашиваем у EmulatorJS текущий слепок памяти (возвращает Uint8Array)
+    window.EmuJS.SaveState(function(stateBuffer) {
+        if (stateBuffer && stateBuffer.length > 0) {
+            // Переводим массив байт в обычный массив, чтобы сохранить как строку в LocalStorage
+            const stateArray = Array.from(stateBuffer);
+            localStorage.setItem(`save_${state.selectedGame.id}`, JSON.stringify(stateArray));
+            
+            alert("ИГРА УСПЕШНО СОХРАНЕНА НА ТВОЕ УСТРОЙСТВО! 💾");
+        } else {
+            alert("Не удалось получить данные сохранения.");
+        }
+    });
+}
+
+// Корректное закрытие эмулятора с очисткой скриптов
+function closeEmulator() {
+    document.getElementById("emulator-layer").classList.add("hidden");
+    document.getElementById("emulator-container").innerHTML = "";
     
-    // Симуляция получения слепка данных (State Save) от EmulatorJS
-    const dummySaveData = `bytes_array_data_for_${state.selectedGame.id}_timestamp_${Date.now()}`;
+    // Удаляем динамический скрипт загрузчика, чтобы он не конфликтовал при следующем запуске
+    const oldScript = document.getElementById("emu-loader-script");
+    if (oldScript) oldScript.remove();
     
-    // Мгновенно сохраняем на устройство юзера
-    localStorage.setItem(`save_${state.selectedGame.id}`, dummySaveData);
-    
-    alert("ИГРА УСПЕШНО СОХРАНЕНА НА УСТРОЙСТВО!");
+    // Сбрасываем глобальный объект эмулятора
+    window.EmuJS = null;
 }
 
 function closeEmulator() {
