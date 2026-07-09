@@ -52,7 +52,6 @@ function renderGames(gamesList) {
         item.className = "game-item";
         item.onclick = () => openLaunchModal(game);
         
-        // Превращаем код платформы в CSS класс для цвета плашки
         const badgeClass = `badge-${game.platform.toLowerCase()}`;
         
         item.innerHTML = `
@@ -67,7 +66,6 @@ function renderGames(gamesList) {
 function filterAndRenderSecrets() {
     const query = document.getElementById("search-secret-input").value.toLowerCase();
     
-    // Фильтруем секреты по поисковому запросу (по названию игры или тексту чита)
     state.filteredSecrets = state.secrets.filter(sec => 
         sec.game_title.toLowerCase().includes(query) || 
         sec.content.toLowerCase().includes(query)
@@ -76,7 +74,6 @@ function filterAndRenderSecrets() {
     const totalPages = Math.ceil(state.filteredSecrets.length / state.secretsPerPage) || 1;
     if (state.secretsPage > totalPages) state.secretsPage = totalPages;
     
-    // Пагинация (вырезаем нужный кусок массива)
     const start = (state.secretsPage - 1) * state.secretsPerPage;
     const end = start + state.secretsPerPage;
     const pageSecrets = state.filteredSecrets.slice(start, end);
@@ -134,45 +131,19 @@ function openLaunchModal(game) {
 function closeLaunchModal() {
     document.getElementById("launch-modal").classList.add("hidden");
 }
-
+      
 function launchGame(loadFromSave) {
     closeLaunchModal();
-    
-    // Показываем полноэкранный слой интро со вставкой картриджа
-    const introLayer = document.getElementById("intro-layer");
-    const introVideo = document.getElementById("intro-video");
-    
-    // Динамически выбираем видео под платформу (например, assets/intro/sega.mp4)
-    introVideo.src = `assets/intro/${state.selectedGame.platform.toLowerCase()}.mp4`;
-    introVideo.muted = !state.isSoundOn;
-    
-    introLayer.classList.remove("hidden");
-    introVideo.play();
-    
-    // Когда интро-ролик закончился, запускаем эмулятор
-    introVideo.onended = () => {
-        introLayer.classList.add("hidden");
-        startEmulator(state.selectedGame, loadFromSave);
-    };
+    startEmulator(state.selectedGame, loadFromSave);
 }
 
-// Переменная для хранения текущего экземпляра эмулятора
-let emuInstance = null;
-
-// 5. ИНИЦИАЛИЗАЦИЯ И РАБОТА НАСТОЯЩЕГО ЭМУЛЯТОРА
+// 5. ИНИЦИАЛИЗАЦИЯ СТАБИЛЬНОГО ЭМУЛЯТОРА ЧЕРЕЗ IFRAME
 function startEmulator(game, loadFromSave) {
     document.getElementById("emulator-layer").classList.remove("hidden");
     const container = document.getElementById("emulator-container");
-    container.innerHTML = ""; // Очищаем контейнер
+    container.innerHTML = ""; // Очищаем контейнер от старых сессий
 
-    // Создаем внутренний контейнер для EmulatorJS
-    const emuDiv = document.createElement("div");
-    emuDiv.id = "game-player";
-    emuDiv.style.width = "100%";
-    emuDiv.style.height = "100%";
-    container.appendChild(emuDiv);
-
-    // Мапим названия твоих платформ под стандарты EmulatorJS
+    // Мапим названия платформ под требования официального плеера EmulatorJS
     const platformMap = {
         'NES': 'nes',
         'SNES': 'snes',
@@ -188,81 +159,33 @@ function startEmulator(game, loadFromSave) {
 
     const systemCode = platformMap[game.platform.toUpperCase()] || 'nes';
 
-    // Конфигурация EmulatorJS
-    window.EmuJS = {
-        System: systemCode,
-        GameUrl: game.rom_url,
-        Language: "en",
-        IsMobile: tg.platform === "mobile" || tg.platform === "android" || tg.platform === "ios",
-        ContainerId: "game-player",
-        // Настройки путей к базам ядер на CDN
-        BiosUrl: "", 
-        ContentUrl: "https://cdn.emulatorjs.org/stable/data/",
-        
-        // Коллбэк, который срабатывает, когда эмулятор полностью загрузился и готов
-        OnStart: function() {
-            console.log("Эмулятор запущен!");
-            
-            // Если юзер выбрал "Загрузить последнее сохранение"
-            if (loadFromSave) {
-                const savedState = localStorage.getItem(`save_${game.id}`);
-                if (savedState) {
-                    try {
-                        // Превращаем строку обратно в массив байт и скармливаем эмулятору
-                        const stateArray = new Uint8Array(JSON.parse(savedState));
-                        window.EmuJS.LoadState(stateArray);
-                    } catch (e) {
-                        console.error("Ошибка десериализации сейва:", e);
-                    }
-                }
-            }
-        }
-    };
+    // Создаем iframe для изолированного и безопасного запуска
+    const iframe = document.createElement("iframe");
+    
+    // Формируем прямую ссылку на плеер с параметрами системы и рома
+    iframe.src = `https://cdn.emulatorjs.org/stable/data/player.html?system=${systemCode}&url=${encodeURIComponent(game.rom_url)}`;
+    
+    iframe.style.width = "100%";
+    iframe.style.height = "100%";
+    iframe.style.border = "none";
+    iframe.id = "emu-iframe";
+    
+    // Разрешаем разворачивать на весь экран и использовать сенсорный геймпад
+    iframe.setAttribute("allowfullscreen", "true");
+    iframe.setAttribute("allow", "gamepad");
 
-    // Динамически загружаем сам скрипт эмулятора с CDN
-    const script = document.createElement("script");
-    script.src = "https://cdn.emulatorjs.org/stable/data/loader.js";
-    script.id = "emu-loader-script";
-    document.body.appendChild(script);
+    container.appendChild(iframe);
 }
 
-// ФУНКЦИЯ МГНОВЕННОГО СОХРАНЕНИЯ НА УСТРОЙСТВО
+// Заглушка для ручной кнопки — в iframe-плеере сохранение работает через встроенную нижнюю панель!
 function saveGameState() {
-    if (!state.selectedGame || !window.EmuJS || typeof window.EmuJS.SaveState !== "function") {
-        alert("Эмулятор еще не готов или функция сохранения недоступна");
-        return;
-    }
-
-    // Запрашиваем у EmulatorJS текущий слепок памяти (возвращает Uint8Array)
-    window.EmuJS.SaveState(function(stateBuffer) {
-        if (stateBuffer && stateBuffer.length > 0) {
-            // Переводим массив байт в обычный массив, чтобы сохранить как строку в LocalStorage
-            const stateArray = Array.from(stateBuffer);
-            localStorage.setItem(`save_${state.selectedGame.id}`, JSON.stringify(stateArray));
-            
-            alert("ИГРА УСПЕШНО СОХРАНЕНА НА ТВОЕ УСТРОЙСТВО! 💾");
-        } else {
-            alert("Не удалось получить данные сохранения.");
-        }
-    });
+    alert("Используй синюю кнопку 'Save State' / 'Load State' на нижней всплывающей панели самого эмулятора!");
 }
 
-// Корректное закрытие эмулятора с очисткой скриптов
+// Корректное закрытие игрового слоя
 function closeEmulator() {
     document.getElementById("emulator-layer").classList.add("hidden");
-    document.getElementById("emulator-container").innerHTML = "";
-    
-    // Удаляем динамический скрипт загрузчика, чтобы он не конфликтовал при следующем запуске
-    const oldScript = document.getElementById("emu-loader-script");
-    if (oldScript) oldScript.remove();
-    
-    // Сбрасываем глобальный объект эмулятора
-    window.EmuJS = null;
-}
-
-function closeEmulator() {
-    document.getElementById("emulator-layer").classList.add("hidden");
-    document.getElementById("emulator-container").innerHTML = "";
+    document.getElementById("emulator-container").innerHTML = ""; // Уничтожаем плеер, чтобы выгрузить его из памяти смартфона
 }
 
 // 6. ОБРАБОТКА ЗАКАЗА ИГРЫ
@@ -284,7 +207,6 @@ function confirmOrder() {
     const gameName = document.getElementById("order-game-name").value.trim();
     const platform = document.getElementById("order-platform").value;
     
-    // Вытаскиваем данные юзера из Telegram
     const userId = tg.initDataUnsafe?.user?.id || "Локальный тест";
     const username = tg.initDataUnsafe?.user?.username ? `@${tg.initDataUnsafe.user.username}` : "Без никнейма";
     
@@ -296,10 +218,9 @@ function confirmOrder() {
         platform: platform
     };
     
-    // Отправляем данные на наш Google бэкенд
     fetch(API_URL, {
         method: "POST",
-        mode: "no-cors", // Предотвращает ошибки CORS при отправке в GAS
+        mode: "no-cors",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(orderData)
     }).then(() => {
@@ -315,11 +236,9 @@ function confirmOrder() {
 function switchTab(tabName) {
     state.currentTab = tabName;
     
-    // Переключаем активные вкладки в CSS
     document.querySelectorAll(".tab-content").forEach(el => el.classList.add("hidden"));
     document.getElementById(`tab-${tabName}`).classList.remove("hidden");
     
-    // Переключаем подсветку кнопок в меню навигации
     document.querySelectorAll(".nav-item").forEach(el => el.classList.remove("active"));
     
     const targetIndex = tabName === 'games' ? 0 : tabName === 'secrets' ? 1 : 2;
@@ -327,20 +246,17 @@ function switchTab(tabName) {
 }
 
 function setupEventListeners() {
-    // Живой поиск игр
     document.getElementById("search-game-input").addEventListener("input", (e) => {
         const query = e.target.value.toLowerCase();
         const filtered = state.games.filter(g => g.title.toLowerCase().includes(query));
         renderGames(filtered);
     });
 
-    // Живой поиск секретов
     document.getElementById("search-secret-input").addEventListener("input", () => {
         state.secretsPage = 1;
         filterAndRenderSecrets();
     });
 
-    // Кнопки пагинации секретов
     document.getElementById("prev-page").addEventListener("click", () => {
         if (state.secretsPage > 1) {
             state.secretsPage--;
@@ -364,6 +280,5 @@ function toggleGlobalSound() {
 }
 
 function toggleEmuSound() {
-    // Тут будет переключение звука внутри EmulatorJS
-    alert("Звук в эмуляторе изменен!");
+    alert("Звук настраивается кнопкой внутри меню самого эмулятора!");
 }
