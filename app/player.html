@@ -22,7 +22,6 @@
         const system = urlParams.get('system') || 'nes';
         const gameUrl = urlParams.get('url');
 
-        // Конфигурация EmulatorJS с жестко прописанным полным путем к CDN для всех файлов ядра
         window.EmuJS = {
             System: system,
             GameUrl: gameUrl,
@@ -30,13 +29,13 @@
             disableLocalization: true,
             ContainerId: "game",
             LoadFrame: true,
-            // Вот это исправит 404: заставляем его брать все скрипты и стили строго из корня CDN
-            ContentUrl: "https://rawcdn.githack.com/EmulatorJS/EmulatorJS/main/data/",
+            // Поднимаемся на уровень выше папки app (../) и заходим в твою готовую папку emulator/
+            ContentUrl: "../emulator/",
             OnStart: function() {
-                console.log("Движок запущен!");
+                console.log("Локальный движок из папки emulator запущен!");
             }
         };
     </script>
-    <script src="https://rawcdn.githack.com/EmulatorJS/EmulatorJS/main/data/loader.js"></script>
+    <script src="../emulator/loader.js"></script>
 </body>
 </html>
