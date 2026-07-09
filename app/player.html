@@ -22,20 +22,19 @@
         const system = urlParams.get('system') || 'nes';
         const gameUrl = urlParams.get('url');
 
-        window.EmuJS = {
-            System: system,
-            GameUrl: gameUrl,
-            Language: "en",
-            disableLocalization: true,
-            ContainerId: "game",
-            LoadFrame: true,
-            // Пустая строка или './' означает, что эмулятор берет все свои файлы прямо из текущей папки app/
-            ContentUrl: "./",
-            OnStart: function() {
-                console.log("Полностью локальный эмулятор запущен!");
-            }
-        };
+        // Настройки для версии, где всё лежит в корне папки app
+        window.EJS_player = '#game';
+        window.EJS_biosUrl = '';
+        window.EJS_gameUrl = gameUrl;
+        window.EJS_core = system;
+        
+        // Точка (./) указывает лоадеру искать папки cores, src, localization прямо здесь
+        window.EJS_pathtodata = './'; 
+        
+        // Включаем поддержку русского языка, раз папка добавлена!
+        window.EJS_language = 'ru'; 
     </script>
+    
     <script src="loader.js"></script>
 </body>
 </html>
