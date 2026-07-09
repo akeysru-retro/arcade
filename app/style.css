@@ -1,0 +1,163 @@
+/* Общие ретро-настройки */
+@import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap');
+
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+    font-family: 'Press Start 2P', cursive, sans-serif;
+    user-select: none;
+}
+
+body, html {
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    background-color: #000;
+    color: #fff;
+    font-size: 12px;
+}
+
+/* Видео-фон */
+#bg-video {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    z-index: -1;
+}
+
+/* Шапка */
+.retro-header {
+    background: rgba(0, 0, 0, 0.85);
+    border-bottom: 3px solid #ffcc00;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 15px;
+}
+.header-title {
+    color: #ffcc00;
+    font-size: 18px;
+    text-shadow: 2px 2px #ff0000;
+}
+
+/* Кнопки */
+.btn-retro {
+    background: #222;
+    color: #fff;
+    border: 2px solid #fff;
+    padding: 8px 12px;
+    cursor: pointer;
+    font-size: 10px;
+}
+.btn-retro:active {
+    background: #ffcc00;
+    color: #000;
+}
+
+/* Списки */
+.list-container {
+    height: calc(100vh - 180px);
+    overflow-y: auto;
+    padding: 10px;
+    background: rgba(0, 0, 0, 0.6);
+}
+
+.game-item, .secret-item {
+    background: rgba(30, 30, 30, 0.9);
+    border: 2px solid #444;
+    padding: 12px;
+    margin-bottom: 8px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+/* ЦВЕТОВЫЕ ПАЛИТРЫ ПРИСТАВОК (ПЛАШКИ) */
+.badge {
+    padding: 4px 6px;
+    font-size: 8px;
+    border-radius: 3px;
+    font-weight: bold;
+}
+.badge-nes { background: #ff0000; color: #fff; }
+.badge-snes { background: #663399; color: #fff; }
+.badge-sega { background: #002288; color: #fff; }
+.badge-32x { background: #000000; color: #ffcc00; border: 1px solid #ffcc00; }
+.badge-sms { background: #00aa00; color: #fff; }
+.badge-tg16 { background: #dd6600; color: #fff; }
+.badge-gb { background: #8b956d; color: #1f1f1f; }
+.badge-gbc { background: #ff007f; color: #fff; }
+.badge-gba { background: #4b0082; color: #fff; }
+.badge-zx { background: #00d2ff; color: #000; }
+
+/* Поиск */
+.search-box input {
+    width: 100%;
+    padding: 12px;
+    background: #111;
+    border: 2px solid #ffcc00;
+    color: #fff;
+    font-size: 10px;
+}
+
+/* Навигация внизу */
+.bottom-nav {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    height: 60px;
+    background: #111;
+    border-top: 3px solid #333;
+    display: flex;
+    z-index: 10;
+}
+.nav-item {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    color: #888;
+    cursor: pointer;
+    font-size: 10px;
+}
+.nav-item.active {
+    color: #ffcc00;
+    background: #222;
+}
+
+/* Скрытые элементы */
+.hidden { display: none !important; }
+
+/* Модальные окна */
+.modal {
+    position: fixed;
+    top: 0; left: 0; width: 100%; height: 100%;
+    background: rgba(0,0,0,0.85);
+    display: flex; justify-content: center; align-items: center;
+    z-index: 100;
+}
+.modal-content {
+    background: #222;
+    border: 3px solid #ffcc00;
+    padding: 20px;
+    width: 85%;
+    text-align: center;
+    line-height: 1.6;
+}
+.modal-buttons { margin-top: 20px; display: flex; justify-content: space-around; }
+.danger { background: #ff0000; }
+.success { background: #00aa00; }
+
+/* Слои интро и эмулятора */
+#intro-layer, #emulator-layer {
+    position: fixed; top:0; left:0; width:100%; height:100%; background:#000; z-index: 200;
+}
+#intro-video { width: 100%; height: 100%; object-fit: contain; }
+.emu-header { height: 40px; background: #111; display: flex; justify-content: space-between; align-items: center; padding: 5px; }
+#emulator-container { height: calc(100% - 40px); width: 100%; }

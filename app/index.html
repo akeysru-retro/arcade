@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>AKEYS Retro Arcade</title>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <video autoplay muted loop id="bg-video">
+        <source src="background-video.mp4" type="video/mp4">
+    </video>
+
+    <div id="intro-layer" class="hidden">
+        <video id="intro-video" playsinline></video>
+    </div>
+
+    <div id="emulator-layer" class="hidden">
+        <div class="emu-header">
+            <button onclick="closeEmulator()" class="btn-retro">◀ НАЗАД</button>
+            <button onclick="saveGameState()" class="btn-retro">💾 СОХРАНИТЬ</button>
+            <button onclick="toggleEmuSound()" id="emu-sound-btn" class="btn-retro">🔊 ЗВУК</button>
+        </div>
+        <div id="emulator-container"></div>
+    </div>
+
+    <div id="main-interface">
+        
+        <header class="retro-header">
+            <div class="header-title">999 IN 1</div>
+            <button id="global-sound-btn" onclick="toggleGlobalSound()">🔊 ЗВУК</button>
+        </header>
+
+        <section id="tab-games" class="tab-content">
+            <div class="search-box">
+                <input type="text" id="search-game-input" placeholder="ПОИСК ИГРЫ. . .">
+            </div>
+            <div id="games-list" class="list-container">
+                </div>
+        </section>
+
+        <section id="tab-secrets" class="tab-content hidden">
+            <div class="search-box">
+                <input type="text" id="search-secret-input" placeholder="ПОИСК ИГРЫ ИЛИ ЧИТА. . .">
+            </div>
+            <div id="secrets-list" class="list-container">
+                </div>
+            <div class="pagination">
+                <button id="prev-page" class="btn-retro">◀ НАЗАД</button>
+                <span id="page-info">PAGE 1/1</span>
+                <button id="next-page" class="btn-retro">ВПЕРЕД ▶</button>
+            </div>
+        </section>
+
+        <section id="tab-order" class="tab-content hidden">
+            <div class="order-box">
+                <h3>ЗАКАЗАТЬ ИГРУ</h3>
+                <label>НАЗВАНИЕ ИГРЫ:</label>
+                <input type="text" id="order-game-name" placeholder="Например: Mortal Kombat 3">
+                
+                <label>ПЛАТФОРМА:</label>
+                <select id="order-platform">
+                    <option value="NES">NES (Dendy)</option>
+                    <option value="SNES">SNES</option>
+                    <option value="Sega">Sega Mega Drive</option>
+                    <option value="32X">Sega 32X</option>
+                    <option value="SMS">Sega Master System</option>
+                    <option value="TG16">TurboGrafx-16</option>
+                    <option value="GB">Game Boy</option>
+                    <option value="GBC">Game Boy Color</option>
+                    <option value="GBA">Game Boy Advance</option>
+                    <option value="ZX">ZX Spectrum</option>
+                </select>
+
+                <button onclick="submitOrder()" class="btn-retro send-btn">ОТПРАВИТЬ ЗАЯВКУ</button>
+            </div>
+        </section>
+
+        <div id="payment-modal" class="modal hidden">
+            <div class="modal-content">
+                <p>Внимание! Добавление игры будет платным. Денежные средства пойдут на поддержку проекта и хорошее настроение автора! 😉</p>
+                <div class="modal-buttons">
+                    <button onclick="confirmOrder()" class="btn-retro success">СОГЛАСЕН</button>
+                    <button onclick="closeModal()" class="btn-retro danger">ОТМЕНА</button>
+                </div>
+            </div>
+        </div>
+
+        <div id="launch-modal" class="modal hidden">
+            <div class="modal-content">
+                <h2 id="launch-game-title">ALADDIN</h2>
+                <button onclick="launchGame(false)" class="btn-retro launch-btn">▶ ИГРАТЬ С НАЧАЛА</button>
+                <button id="btn-continue-save" onclick="launchGame(true)" class="btn-retro launch-btn save-btn">💾 ЗАГРУЗИТЬ ПОСЛЕДНЕЕ СОХРАНЕНИЕ</button>
+                <button onclick="closeLaunchModal()" class="btn-retro danger">ОТМЕНА</button>
+            </div>
+        </div>
+
+        <nav class="bottom-nav">
+            <div class="nav-item active" onclick="switchTab('games')">🕹️ <span>ИГРЫ</span></div>
+            <div class="nav-item" onclick="switchTab('secrets')">🔑 <span>СЕКРЕТЫ</span></div>
+            <div class="nav-item" onclick="switchTab('order')">📥 <span>ЗАКАЗ</span></div>
+        </nav>
+
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>
