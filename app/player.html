@@ -3,9 +3,9 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>AKEYS Retro Player</title>
+    <title>AKEYS Arcade Player</title>
     <style>
-        html, body, #emulator {
+        html, body, #game {
             width: 100%;
             height: 100%;
             padding: 0;
@@ -16,30 +16,27 @@
     </style>
 </head>
 <body>
-
-    <iframe id="emulator" src="" allowfullscreen allow="gamepad"></iframe>
-
+    <div id="game"></div>
     <script>
         const urlParams = new URLSearchParams(window.location.search);
         const system = urlParams.get('system') || 'nes';
         const gameUrl = urlParams.get('url');
 
-        // Мапим консоли под требования NostalgiJS плеера
-        const systemMap = {
-            'nes': 'nes',
-            'snes': 'snes',
-            'segaMD': 'sega',
-            'gb': 'gb',
-            'gbc': 'gbc',
-            'gba': 'gba'
+        // Конфигурация EmulatorJS с жестко прописанным полным путем к CDN для всех файлов ядра
+        window.EmuJS = {
+            System: system,
+            GameUrl: gameUrl,
+            Language: "en",
+            disableLocalization: true,
+            ContainerId: "game",
+            LoadFrame: true,
+            // Вот это исправит 404: заставляем его брать все скрипты и стили строго из корня CDN
+            ContentUrl: "https://rawcdn.githack.com/EmulatorJS/EmulatorJS/main/data/",
+            OnStart: function() {
+                console.log("Движок запущен!");
+            }
         };
-
-        const core = systemMap[system] || 'nes';
-
-        // Формируем железную ссылку на проверенный независимый веб-плеер
-        if (gameUrl) {
-            document.getElementById('emulator').src = `https://web.nostalgi.js.org/?core=${core}&rom=${encodeURIComponent(gameUrl)}`;
-        }
     </script>
+    <script src="https://rawcdn.githack.com/EmulatorJS/EmulatorJS/main/data/loader.js"></script>
 </body>
 </html>
