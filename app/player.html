@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html>
+<html lang="ru">
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
@@ -18,19 +18,22 @@
 <body>
     <div id="game"></div>
     <script>
-        // Получаем параметры из ссылки (system и url ромы)
+        // Получаем параметры из строки запроса
         const urlParams = new URLSearchParams(window.location.search);
         const system = urlParams.get('system') || 'nes';
         const gameUrl = urlParams.get('url');
 
+        // Конфигурация для стабильного запуска без внешних зависимостей
         window.EmuJS = {
             System: system,
             GameUrl: gameUrl,
             Language: "en",
+            disableLocalization: true, // Запрещаем искать ru.json
             ContainerId: "game",
+            LoadFrame: true,
             ContentUrl: "https://cdn.emulatorjs.org/stable/data/",
             OnStart: function() {
-                console.log("Игра успешно запущена внутри локального плеера!");
+                console.log("Игра запущена!");
             }
         };
     </script>
