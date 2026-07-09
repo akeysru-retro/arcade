@@ -181,55 +181,117 @@ function launchGame(loadFromSave) {
     startEmulator(state.selectedGame, loadFromSave);
 }
 
-// 5. ИНИЦИАЛИЗАЦИЯ СТАБИЛЬНОГО ЭМУЛЯТОРА ЧЕРЕЗ IFRAME
+// 5. ИНИЦИАЛИЗАЦИЯ ЛОКАЛЬНОГО ЭМУЛЯТОРА НАПРЯМУЮ (БЕЗ IFRAME)
 function startEmulator(game, loadFromSave) {
     document.getElementById("emulator-layer").classList.remove("hidden");
     const container = document.getElementById("emulator-container");
-    container.innerHTML = ""; // Очищаем контейнер от старых сессий
+    container.innerHTML = ""; // Очищаем контейнер
 
-    // Мапим названия платформ под требования официального плеера EmulatorJS
+    // Создаем блок для самого движка EmulatorJS
+    const emuDiv = document.createElement("div");
+    emuDiv.id = "game-player";
+    emuDiv.style.width = "100%";
+    emuDiv.style.height = "100%";
+    container.appendChild(emuDiv);
+
+    // Мапим платформы под стандарты локального движка
     const platformMap = {
-        'NES': 'nes',
-        'SNES': 'snes',
-        'SEGA': 'segaMD',
-        '32X': 'sega32X',
-        'SMS': 'segaMS',
-        'TG16': 'pcEngine',
-        'GB': 'gb',
-        'GBC': 'gbc',
-        'GBA': 'gba',
-        'ZX': 'zxSpectrum'
+        'NES': 'nes', 'SNES': 'snes', 'SEGA': 'segaMD', '32X': 'sega32X',
+        'SMS': 'segaMS', 'TG16': 'pcEngine', 'GB': 'gb', 'GBC': 'gbc', 'GBA': 'gba', 'ZX': 'zxSpectrum'
     };
-
     const systemCode = platformMap[game.platform.toUpperCase()] || 'nes';
 
-    // Создаем iframe для изолированного и безопасного запуска
-    const iframe = document.createElement("iframe");
+    // Конфигурируем глобальные переменные для твоего локального loader.js (версия 4.0.0+)
+    window.EJS_player = '#game-player';
+    window.EJS_biosUrl = '';
+    window.EJS_gameUrl = game.rom_url;
+    window.EJS_core = systemCode;
+    window.EJS_pathtodata = './'; // Ищем файлы cores/ прямо в текущей папке app/
+    window.EJS_language = 'ru';
     
-    // Формируем прямую ссылку на плеер с параметрами системы и рома
-    iframe.src = `player.html?system=${systemCode}&url=${encodeURIComponent(game.rom_url)}`;
-    
-    iframe.style.width = "100%";
-    iframe.style.height = "100%";
-    iframe.style.border = "none";
-    iframe.id = "emu-iframe";
-    
-    // Разрешаем разворачивать на весь экран и использовать сенсорный геймпад
-    iframe.setAttribute("allowfullscreen", "true");
-    iframe.setAttribute("allow", "gamepad");
+    // НАСТРОЙКА ЗВУКА: Передаем глобальное состояние звука из меню в эмулятор
+    window.EJS_startOnLoaded = true;
+    window.EJS_volume = state.isSoundOn ? 1 : 0;
 
-    container.appendChild(iframe);
+    // ХИТРЫЙ КОЛЛБЭК: Ждем, когда движок полностью загрузится в память страницы
+    window.EJS_onGameStart = function() {
+        console.log("Игра успешно стартовала напрямую!");
+        
+        // Если юзер нажал "ПРОДОЛЖИТЬ С ПОСЛЕДНЕГО СОХРАНЕНИЯ"
+        if (loadFromSave) {
+            const savedState = localStorage.getItem(`save_${game.id}`);
+            if (savedState && window.EJS_emulator && typeof window.EJS_emulator.loadState === "function") {
+                try {
+                    // Превращаем JSON-строку обратно в массив байт и скармливаем напрямую в оперативку ядра
+                    const stateArray = new Uint8Array(JSON.parse(savedState));
+                    window.EJS_emulator.loadState(stateArray);
+                } catch (e) {
+                    console.error("Критическая ошибка загрузки сейва:", e);
+                }
+            }
+        }
+    };
+
+    // Динамически перезапускаем локальный лоадер внутри текущего контекста страницы
+    const oldLoader = document.getElementById("emu-loader-script");
+    if (oldLoader) oldLoader.remove();
+
+    const script = document.createElement("script");
+    script.src = "loader.js";
+    script.id = "emu-loader-script";
+    document.body.appendChild(script);
 }
 
-// Заглушка для ручной кнопки — в iframe-плеере сохранение работает через встроенную нижнюю панель!
+// ЖЕЛЕЗНАЯ ФУНКЦИЯ СОХРАНЕНИЯ С ВЕРХНЕЙ КНОПКИ
 function saveGameState() {
-    alert("Используй синюю кнопку 'Save State' / 'Load State' на нижней всплывающей панели самого эмулятора!");
+    if (!state.selectedGame || !window.EJS_emulator || typeof window.EJS_emulator.saveState !== "function") {
+        alert("Подожди полной загрузки игры для создания сохранения!");
+        return;
+    }
+
+    // Вызываем прямой метод сохранения из запущенного ядра эмулятора
+    window.EJS_emulator.saveState(function(stateBuffer) {
+        if (stateBuffer && stateBuffer.length > 0) {
+            // Переводим массив байт (Uint8Array) в обычный массив для сохранения в LocalStorage смартфона
+            const stateArray = Array.from(stateBuffer);
+            localStorage.setItem(`save_${state.selectedGame.id}`, JSON.stringify(stateArray));
+            
+            alert("ИГРА УСПЕШНО СОХРАНЕНА НА ТВОЕ УСТРОЙСТВО! 💾");
+            
+            // Сразу обновляем кнопку "Продолжить" в меню лаунча
+            const continueBtn = document.getElementById("btn-continue-save");
+            if (continueBtn) continueBtn.classList.remove("hidden");
+        } else {
+            alert("Не удалось зафиксировать слепок памяти игры.");
+        }
+    });
 }
 
-// Корректное закрытие игрового слоя
+// УПРАВЛЕНИЕ ЗВУКОМ С ВЕРХНЕЙ КНОПКИ ВНУТРИ ЭМУЛЯТОРА
+function toggleEmuSound() {
+    state.isSoundOn = !state.isSoundOn;
+    const soundBtn = document.getElementById("emu-sound-btn");
+    
+    if (window.EJS_emulator && typeof window.EJS_emulator.setVolume === "function") {
+        window.EJS_emulator.setVolume(state.isSoundOn ? 1 : 0);
+        soundBtn.innerText = state.isSoundOn ? "🔊 ЗВУК" : "🔇 ЗВУК";
+    } else {
+        alert("Эмулятор еще загружается...");
+    }
+}
+
+// КОРРЕКТНОЕ ЗАКРЫТИЕ С ОЧИСТКОЙ ГЛОБАЛЬНОЙ ПАМЯТИ
 function closeEmulator() {
     document.getElementById("emulator-layer").classList.add("hidden");
-    document.getElementById("emulator-container").innerHTML = ""; // Уничтожаем плеер, чтобы выгрузить его из памяти смартфона
+    document.getElementById("emulator-container").innerHTML = "";
+    
+    // Принудительно выгружаем тяжелые скрипты ядер из памяти вкладки
+    if (window.EJS_emulator && typeof window.EJS_emulator.destroy === "function") {
+        window.EJS_emulator.destroy();
+    }
+    
+    window.EJS_emulator = null;
+    window.EJS_player = null;
 }
 
 // 6. ОБРАБОТКА ЗАКАЗА ИГРЫ
