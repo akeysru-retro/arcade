@@ -163,7 +163,7 @@ function startEmulator(game, loadFromSave) {
     const iframe = document.createElement("iframe");
     
     // Формируем прямую ссылку на плеер с параметрами системы и рома
-    iframe.src = `https://cdn.emulatorjs.org/stable/data/player.html?system=${systemCode}&url=${encodeURIComponent(game.rom_url)}`;
+    iframe.src = `player.html?system=${systemCode}&url=${encodeURIComponent(game.rom_url)}`;
     
     iframe.style.width = "100%";
     iframe.style.height = "100%";

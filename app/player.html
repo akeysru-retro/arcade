@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>AKEYS Arcade Player</title>
+    <style>
+        html, body, #game {
+            width: 100%;
+            height: 100%;
+            padding: 0;
+            margin: 0;
+            background-color: #000;
+            overflow: hidden;
+        }
+    </style>
+</head>
+<body>
+    <div id="game"></div>
+    <script>
+        // Получаем параметры из ссылки (system и url ромы)
+        const urlParams = new URLSearchParams(window.location.search);
+        const system = urlParams.get('system') || 'nes';
+        const gameUrl = urlParams.get('url');
+
+        window.EmuJS = {
+            System: system,
+            GameUrl: gameUrl,
+            Language: "en",
+            ContainerId: "game",
+            ContentUrl: "https://cdn.emulatorjs.org/stable/data/",
+            OnStart: function() {
+                console.log("Игра успешно запущена внутри локального плеера!");
+            }
+        };
+    </script>
+    <script src="https://cdn.emulatorjs.org/stable/data/loader.js"></script>
+</body>
+</html>
