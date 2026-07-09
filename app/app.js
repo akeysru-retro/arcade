@@ -37,7 +37,7 @@ function loadDataFromGoogle() {
         .catch(err => console.error("Ошибка загрузки данных:", err));
 }
 
-// 2. ОТРИСОВКА СПИСКА ИГР
+// 2. ОТРИСОВКА СПИСКА ИГР С ПОДДЕРЖКОЙ ИЗБРАННОГО
 function renderGames(gamesList) {
     const container = document.getElementById("games-list");
     container.innerHTML = "";
@@ -47,19 +47,63 @@ function renderGames(gamesList) {
         return;
     }
     
-    gamesList.forEach(game => {
+    // Получаем список ID избранных игр из localStorage устройства
+    const favorites = JSON.parse(localStorage.getItem("v4_favorites") || "[]");
+    
+    // Сортируем игры: избранные всегда идут на самый верх списка!
+    const sortedGames = [...gamesList].sort((a, b) => {
+        const aFav = favorites.includes(a.id);
+        const bFav = favorites.includes(b.id);
+        return bFav - aFav; 
+    });
+    
+    sortedGames.forEach(game => {
         const item = document.createElement("div");
         item.className = "game-item";
-        item.onclick = () => openLaunchModal(game);
         
+        const isFav = favorites.includes(game.id);
         const badgeClass = `badge-${game.platform.toLowerCase()}`;
         
+        // Создаем структуру: Звезда + Название кликабельны отдельно от плашки платформы
         item.innerHTML = `
-            <span>${game.title}</span>
+            <div class="game-left-side">
+                <span class="fav-star ${isFav ? 'active' : ''}" data-id="${game.id}">★</span>
+                <span class="game-click-zone" style="cursor:pointer;">${game.title}</span>
+            </div>
             <span class="badge ${badgeClass}">${game.platform}</span>
         `;
+        
+        // Клик по звезде — добавляет/удаляет из избранного
+        item.querySelector(".fav-star").onclick = (e) => {
+            e.stopPropagation(); // Чтобы не запускалась игра при клике на звезду
+            toggleFavorite(game.id);
+        };
+        
+        // Клик по названию — запускает игру
+        item.querySelector(".game-click-zone").onclick = () => openLaunchModal(game);
+        
         container.appendChild(item);
     });
+}
+
+// Функция добавления/удаления игры из избранного устройства
+function toggleFavorite(gameId) {
+    let favorites = JSON.parse(localStorage.getItem("v4_favorites") || "[]");
+    
+    if (favorites.includes(gameId)) {
+        // Если уже есть — удаляем
+        favorites = favorites.filter(id => id !== gameId);
+    } else {
+        // Если нет — добавляем
+        favorites.push(gameId);
+    }
+    
+    localStorage.setItem("v4_favorites", JSON.stringify(favorites));
+    
+    // Мгновенно перерисовываем список игр с учетом новой сортировки
+    const query = document.getElementById("search-game-input").value.toLowerCase();
+    const filtered = state.games.filter(g => g.title.toLowerCase().includes(query));
+    renderGames(filtered);
 }
 
 // 3. ОТРИСОВКА И ПАГИНАЦИЯ СЕКРЕТОВ
