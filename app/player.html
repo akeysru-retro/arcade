@@ -3,9 +3,9 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>AKEYS Arcade Player</title>
+    <title>AKEYS Retro Player</title>
     <style>
-        html, body, #game {
+        html, body, #emulator {
             width: 100%;
             height: 100%;
             padding: 0;
@@ -16,27 +16,30 @@
     </style>
 </head>
 <body>
-    <div id="game"></div>
+
+    <iframe id="emulator" src="" allowfullscreen allow="gamepad"></iframe>
+
     <script>
-        // Получаем параметры из строки запроса
         const urlParams = new URLSearchParams(window.location.search);
         const system = urlParams.get('system') || 'nes';
         const gameUrl = urlParams.get('url');
 
-        // Конфигурация для стабильного запуска без внешних зависимостей
-        window.EmuJS = {
-            System: system,
-            GameUrl: gameUrl,
-            Language: "en",
-            disableLocalization: true, // Запрещаем искать ru.json
-            ContainerId: "game",
-            LoadFrame: true,
-            ContentUrl: "https://cdn.emulatorjs.org/stable/data/",
-            OnStart: function() {
-                console.log("Игра запущена!");
-            }
+        // Мапим консоли под требования NostalgiJS плеера
+        const systemMap = {
+            'nes': 'nes',
+            'snes': 'snes',
+            'segaMD': 'sega',
+            'gb': 'gb',
+            'gbc': 'gbc',
+            'gba': 'gba'
         };
+
+        const core = systemMap[system] || 'nes';
+
+        // Формируем железную ссылку на проверенный независимый веб-плеер
+        if (gameUrl) {
+            document.getElementById('emulator').src = `https://web.nostalgi.js.org/?core=${core}&rom=${encodeURIComponent(gameUrl)}`;
+        }
     </script>
-    <script src="https://cdn.emulatorjs.org/stable/data/loader.js"></script>
 </body>
 </html>
