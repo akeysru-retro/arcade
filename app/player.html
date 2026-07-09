@@ -29,13 +29,13 @@
             disableLocalization: true,
             ContainerId: "game",
             LoadFrame: true,
-            // Поднимаемся на уровень выше папки app (../) и заходим в твою готовую папку emulator/
-            ContentUrl: "../emulator/",
+            // Пустая строка или './' означает, что эмулятор берет все свои файлы прямо из текущей папки app/
+            ContentUrl: "./",
             OnStart: function() {
-                console.log("Локальный движок из папки emulator запущен!");
+                console.log("Полностью локальный эмулятор запущен!");
             }
         };
     </script>
-    <script src="../emulator/loader.js"></script>
+    <script src="loader.js"></script>
 </body>
 </html>
