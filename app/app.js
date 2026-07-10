@@ -91,10 +91,8 @@ function toggleFavorite(gameId) {
     let favorites = JSON.parse(localStorage.getItem("v4_favorites") || "[]");
     
     if (favorites.includes(gameId)) {
-        // Если уже есть — удаляем
         favorites = favorites.filter(id => id !== gameId);
     } else {
-        // Если нет — добавляем
         favorites.push(gameId);
     }
     
@@ -159,8 +157,10 @@ function openLaunchModal(game) {
     state.selectedGame = game;
     document.getElementById("launch-game-title").innerText = game.title.toUpperCase();
     
-    // Проверяем, есть ли сохранение для этой игры в LocalStorage устройства
-    const hasSave = localStorage.getItem(`save_${game.id}`);
+    // Для режима 'keep in browser' мы проверяем, зафиксировал ли сам EmulatorJS данные в IndexedDB.
+    // Так как к IndexedDB из JS до загрузки ядра достучаться сложно, оставим базовую проверку флага,
+    // либо кнопка "Продолжить" будет активна всегда, если игра запускалась ранее.
+    const hasSave = localStorage.getItem(`save_initiated_${game.id}`);
     const continueBtn = document.getElementById("btn-continue-save");
     
     if (hasSave) {
@@ -187,52 +187,41 @@ function startEmulator(game, loadFromSave) {
     const container = document.getElementById("emulator-container");
     container.innerHTML = ""; // Очищаем контейнер
 
-    // Создаем блок для самого движка EmulatorJS
     const emuDiv = document.createElement("div");
     emuDiv.id = "game-player";
     emuDiv.style.width = "100%";
     emuDiv.style.height = "100%";
     container.appendChild(emuDiv);
 
-    // Мапим платформы под стандарты локального движка
     const platformMap = {
         'NES': 'nes', 'SNES': 'snes', 'SEGA': 'segaMD', '32X': 'sega32X',
         'SMS': 'segaMS', 'TG16': 'pcEngine', 'GB': 'gb', 'GBC': 'gbc', 'GBA': 'gba', 'ZX': 'zxSpectrum'
     };
     const systemCode = platformMap[game.platform.toUpperCase()] || 'nes';
 
-    // Конфигурируем глобальные переменные для твоего локального loader.js (версия 4.0.0+)
+    // Конфигурация EmulatorJS (версия 4.0.0+)
     window.EJS_player = '#game-player';
     window.EJS_biosUrl = '';
     window.EJS_gameUrl = game.rom_url;
     window.EJS_core = systemCode;
-    window.EJS_pathtodata = './'; // Ищем файлы cores/ прямо в текущей папке app/
+    window.EJS_pathtodata = './'; 
     window.EJS_language = 'ru';
-    
-    // НАСТРОЙКА ЗВУКА: Передаем глобальное состояние звука из меню в эмулятор
+
+    // НАСТРОЙКИ АВТО-СОХРАНЕНИЙ ПО ТВОЕМУ МЕТОДУ
+    window.EJS_DefaultSaveMode = 'browser'; // По умолчанию переводим в IndexedDB ("keep in browser")
+    window.EJS_autosave = true;             // Автосейв при закрытии страницы
+    window.EJS_ForceLocalSave = true;       // Сохраняем только локально в браузере
+
     window.EJS_startOnLoaded = true;
     window.EJS_volume = state.isSoundOn ? 1 : 0;
 
-    // ХИТРЫЙ КОЛЛБЭК: Ждем, когда движок полностью загрузится в память страницы
     window.EJS_onGameStart = function() {
         console.log("Игра успешно стартовала напрямую!");
-        
-        // Если юзер нажал "ПРОДОЛЖИТЬ С ПОСЛЕДНЕГО СОХРАНЕНИЯ"
-        if (loadFromSave) {
-            const savedState = localStorage.getItem(`save_${game.id}`);
-            if (savedState && window.EJS_emulator && typeof window.EJS_emulator.loadState === "function") {
-                try {
-                    // Превращаем JSON-строку обратно в массив байт и скармливаем напрямую в оперативку ядра
-                    const stateArray = new Uint8Array(JSON.parse(savedState));
-                    window.EJS_emulator.loadState(stateArray);
-                } catch (e) {
-                    console.error("Критическая ошибка загрузки сейва:", e);
-                }
-            }
-        }
+        // Помечаем, что игра запускалась, чтобы кнопка "Продолжить" знала о существовании кэша
+        localStorage.setItem(`save_initiated_${game.id}`, "true");
     };
 
-    // Динамически перезапускаем локальный лоадер внутри текущего контекста страницы
+    // Перезапуск скрипта лоадера
     const oldLoader = document.getElementById("emu-loader-script");
     if (oldLoader) oldLoader.remove();
 
@@ -244,27 +233,16 @@ function startEmulator(game, loadFromSave) {
 
 // ЖЕЛЕЗНАЯ ФУНКЦИЯ СОХРАНЕНИЯ С ВЕРХНЕЙ КНОПКИ
 function saveGameState() {
-    if (!state.selectedGame || !window.EJS_emulator || typeof window.EJS_emulator.saveState !== "function") {
-        alert("Подожди полной загрузки игры для создания сохранения!");
-        return;
-    }
-
-    // Вызываем прямой метод сохранения из запущенного ядра эмулятора
-    window.EJS_emulator.saveState(function(stateBuffer) {
-        if (stateBuffer && stateBuffer.length > 0) {
-            // Переводим массив байт (Uint8Array) в обычный массив для сохранения в LocalStorage смартфона
-            const stateArray = Array.from(stateBuffer);
-            localStorage.setItem(`save_${state.selectedGame.id}`, JSON.stringify(stateArray));
-            
-            alert("ИГРА УСПЕШНО СОХРАНЕНА НА ТВОЕ УСТРОЙСТВО! 💾");
-            
-            // Сразу обновляем кнопку "Продолжить" в меню лаунча
-            const continueBtn = document.getElementById("btn-continue-save");
-            if (continueBtn) continueBtn.classList.remove("hidden");
-        } else {
-            alert("Не удалось зафиксировать слепок памяти игры.");
+    if (window.EJS_emulator && typeof window.EJS_emulator.quickSave === "function") {
+        window.EJS_emulator.quickSave(); // Эмулируем нажатие сохранения самого движка в браузер
+        alert("ИГРА УСПЕШНО СОХРАНЕНА! 💾");
+        
+        if (state.selectedGame) {
+            localStorage.setItem(`save_initiated_${state.selectedGame.id}`, "true");
         }
-    });
+    } else {
+        alert("Подожди полной загрузки игры для сохранения...");
+    }
 }
 
 // УПРАВЛЕНИЕ ЗВУКОМ С ВЕРХНЕЙ КНОПКИ ВНУТРИ ЭМУЛЯТОРА
@@ -274,7 +252,7 @@ function toggleEmuSound() {
     
     if (window.EJS_emulator && typeof window.EJS_emulator.setVolume === "function") {
         window.EJS_emulator.setVolume(state.isSoundOn ? 1 : 0);
-        soundBtn.innerText = state.isSoundOn ? "🔊 ЗВУК" : "🔇 ЗВУК";
+        if (soundBtn) soundBtn.innerText = state.isSoundOn ? "🔊 ЗВУК" : "🔇 ЗВУК";
     } else {
         alert("Эмулятор еще загружается...");
     }
@@ -285,7 +263,6 @@ function closeEmulator() {
     document.getElementById("emulator-layer").classList.add("hidden");
     document.getElementById("emulator-container").innerHTML = "";
     
-    // Принудительно выгружаем тяжелые скрипты ядер из памяти вкладки
     if (window.EJS_emulator && typeof window.EJS_emulator.destroy === "function") {
         window.EJS_emulator.destroy();
     }
@@ -381,10 +358,6 @@ function setupEventListeners() {
 function toggleGlobalSound() {
     state.isSoundOn = !state.isSoundOn;
     const bgVideo = document.getElementById("bg-video");
-    bgVideo.muted = !state.isSoundOn;
+    if (bgVideo) bgVideo.muted = !state.isSoundOn;
     document.getElementById("global-sound-btn").innerText = state.isSoundOn ? "🔊 ЗВУК" : "🔇 ЗВУК";
-}
-
-function toggleEmuSound() {
-    alert("Звук настраивается кнопкой внутри меню самого эмулятора!");
 }
