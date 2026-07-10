@@ -122,7 +122,7 @@ function renderGamesPage() {
     });
 }
 
-// 4. ИНИЦИАЛИЗАЦИЯ ЭМУЛЯТОРА — ПРЯМАЯ И СТАБИЛЬНАЯ ЗАГРУЗКА ИЗ ПЕРЕИМЕНОВАННЫХ ФАЙЛОВ
+// 4. ИНИЦИАЛИЗАЦИЯ ЭМУЛЯТОРА — АВТОМАТИЧЕСКИЙ СТАРТ РОМА БЕЗ МЕНЮ RETROARCH
 function startEmulator(game) {
     state.selectedGame = game;
     document.getElementById("back-to-catalog").classList.remove("hidden");
@@ -137,14 +137,14 @@ function startEmulator(game) {
     emuDiv.style.width = "100%"; emuDiv.style.height = "100%";
     container.appendChild(emuDiv);
 
-    // Лоадер автоматически подтянет sega32X.js и pcEngine.js после переименования на GitHub!
+    // Системные коды: picodrive и mednafen_pce, чтобы он качал твои файлы с GitHub
     const platformMap = {
         'NES': 'nes',                  
         'SNES': 'snes9x',              
         'SEGA': 'genesis_plus_gx',     
-        '32X': 'sega32X',            
-        'SMS': 'segaMS',             
-        'TG16': 'pcEngine',          
+        '32X': 'picodrive',            
+        'SMS': 'smsplus',              
+        'TG16': 'mednafen_pce',        
         'GB': 'gambatte',              
         'GBC': 'gambatte',             
         'GBA': 'mgba'
@@ -154,16 +154,17 @@ function startEmulator(game) {
 
     window.EJS_player = '#game-player';
     window.EJS_biosUrl = '';
-    window.EJS_gameUrl = game.rom_url;
+    window.EJS_gameUrl = game.rom_url; // Твоя ссылка на игру из Google Таблицы
     window.EJS_core = systemCode;
     window.EJS_pathtodata = './'; 
     window.EJS_language = 'ru';
     window.EJS_gameName = game.title.replace(/ /g, '_');
-	
-	// ====== ДОБАВЛЯЕМ ЭТУ СТРОЧКУ, ЧТОБЫ ИГРА СРАЗУ СТАРТОВАЛА ======
-    window.EJS_loadOnStart = true; // Заставляет RetroArch автоматически запустить ром
+
+    // ======= ЖЕСТКИЙ АВТОЗАПУСК ИГРЫ (УБИРАЕТ СЕРВИСНОЕ МЕНЮ) =======
+    window.EJS_loadOnStart = true; 
     // ===============================================================
 
+    // Настройки IndexedDB ("keep in browser")
     window.EJS_DefaultSaveMode = 'browser'; 
     window.EJS_autosave = true;             
     window.EJS_ForceLocalSave = true;       
