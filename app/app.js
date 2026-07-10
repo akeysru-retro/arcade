@@ -122,7 +122,7 @@ function renderGamesPage() {
     });
 }
 
-// 4. ИНИЦИАЛИЗАЦИЯ ЭМУЛЯТОРА (ЛИШНЯЯ СКОБКА УБРАНА)
+// 4. ИНИЦИАЛИЗАЦИЯ ЭМУЛЯТОРА С ИСПРАВЛЕНИЕМ ГЕЙМПАДОВ И ZX SPECTRUM
 function startEmulator(game) {
     state.selectedGame = game;
     document.getElementById("back-to-catalog").classList.remove("hidden");
@@ -137,17 +137,18 @@ function startEmulator(game) {
     emuDiv.style.width = "100%"; emuDiv.style.height = "100%";
     container.appendChild(emuDiv);
 
+    // Официальные системные имена для правильной отрисовки геймпадов и кнопки START!
     const platformMap = {
         'NES': 'nes',                  
         'SNES': 'snes9x',              
         'SEGA': 'genesis_plus_gx',     
-        '32X': 'picodrive',            
-        'SMS': 'smsplus',              
-        'TG16': 'mednafen_pce',        
+        '32X': 'sega32X',            // Вернет родной геймпад 32X с кнопкой START
+        'SMS': 'segaMS',             // Вернет родной геймпад SMS с кнопкой START
+        'TG16': 'pcEngine',        
         'GB': 'gambatte',              
         'GBC': 'gambatte',             
         'GBA': 'mgba',                 
-        'ZX': 'fuse'                   
+        'ZX': 'zxSpectrum'           // Загрузит правильный интерфейс клавиатуры Спектрума
     };
     
     const systemCode = platformMap[game.platform.toUpperCase()] || 'nes';
@@ -159,6 +160,18 @@ function startEmulator(game) {
     window.EJS_pathtodata = './'; 
     window.EJS_language = 'ru';
     window.EJS_gameName = game.title.replace(/ /g, '_');
+
+    // ХИТРЫЙ МОСТ ДЛЯ ТВОИХ ФАЙЛОВ НА ГИТХАБЕ:
+    // Если эмулятор ищет файлы, мы явно указываем имена из твоей папки!
+    if (game.platform.toUpperCase() === '32X') {
+        window.EJS_coreName = 'picodrive'; // Ищет picodrive.js вместо sega32X.js
+    } else if (game.platform.toUpperCase() === 'SMS') {
+        window.EJS_coreName = 'smsplus';   // Ищет smsplus.js вместо segaMS.js
+    } else if (game.platform.toUpperCase() === 'TG16') {
+        window.EJS_coreName = 'mednafen_pce'; // Ищет mednafen_pce.js
+    } else if (game.platform.toUpperCase() === 'ZX') {
+        window.EJS_coreName = 'fuse';      // Ищет fuse.js
+    }
 
     window.EJS_startOnLoaded = true;
     window.EJS_volume = state.isSoundOn ? 1 : 0;
