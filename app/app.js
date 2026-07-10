@@ -159,8 +159,11 @@ function startEmulator(game) {
     window.EJS_pathtodata = './'; 
     window.EJS_language = 'ru';
     window.EJS_gameName = game.title.replace(/ /g, '_');
+	
+	// ====== ДОБАВЛЯЕМ ЭТУ СТРОЧКУ, ЧТОБЫ ИГРА СРАЗУ СТАРТОВАЛА ======
+    window.EJS_loadOnStart = true; // Заставляет RetroArch автоматически запустить ром
+    // ===============================================================
 
-    // Настройки сохранения в браузер ("keep in browser")
     window.EJS_DefaultSaveMode = 'browser'; 
     window.EJS_autosave = true;             
     window.EJS_ForceLocalSave = true;       
