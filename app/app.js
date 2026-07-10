@@ -122,7 +122,7 @@ function renderGamesPage() {
     });
 }
 
-// 4. ИНИЦИАЛИЗАЦИЯ ЭМУЛЯТОРА — РЕШЕНИЕ ПРОБЛЕМЫ С 32X И TG16
+// 4. ИНИЦИАЛИЗАЦИЯ ЭМУЛЯТОРА — ПРЯМАЯ И СТАБИЛЬНАЯ ЗАГРУЗКА ИЗ ПЕРЕИМЕНОВАННЫХ ФАЙЛОВ
 function startEmulator(game) {
     state.selectedGame = game;
     document.getElementById("back-to-catalog").classList.remove("hidden");
@@ -137,14 +137,14 @@ function startEmulator(game) {
     emuDiv.style.width = "100%"; emuDiv.style.height = "100%";
     container.appendChild(emuDiv);
 
-    // Системные коды для правильной отрисовки интерфейса кнопок START
+    // Лоадер автоматически подтянет sega32X.js и pcEngine.js после переименования на GitHub!
     const platformMap = {
         'NES': 'nes',                  
         'SNES': 'snes9x',              
         'SEGA': 'genesis_plus_gx',     
-        '32X': 'sega32X',            // Вернет геймпад 32X с кнопкой START
-        'SMS': 'segaMS',             // Вернет геймпад SMS с кнопкой START
-        'TG16': 'pcEngine',          // Вернет геймпад PC Engine
+        '32X': 'sega32X',            
+        'SMS': 'segaMS',             
+        'TG16': 'pcEngine',          
         'GB': 'gambatte',              
         'GBC': 'gambatte',             
         'GBA': 'mgba'
@@ -160,19 +160,10 @@ function startEmulator(game) {
     window.EJS_language = 'ru';
     window.EJS_gameName = game.title.replace(/ /g, '_');
 
-    // Настройки IndexedDB ("keep in browser")
+    // Настройки сохранения в браузер ("keep in browser")
     window.EJS_DefaultSaveMode = 'browser'; 
     window.EJS_autosave = true;             
     window.EJS_ForceLocalSave = true;       
-
-    // ПЕРЕНАПРАВЛЕНИЕ НА ТВОИ ФАЙЛЫ (Решает зависание при запуске)
-    if (game.platform.toUpperCase() === '32X') {
-        window.EJS_coreName = 'picodrive';      // Берет picodrive.js из твоей папкиcores
-    } else if (game.platform.toUpperCase() === 'SMS') {
-        window.EJS_coreName = 'smsplus';        // Берет smsplus.js из твоей папки cores
-    } else if (game.platform.toUpperCase() === 'TG16') {
-        window.EJS_coreName = 'mednafen_pce';   // Берет mednafen_pce.js из твоей папки cores
-    }
 
     window.EJS_startOnLoaded = true;
     window.EJS_volume = state.isSoundOn ? 1 : 0;
