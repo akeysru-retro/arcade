@@ -15,7 +15,6 @@
         }
         body { display: flex; flex-direction: column; align-items: center; justify-content: flex-start; }
         
-        /* Поднимаем панель на самый верх, чтобы кнопки были кликабельны поверх эмулятора */
         .header-panel {
             display: flex; width: 100%; max-width: 400px; justify-content: space-between; align-items: center;
             padding: 8px 15px; box-sizing: border-box; background: #000; border-bottom: 2px solid #333; 
@@ -25,7 +24,6 @@
             background: #222; border: 2px solid #555; color: #fff;
             font-family: 'Press Start 2P', monospace; font-size: 8px; padding: 6px 10px; cursor: pointer;
         }
-        #emu-sound-btn.muted { color: #ffaa00; border-color: #663333; }
         .hidden { display: none !important; }
 
         #catalog-container {
@@ -69,7 +67,6 @@
         }
         .fav-filter-toggle.active { border-color: #ffcc00; color: #ffcc00; background: #221c00; }
 
-        .games-pagination-container { display: flex; width: 100%; }
         .pagination-container {
             display: flex; justify-content: space-between; align-items: center;
             width: 100%; padding: 20px 25px 10px 25px; box-sizing: border-box;
@@ -84,13 +81,11 @@
         .page-btn:disabled { background: #111; border-color: #333; color: #444; cursor: not-allowed; }
         .page-info-text { font-size: 7px; color: #888; text-align: center; }
 
-        #section-saves-manager { padding: 0 25px; box-sizing: border-box; width: 100%; display: flex; flex-direction: column; gap: 15px; }
         .btn-launch-new {
             width: 100%; background: #222; border: 3px solid #555; color: #fff;
             font-family: 'Press Start 2P', monospace; font-size: 8px; padding: 12px;
             cursor: pointer; border-radius: 4px; text-align: center; box-sizing: border-box;
         }
-        .btn-launch-new:active { background: #444; color: #ffff00; }
         
         .secret-card { background: rgba(17, 17, 17, 0.9); border: 2px solid #444; margin: 0 20px 15px 20px; padding: 15px; border-radius: 4px; }
         .secret-game { font-size: 10px; color: #ffff00; margin-bottom: 6px; }
@@ -107,7 +102,6 @@
         }
         .form-input:focus { border-color: #00ff00; outline: none; }
         
-        /* Стилизация выпадающего списка */
         select.form-input {
             appearance: none;
             -webkit-appearance: none;
@@ -130,7 +124,6 @@
         .tab-item.active { color: #ffff00; background: #1a1a1a; }
         .tab-icon { font-size: 14px; }
 
-        /* Изолируем слой эмулятора чуть ниже панели шапки */
         #emulator-layer { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: #000; z-index: 50000; padding-top: 44px; box-sizing: border-box; }
         #emulator-container { width: 100%; height: 100%; background: #000; }
     </style>
@@ -138,9 +131,8 @@
 <body>
 
     <div class="header-panel">
-        <!-- КНОПКА НАЗАД ДЛЯ ВЫХОДА В МЕНЮ -->
+        <!-- Кнопка "Сохранить" полностью удалена из разметки -->
         <button id="back-to-catalog" class="head-btn hidden" onclick="closeEmulator()">↩ МЕНЮ</button>
-        <button id="header-save" class="head-btn hidden" onclick="saveGameState()">💾 СОХРАНИТЬ</button>
         <div id="main-title" style="font-size: 8px; letter-spacing: 1px;">9999 IN 1</div>
         <button id="emu-sound-btn" class="head-btn" onclick="toggleEmuSound()">🔊 ЗВУК</button>
     </div>
@@ -161,16 +153,6 @@
             <div class="pagination-container" id="games-pagination"></div>
         </div>
 
-        <!-- МЕНЮ ЗАПУСКА -->
-        <div id="tab-saves" class="tab-content">
-            <div class="menu-title" id="saves-manager-title">ЗАГРУЗКА...</div>
-            <div id="section-saves-manager">
-                <button class="btn-launch-new" onclick="launchGame(false)">▶ ИГРАТЬ С НАЧАЛА</button>
-                <button class="btn-launch-new" id="btn-load-last" style="background: #0064ff; border-color: #0040aa;" onclick="launchGame(true)">💾 ЗАГРУЗИТЬ ПОСЛЕДНЕЕ СОХРАНЕНИЕ</button>
-                <button class="btn-launch-new" style="background: #333; border-color: #555; margin-top: 15px;" onclick="cancelLaunch()">↩ ОТМЕНА</button>
-            </div>
-        </div>
-
         <!-- ВКЛАДКА СЕКРЕТОВ -->
         <div id="tab-secrets" class="tab-content">
             <div class="menu-title">СЕКРЕТЫ</div>
@@ -181,7 +163,7 @@
             <div class="pagination-container" id="secrets-pagination"></div>
         </div>
 
-        <!-- ВКЛАДКА ЗАКАЗА С ВЫПАДАЮЩИМ СПИСКОМ ПЛАТФОРМ -->
+        <!-- ВКЛАДКА ЗАКАЗА С РАСШИРЕННЫМ ВЫПАДАЮЩИМ СПИСКОМ -->
         <div id="tab-order" class="tab-content">
             <div class="menu-title">ЗАКАЗ ИГР</div>
             <div class="order-container">
@@ -192,12 +174,17 @@
                 </div>
                 <div class="form-group">
                     <label class="form-label">ПЛАТФОРМА (КОНСОЛЬ):</label>
-                    <!-- Заменили текстовое поле на выпадающий список (select) -->
                     <select id="order-platform" class="form-input">
-                        <option value="NES (Dendy)">NES (Dendy)</option>
-                        <option value="SEGA Mega Drive">SEGA Mega Drive</option>
-                        <option value="SNES (Super Nintendo)">SNES (Super Nintendo)</option>
-                        <option value="Game Boy Advance">Game Boy Advance</option>
+                        <option value="NES">NES (Dendy)</option>
+                        <option value="SNES">Super Nintendo</option>
+                        <option value="SEGA">Sega</option>
+                        <option value="32X">Sega 32X</option>
+                        <option value="SMS">Sega Master System</option>
+                        <option value="TG16">PC Engine / TurboGrafx-16</option>
+                        <option value="GB">Game Boy</option>
+                        <option value="GBC">Game Boy Color</option>
+                        <option value="GBA">Game Boy ADVANCE</option>
+                        <option value="ZX">ZX Spectrum</option>
                     </select>
                 </div>
                 <button class="order-submit-btn btn-launch-new" style="background: #0064ff; border-color: #0040aa;" onclick="submitOrder()">ОТПРАВИТЬ ЗАЯВКУ</button>

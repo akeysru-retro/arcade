@@ -109,7 +109,8 @@ function renderGamesPage() {
             <div class="fav-star-btn ${isFav ? 'active' : ''}">⭐</div>
         `;
         
-        item.querySelector('.game-click-zone').onclick = () => openSavesManagerScreen(game);
+        // МГНОВЕННЫЙ ЗАПУСК ИГРЫ В ОДИН КЛИК БЕЗ ПРОМЕЖУТОЧНЫХ МЕНЮ
+        item.querySelector('.game-click-zone').onclick = () => startEmulator(game);
         item.querySelector('.fav-star-btn').onclick = (e) => toggleFavorite(game.id, e);
         
         container.appendChild(item);
@@ -122,28 +123,10 @@ function renderGamesPage() {
     });
 }
 
-function openSavesManagerScreen(game) {
+// 4. ИНИЦИАЛИЗАЦИЯ ЭМУЛЯТОРА
+function startEmulator(game) {
     state.selectedGame = game;
-    document.getElementById('tab-games').classList.remove('active');
-    document.getElementById('tab-saves').classList.add('active');
-    document.getElementById('saves-manager-title').textContent = game.title.toUpperCase();
-}
-
-function cancelLaunch() {
-    document.getElementById('tab-saves').classList.remove('active');
-    document.getElementById('tab-games').classList.add('active');
-}
-
-function launchGame(loadFromSave) {
-    document.getElementById('tab-saves').classList.remove('active');
-    startEmulator(state.selectedGame, loadFromSave);
-}
-
-// 4. ИНИЦИАЛИЗАЦИЯ ЭМУЛЯТОРА С ИСПРАВЛЕННЫМ РЕГИСТРОМ НАСТРОЕК
-function startEmulator(game, loadFromSave) {
-    // Делаем кнопки шапки видимыми
     document.getElementById("back-to-catalog").classList.remove("hidden");
-    document.getElementById("header-save").classList.remove("hidden");
     document.getElementById("emulator-layer").style.display = "block";
     document.getElementById("app-tab-bar").style.display = "none";
     
@@ -156,11 +139,11 @@ function startEmulator(game, loadFromSave) {
     container.appendChild(emuDiv);
 
     const platformMap = {
-        'NES': 'nes', 'SNES': 'snes', 'SEGA': 'segaMD', 'GBA': 'gba', 'GB': 'gb', 'GBC': 'gbc'
+        'NES': 'nes', 'SNES': 'snes', 'SEGA': 'segaMD', 'GBA': 'gba', 'GB': 'gb', 'GBC': 'gbc',
+        '32X': 'sega32X', 'SMS': 'segaMS', 'TG16': 'pcEngine', 'ZX': 'zxSpectrum'
     };
     const systemCode = platformMap[game.platform.toUpperCase()] || 'nes';
 
-    // ВЫРАВНИВАНИЕ НАСТРОЕК СОХРАНЕНИЙ (Регистр букв исправлен)
     window.EJS_player = '#game-player';
     window.EJS_biosUrl = '';
     window.EJS_gameUrl = game.rom_url;
@@ -169,18 +152,8 @@ function startEmulator(game, loadFromSave) {
     window.EJS_language = 'ru';
     window.EJS_gameName = game.title.replace(/ /g, '_');
 
-    // Настройки для IndexedDB ("keep in browser") по стандарту
-    window.EJS_DefaultSaveMode = 'browser'; 
-    window.EJS_autosave = true;             
-    window.EJS_ForceLocalSave = true;       
-
     window.EJS_startOnLoaded = true;
     window.EJS_volume = state.isSoundOn ? 1 : 0;
-    window.EJS_Volume = state.isSoundOn ? 1 : 0; // Запасной дубликат для старых ядер
-
-    if (!loadFromSave) {
-        window.EJS_startOnLoaded = true;
-    }
 
     const oldLoader = document.getElementById("emu-loader-script");
     if (oldLoader) oldLoader.remove();
@@ -189,15 +162,6 @@ function startEmulator(game, loadFromSave) {
     script.src = "loader.js";
     script.id = "emu-loader-script";
     document.body.appendChild(script);
-}
-
-function saveGameState() {
-    if (window.EJS_emulator && typeof window.EJS_emulator.quickSave === "function") {
-        window.EJS_emulator.quickSave();
-        alert("ИГРА УСПЕШНО СОХРАНЕНА НА УСТРОЙСТВО! 💾");
-    } else {
-        alert("Подожди полной загрузки игры...");
-    }
 }
 
 function toggleEmuSound() {
@@ -212,11 +176,9 @@ function toggleEmuSound() {
     if (bgVideo) bgVideo.muted = !state.isSoundOn;
 }
 
-// ФУНКЦИЯ КНОПКИ НАЗАД: Выгружает эмулятор и возвращает в меню
 function closeEmulator() {
     document.getElementById("emulator-layer").style.display = "none";
     document.getElementById("back-to-catalog").classList.add("hidden");
-    document.getElementById("header-save").classList.add("hidden");
     document.getElementById("app-tab-bar").style.display = "flex";
     document.getElementById("emulator-container").innerHTML = "";
     
@@ -225,6 +187,60 @@ function closeEmulator() {
     }
     window.EJS_emulator = null;
     switchTab('games');
+}
+
+// 5. СЕКРЕТЫ И ЗАКАЗ ИГРЫ С TG POPUP И ДВУМЯ ТИПАМИ УВЕДОМЛЕНИЙ ДЛЯ АДМИНА
+function submitOrder() {
+    const gameName = document.getElementById("order-game-name").value.trim();
+    const platform = document.getElementById("order-platform").value;
+    if (!gameName) { alert("ВВЕДИТЕ НАЗВАНИЕ ИГРЫ!"); return; }
+    
+    const userId = tg.initDataUnsafe?.user?.id || "Локальный тест";
+    const username = tg.initDataUnsafe?.user?.username ? `@${tg.initDataUnsafe.user.username}` : "no_name";
+
+    // Шаг 1: Показываем лаконичное системное окно с кнопками Да / Отмена
+    tg.showPopup({
+        title: "ВНИМАНИЕ!",
+        message: "Добавление новой игры платное и стоит 100 рублей за заказ. Вас это устраивает?",
+        buttons: [
+            { id: "yes", type: "default", text: "ДА" },
+            { id: "no", type: "destructive", text: "ОТМЕНА" }
+        ]
+    }, (buttonId) => {
+        if (buttonId === "yes") {
+            // Если нажал ДА — отправляем боевую заявку админу в бэкенд
+            const orderData = { 
+                action: "create_order", 
+                status: "paid_intent",
+                user_id: userId, 
+                username: username, 
+                game_name: gameName, 
+                platform: platform 
+            };
+            
+            fetch(API_URL, { method: "POST", mode: "no-cors", headers: { "Content-Type": "application/json" }, body: JSON.stringify(orderData) });
+            
+            // Выводим реквизиты
+            tg.showAlert(`ОТЛИЧНО!\n\nДля активации заказа переведите 100 руб. по реквизитам:\n\n📞 Тел: 89132971262\n👤 Денис Владимирович Ф.\n🏦 Альфа банк\n\nЗаявка отправлена администратору!`);
+            document.getElementById("order-game-name").value = "";
+            
+        } else {
+            // Если нажал ОТМЕНА — шлем админу данные о "редиске", который отказался платить
+            const cancelData = { 
+                action: "create_order", 
+                status: "cancelled_by_user",
+                user_id: userId, 
+                username: username, 
+                game_name: gameName, 
+                platform: platform 
+            };
+            
+            fetch(API_URL, { method: "POST", mode: "no-cors", headers: { "Content-Type": "application/json" }, body: JSON.stringify(cancelData) });
+            
+            // Просто тихо очищаем поле, форма закрывается
+            document.getElementById("order-game-name").value = "";
+        }
+    });
 }
 
 function filterAndRenderSecrets() {
@@ -264,25 +280,6 @@ function renderSecretsPage() {
         state.secretsPage = newPage;
         renderSecretsPage();
     });
-}
-
-// ЗАКАЗ ИГРЫ С ТОЧНЫМИ РЕКВИЗИТАМИ В ОПОВЕЩЕНИИ
-function submitOrder() {
-    const gameName = document.getElementById("order-game-name").value.trim();
-    const platform = document.getElementById("order-platform").value;
-    if (!gameName) { alert("ВВЕДИТЕ НАЗВАНИЕ ИГРЫ!"); return; }
-    
-    const userId = tg.initDataUnsafe?.user?.id || "Локальный тест";
-    const username = tg.initDataUnsafe?.user?.username ? `@${tg.initDataUnsafe.user.username}` : "no_name";
-    
-    const orderData = { action: "create_order", user_id: userId, username: username, game_name: gameName, platform: platform };
-    
-    fetch(API_URL, { method: "POST", mode: "no-cors", headers: { "Content-Type": "application/json" }, body: JSON.stringify(orderData) })
-        .then(() => {
-            // Твои реквизиты добавлены прямо в финальное окно заказа!
-            alert(`ЗАЯВКА СФОРМИРОВАНА!\n\nДля активации игры выполните перевод 100 руб. по реквизитам:\n\n📞 Тел: 89132971262\n👤 Денис Владимирович Ф.\n🏦 Альфа банк\n\nПосле проверки игра появится в боте!`);
-            document.getElementById("order-game-name").value = "";
-        }).catch(() => alert("Ошибка связи с сервером."));
 }
 
 function renderPagination(containerId, totalPages, currentPage, callback) {
