@@ -109,7 +109,6 @@ function renderGamesPage() {
             <div class="fav-star-btn ${isFav ? 'active' : ''}">⭐</div>
         `;
         
-        // МГНОВЕННЫЙ ЗАПУСК ИГРЫ В ОДИН КЛИК БЕЗ ПРОМЕЖУТОЧНЫХ МЕНЮ
         item.querySelector('.game-click-zone').onclick = () => startEmulator(game);
         item.querySelector('.fav-star-btn').onclick = (e) => toggleFavorite(game.id, e);
         
@@ -123,7 +122,7 @@ function renderGamesPage() {
     });
 }
 
-// 4. ИНИЦИАЛИЗАЦИЯ ЭМУЛЯТОРА
+// 4. ИНИЦИАЛИЗАЦИЯ ЭМУЛЯТОРА (ЛИШНЯЯ СКОБКА УБРАНА)
 function startEmulator(game) {
     state.selectedGame = game;
     document.getElementById("back-to-catalog").classList.remove("hidden");
@@ -139,18 +138,18 @@ function startEmulator(game) {
     container.appendChild(emuDiv);
 
     const platformMap = {
-    'NES': 'nes',                  // Генерирует fceumm-wasm.data (он у тебя есть)
-    'SNES': 'snes9x',              // Переключаем на snes9x-wasm.data (у тебя есть)
-    'SEGA': 'genesis_plus_gx',     // Для обычной Сеги используем genesis_plus_gx-wasm.data
-    '32X': 'picodrive',            // ВАЖНО: 32X запускаем через picodrive-wasm.data
-    'SMS': 'smsplus',              // Master System запускаем через smsplus-wasm.data
-    'TG16': 'mednafen_pce',        // PC Engine запускаем через mednafen_pce-wasm.data
-    'GB': 'gambatte',              // Game Boy запускаем через gambatte-wasm.data
-    'GBC': 'gambatte',             // Game Boy Color тоже отлично идет через gambatte-wasm.data
-    'GBA': 'mgba',                 // Game Boy Advance используем mgba-wasm.data
-    'ZX': 'fuse'                   // ZX Spectrum запускаем через fuse-wasm.data
-};
+        'NES': 'nes',                  
+        'SNES': 'snes9x',              
+        'SEGA': 'genesis_plus_gx',     
+        '32X': 'picodrive',            
+        'SMS': 'smsplus',              
+        'TG16': 'mednafen_pce',        
+        'GB': 'gambatte',              
+        'GBC': 'gambatte',             
+        'GBA': 'mgba',                 
+        'ZX': 'fuse'                   
     };
+    
     const systemCode = platformMap[game.platform.toUpperCase()] || 'nes';
 
     window.EJS_player = '#game-player';
@@ -198,7 +197,7 @@ function closeEmulator() {
     switchTab('games');
 }
 
-// 5. СЕКРЕТЫ И ЗАКАЗ ИГРЫ С TG POPUP И ДВУМЯ ТИПАМИ УВЕДОМЛЕНИЙ ДЛЯ АДМИНА
+// 5. СЕКРЕТЫ И ЗАКАЗ ИГРЫ
 function submitOrder() {
     const gameName = document.getElementById("order-game-name").value.trim();
     const platform = document.getElementById("order-platform").value;
@@ -207,7 +206,6 @@ function submitOrder() {
     const userId = tg.initDataUnsafe?.user?.id || "Локальный тест";
     const username = tg.initDataUnsafe?.user?.username ? `@${tg.initDataUnsafe.user.username}` : "no_name";
 
-    // Шаг 1: Показываем лаконичное системное окно с кнопками Да / Отмена
     tg.showPopup({
         title: "ВНИМАНИЕ!",
         message: "Добавление новой игры платное и стоит 100 рублей за заказ. Вас это устраивает?",
@@ -217,7 +215,6 @@ function submitOrder() {
         ]
     }, (buttonId) => {
         if (buttonId === "yes") {
-            // Если нажал ДА — отправляем боевую заявку админу в бэкенд
             const orderData = { 
                 action: "create_order", 
                 status: "paid_intent",
@@ -229,12 +226,10 @@ function submitOrder() {
             
             fetch(API_URL, { method: "POST", mode: "no-cors", headers: { "Content-Type": "application/json" }, body: JSON.stringify(orderData) });
             
-            // Выводим реквизиты
             tg.showAlert(`ОТЛИЧНО!\n\nДля активации заказа переведите 100 руб. по реквизитам:\n\n📞 Тел: 89132971262\n👤 Денис Владимирович Ф.\n🏦 Альфа банк\n\nЗаявка отправлена администратору!`);
             document.getElementById("order-game-name").value = "";
             
         } else {
-            // Если нажал ОТМЕНА — шлем админу данные о "редиске", который отказался платить
             const cancelData = { 
                 action: "create_order", 
                 status: "cancelled_by_user",
@@ -246,7 +241,6 @@ function submitOrder() {
             
             fetch(API_URL, { method: "POST", mode: "no-cors", headers: { "Content-Type": "application/json" }, body: JSON.stringify(cancelData) });
             
-            // Просто тихо очищаем поле, форма закрывается
             document.getElementById("order-game-name").value = "";
         }
     });
