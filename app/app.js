@@ -122,7 +122,7 @@ function renderGamesPage() {
     });
 }
 
-// 4. ИНИЦИАЛИЗАЦИЯ ЭМУЛЯТОРА С ИСПРАВЛЕНИЕМ ГЕЙМПАДОВ И ZX SPECTRUM
+// 4. ИНИЦИАЛИЗАЦИЯ ЭМУЛЯТОРА — ФИНАЛЬНАЯ СБОРКА И КОНТРОЛЛЕРЫ
 function startEmulator(game) {
     state.selectedGame = game;
     document.getElementById("back-to-catalog").classList.remove("hidden");
@@ -137,18 +137,18 @@ function startEmulator(game) {
     emuDiv.style.width = "100%"; emuDiv.style.height = "100%";
     container.appendChild(emuDiv);
 
-    // Официальные системные имена для правильной отрисовки геймпадов и кнопки START!
+    // Карта платформ строго по стандартам лоадера (для вывода кнопок START и SELECT)
     const platformMap = {
         'NES': 'nes',                  
         'SNES': 'snes9x',              
         'SEGA': 'genesis_plus_gx',     
-        '32X': 'sega32X',            // Вернет родной геймпад 32X с кнопкой START
-        'SMS': 'segaMS',             // Вернет родной геймпад SMS с кнопкой START
+        '32X': 'sega32X',            // Родное имя ядра: вернет полноценный геймпад
+        'SMS': 'segaMS',             // Родное имя ядра: вернет полноценный геймпад
         'TG16': 'pcEngine',        
         'GB': 'gambatte',              
         'GBC': 'gambatte',             
         'GBA': 'mgba',                 
-        'ZX': 'zxSpectrum'           // Загрузит правильный интерфейс клавиатуры Спектрума
+        'ZX': 'zxSpectrum'           
     };
     
     const systemCode = platformMap[game.platform.toUpperCase()] || 'nes';
@@ -161,16 +161,11 @@ function startEmulator(game) {
     window.EJS_language = 'ru';
     window.EJS_gameName = game.title.replace(/ /g, '_');
 
-    // ХИТРЫЙ МОСТ ДЛЯ ТВОИХ ФАЙЛОВ НА ГИТХАБЕ:
-    // Если эмулятор ищет файлы, мы явно указываем имена из твоей папки!
-    if (game.platform.toUpperCase() === '32X') {
-        window.EJS_coreName = 'picodrive'; // Ищет picodrive.js вместо sega32X.js
-    } else if (game.platform.toUpperCase() === 'SMS') {
-        window.EJS_coreName = 'smsplus';   // Ищет smsplus.js вместо segaMS.js
-    } else if (game.platform.toUpperCase() === 'TG16') {
-        window.EJS_coreName = 'mednafen_pce'; // Ищет mednafen_pce.js
+    // Оставляем мост только для тех систем, чьи управляющие JS-скрипты имеют уникальные имена
+    if (game.platform.toUpperCase() === 'TG16') {
+        window.EJS_coreName = 'mednafen_pce';
     } else if (game.platform.toUpperCase() === 'ZX') {
-        window.EJS_coreName = 'fuse';      // Ищет fuse.js
+        window.EJS_coreName = 'fuse'; // Направляем лоадер на файлы fuse, что на твоем скриншоте
     }
 
     window.EJS_startOnLoaded = true;
