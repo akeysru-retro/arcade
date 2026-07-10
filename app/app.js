@@ -11,7 +11,7 @@ let state = {
     currentTab: 'games',
     gamesPage: 1,
     secretsPage: 1,
-    itemsPerPage: 5, // Пагинация по 5 элементов 1 в 1
+    itemsPerPage: 5,
     showOnlyFavorites: false,
     selectedGame: null,
     isSoundOn: true
@@ -31,7 +31,6 @@ function loadDataFromGoogle() {
             state.games = data.games || [];
             state.secrets = data.secrets || [];
             
-            // Сортировка по алфавиту
             state.games.sort((a, b) => a.title.toLowerCase().localeCompare(b.title.toLowerCase(), 'ru'));
             state.filteredGames = [...state.games];
             
@@ -41,7 +40,6 @@ function loadDataFromGoogle() {
         .catch(err => console.error("Ошибка сети:", err));
 }
 
-// 2. СИСТЕМА ИГР И ИЗБРАННОГО (1 в 1)
 function isGameFavorite(gameId) {
     const favs = JSON.parse(localStorage.getItem('retro_favs') || "[]");
     return favs.includes(gameId);
@@ -124,29 +122,16 @@ function renderGamesPage() {
     });
 }
 
-// 3. МЕНЮ ВЫБОР ЗАПУСКА С УПРАВЛЕНИЕМ СЕЙВАМИ (KEEP IN BROWSER ПО УМОЛЧАНИЮ)
 function openSavesManagerScreen(game) {
     state.selectedGame = game;
-    
-    // Скрываем списки каталога
     document.getElementById('tab-games').classList.remove('active');
-    document.getElementById('section-saves-manager').parentElement.classList.add('active');
+    document.getElementById('tab-saves').classList.add('active');
     document.getElementById('saves-manager-title').textContent = game.title.toUpperCase();
-    
-    // Проверяем наличие флага запуска сейва в LocalStorage устройства
-    const btnLoadLast = document.getElementById('btn-load-last');
-    const hasSave = localStorage.getItem(`save_initiated_${game.id}`);
-    
-    if (hasSave) {
-        btnLoadLast.removeAttribute('disabled');
-        btnLoadLast.style.background = "#0064ff"; btnLoadLast.style.color = "#fff";
-        btnLoadLast.textContent = "💾 ЗАГРУЗИТЬ ПОСЛЕДНЕЕ СОХРАНЕНИЕ";
-    } else {
-        // Для Сеги/GBA кнопка всегда активна, так как эмулятор сам проверит IndexedDB под капотом
-        btnLoadLast.removeAttribute('disabled');
-        btnLoadLast.style.background = "#0064ff"; btnLoadLast.style.color = "#fff";
-        btnLoadLast.textContent = "💾 ЗАГРУЗИТЬ ПОСЛЕДНЕЕ СОХРАНЕНИЕ";
-    }
+}
+
+function cancelLaunch() {
+    document.getElementById('tab-saves').classList.remove('active');
+    document.getElementById('tab-games').classList.add('active');
 }
 
 function launchGame(loadFromSave) {
@@ -154,9 +139,9 @@ function launchGame(loadFromSave) {
     startEmulator(state.selectedGame, loadFromSave);
 }
 
-// 4. ПРЯМОЙ СТАРТ ЭМУЛЯТОРА С ПЕРЕДАЧЕЙ ПАРАМЕТРОВ КОНКУРЕНТА
+// 4. ИНИЦИАЛИЗАЦИЯ ЭМУЛЯТОРА С ИСПРАВЛЕННЫМ РЕГИСТРОМ НАСТРОЕК
 function startEmulator(game, loadFromSave) {
-    // Показываем кнопки управления на верхней панели
+    // Делаем кнопки шапки видимыми
     document.getElementById("back-to-catalog").classList.remove("hidden");
     document.getElementById("header-save").classList.remove("hidden");
     document.getElementById("emulator-layer").style.display = "block";
@@ -175,7 +160,7 @@ function startEmulator(game, loadFromSave) {
     };
     const systemCode = platformMap[game.platform.toUpperCase()] || 'nes';
 
-    // Внедряем те самые параметры автосохранения по умолчанию (keep in browser)
+    // ВЫРАВНИВАНИЕ НАСТРОЕК СОХРАНЕНИЙ (Регистр букв исправлен)
     window.EJS_player = '#game-player';
     window.EJS_biosUrl = '';
     window.EJS_gameUrl = game.rom_url;
@@ -184,22 +169,18 @@ function startEmulator(game, loadFromSave) {
     window.EJS_language = 'ru';
     window.EJS_gameName = game.title.replace(/ /g, '_');
 
-    // КЛЮЧЕВОЙ МОМЕНТ ХОТФИКСА СЕЙВОВ
+    // Настройки для IndexedDB ("keep in browser") по стандарту
     window.EJS_DefaultSaveMode = 'browser'; 
     window.EJS_autosave = true;             
     window.EJS_ForceLocalSave = true;       
 
     window.EJS_startOnLoaded = true;
     window.EJS_volume = state.isSoundOn ? 1 : 0;
+    window.EJS_Volume = state.isSoundOn ? 1 : 0; // Запасной дубликат для старых ядер
 
     if (!loadFromSave) {
-        // Чистый старт, если выбрана кнопка "С начала"
         window.EJS_startOnLoaded = true;
     }
-
-    window.EJS_onGameStart = function() {
-        localStorage.setItem(`save_initiated_${game.id}`, "true");
-    };
 
     const oldLoader = document.getElementById("emu-loader-script");
     if (oldLoader) oldLoader.remove();
@@ -214,7 +195,6 @@ function saveGameState() {
     if (window.EJS_emulator && typeof window.EJS_emulator.quickSave === "function") {
         window.EJS_emulator.quickSave();
         alert("ИГРА УСПЕШНО СОХРАНЕНА НА УСТРОЙСТВО! 💾");
-        if (state.selectedGame) localStorage.setItem(`save_initiated_${state.selectedGame.id}`, "true");
     } else {
         alert("Подожди полной загрузки игры...");
     }
@@ -232,6 +212,7 @@ function toggleEmuSound() {
     if (bgVideo) bgVideo.muted = !state.isSoundOn;
 }
 
+// ФУНКЦИЯ КНОПКИ НАЗАД: Выгружает эмулятор и возвращает в меню
 function closeEmulator() {
     document.getElementById("emulator-layer").style.display = "none";
     document.getElementById("back-to-catalog").classList.add("hidden");
@@ -246,7 +227,6 @@ function closeEmulator() {
     switchTab('games');
 }
 
-// 5. СЕКРЕТЫ И ЗАКАЗ
 function filterAndRenderSecrets() {
     const query = document.getElementById('search-secret-input').value.toLowerCase().trim();
     state.filteredSecrets = state.secrets.filter(sec => 
@@ -286,9 +266,10 @@ function renderSecretsPage() {
     });
 }
 
+// ЗАКАЗ ИГРЫ С ТОЧНЫМИ РЕКВИЗИТАМИ В ОПОВЕЩЕНИИ
 function submitOrder() {
     const gameName = document.getElementById("order-game-name").value.trim();
-    const platform = document.getElementById("order-platform").value.trim();
+    const platform = document.getElementById("order-platform").value;
     if (!gameName) { alert("ВВЕДИТЕ НАЗВАНИЕ ИГРЫ!"); return; }
     
     const userId = tg.initDataUnsafe?.user?.id || "Локальный тест";
@@ -298,13 +279,12 @@ function submitOrder() {
     
     fetch(API_URL, { method: "POST", mode: "no-cors", headers: { "Content-Type": "application/json" }, body: JSON.stringify(orderData) })
         .then(() => {
-            alert("ЗАЯВКА ОТПРАВЛЕНА!\n\nРеквизиты отправлены администратору.");
+            // Твои реквизиты добавлены прямо в финальное окно заказа!
+            alert(`ЗАЯВКА СФОРМИРОВАНА!\n\nДля активации игры выполните перевод 100 руб. по реквизитам:\n\n📞 Тел: 89132971262\n👤 Денис Владимирович Ф.\n🏦 Альфа банк\n\nПосле проверки игра появится в боте!`);
             document.getElementById("order-game-name").value = "";
-            document.getElementById("order-platform").value = "";
-        }).catch(() => alert("Ошибка связи."));
+        }).catch(() => alert("Ошибка связи с сервером."));
 }
 
-// ОБЩАЯ ПАГИНАЦИЯ (1 в 1)
 function renderPagination(containerId, totalPages, currentPage, callback) {
     const container = document.getElementById(containerId);
     container.innerHTML = "";

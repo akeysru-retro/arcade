@@ -15,10 +15,11 @@
         }
         body { display: flex; flex-direction: column; align-items: center; justify-content: flex-start; }
         
+        /* Поднимаем панель на самый верх, чтобы кнопки были кликабельны поверх эмулятора */
         .header-panel {
             display: flex; width: 100%; max-width: 400px; justify-content: space-between; align-items: center;
             padding: 8px 15px; box-sizing: border-box; background: #000; border-bottom: 2px solid #333; 
-            position: fixed; top: 0; left: 0; right: 0; height: 44px; z-index: 200000 !important;
+            position: fixed; top: 0; left: 0; right: 0; height: 44px; z-index: 999999 !important;
         }
         .head-btn {
             background: #222; border: 2px solid #555; color: #fff;
@@ -68,6 +69,7 @@
         }
         .fav-filter-toggle.active { border-color: #ffcc00; color: #ffcc00; background: #221c00; }
 
+        .games-pagination-container { display: flex; width: 100%; }
         .pagination-container {
             display: flex; justify-content: space-between; align-items: center;
             width: 100%; padding: 20px 25px 10px 25px; box-sizing: border-box;
@@ -104,10 +106,15 @@
             font-family: 'Press Start 2P', monospace; font-size: 9px; border-radius: 4px;
         }
         .form-input:focus { border-color: #00ff00; outline: none; }
-        .order-submit-btn {
-            width: 100%; background: #0064ff; border: 3px solid #0040aa; color: #fff;
-            font-family: 'Press Start 2P', monospace; font-size: 10px; padding: 12px;
-            cursor: pointer; border-radius: 4px; margin-top: 10px;
+        
+        /* Стилизация выпадающего списка */
+        select.form-input {
+            appearance: none;
+            -webkit-appearance: none;
+            background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='10' height='10' fill='%23ffff00'><polygon points='0,0 10,0 5,5'/></svg>");
+            background-repeat: no-repeat;
+            background-position: right 10px center;
+            padding-right: 30px;
         }
 
         .tab-bar {
@@ -123,13 +130,15 @@
         .tab-item.active { color: #ffff00; background: #1a1a1a; }
         .tab-icon { font-size: 14px; }
 
-        #emulator-layer { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: #000; z-index: 500000; padding-top: 44px; box-sizing: border-box; }
+        /* Изолируем слой эмулятора чуть ниже панели шапки */
+        #emulator-layer { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: #000; z-index: 50000; padding-top: 44px; box-sizing: border-box; }
         #emulator-container { width: 100%; height: 100%; background: #000; }
     </style>
 </head>
 <body>
 
     <div class="header-panel">
+        <!-- КНОПКА НАЗАД ДЛЯ ВЫХОДА В МЕНЮ -->
         <button id="back-to-catalog" class="head-btn hidden" onclick="closeEmulator()">↩ МЕНЮ</button>
         <button id="header-save" class="head-btn hidden" onclick="saveGameState()">💾 СОХРАНИТЬ</button>
         <div id="main-title" style="font-size: 8px; letter-spacing: 1px;">9999 IN 1</div>
@@ -152,12 +161,13 @@
             <div class="pagination-container" id="games-pagination"></div>
         </div>
 
-        <!-- МЕНЮ ЗАПУСКА ИЗБРАННОЙ ИГРЫ (ОФОРМЛЕНИЕ 1 в 1) -->
+        <!-- МЕНЮ ЗАПУСКА -->
         <div id="tab-saves" class="tab-content">
             <div class="menu-title" id="saves-manager-title">ЗАГРУЗКА...</div>
             <div id="section-saves-manager">
                 <button class="btn-launch-new" onclick="launchGame(false)">▶ ИГРАТЬ С НАЧАЛА</button>
                 <button class="btn-launch-new" id="btn-load-last" style="background: #0064ff; border-color: #0040aa;" onclick="launchGame(true)">💾 ЗАГРУЗИТЬ ПОСЛЕДНЕЕ СОХРАНЕНИЕ</button>
+                <button class="btn-launch-new" style="background: #333; border-color: #555; margin-top: 15px;" onclick="cancelLaunch()">↩ ОТМЕНА</button>
             </div>
         </div>
 
@@ -171,7 +181,7 @@
             <div class="pagination-container" id="secrets-pagination"></div>
         </div>
 
-        <!-- ВКЛАДКА ЗАКАЗА -->
+        <!-- ВКЛАДКА ЗАКАЗА С ВЫПАДАЮЩИМ СПИСКОМ ПЛАТФОРМ -->
         <div id="tab-order" class="tab-content">
             <div class="menu-title">ЗАКАЗ ИГР</div>
             <div class="order-container">
@@ -182,7 +192,13 @@
                 </div>
                 <div class="form-group">
                     <label class="form-label">ПЛАТФОРМА (КОНСОЛЬ):</label>
-                    <input type="text" id="order-platform" class="form-input" placeholder="NES / SEGA / GBA">
+                    <!-- Заменили текстовое поле на выпадающий список (select) -->
+                    <select id="order-platform" class="form-input">
+                        <option value="NES (Dendy)">NES (Dendy)</option>
+                        <option value="SEGA Mega Drive">SEGA Mega Drive</option>
+                        <option value="SNES (Super Nintendo)">SNES (Super Nintendo)</option>
+                        <option value="Game Boy Advance">Game Boy Advance</option>
+                    </select>
                 </div>
                 <button class="order-submit-btn btn-launch-new" style="background: #0064ff; border-color: #0040aa;" onclick="submitOrder()">ОТПРАВИТЬ ЗАЯВКУ</button>
             </div>
@@ -202,7 +218,6 @@
         </div>
     </div>
 
-    <!-- ЭКРАН ЖИВОГО ЭМУЛЯТОРА -->
     <div id="emulator-layer">
         <div id="emulator-container"></div>
     </div>
