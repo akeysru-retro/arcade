@@ -139,8 +139,17 @@ function startEmulator(game) {
     container.appendChild(emuDiv);
 
     const platformMap = {
-        'NES': 'nes', 'SNES': 'snes', 'SEGA': 'segaMD', 'GBA': 'gba', 'GB': 'gb', 'GBC': 'gbc',
-        '32X': 'sega32X', 'SMS': 'segaMS', 'TG16': 'pcEngine', 'ZX': 'zxSpectrum'
+    'NES': 'nes',                  // Генерирует fceumm-wasm.data (он у тебя есть)
+    'SNES': 'snes9x',              // Переключаем на snes9x-wasm.data (у тебя есть)
+    'SEGA': 'genesis_plus_gx',     // Для обычной Сеги используем genesis_plus_gx-wasm.data
+    '32X': 'picodrive',            // ВАЖНО: 32X запускаем через picodrive-wasm.data
+    'SMS': 'smsplus',              // Master System запускаем через smsplus-wasm.data
+    'TG16': 'mednafen_pce',        // PC Engine запускаем через mednafen_pce-wasm.data
+    'GB': 'gambatte',              // Game Boy запускаем через gambatte-wasm.data
+    'GBC': 'gambatte',             // Game Boy Color тоже отлично идет через gambatte-wasm.data
+    'GBA': 'mgba',                 // Game Boy Advance используем mgba-wasm.data
+    'ZX': 'fuse'                   // ZX Spectrum запускаем через fuse-wasm.data
+};
     };
     const systemCode = platformMap[game.platform.toUpperCase()] || 'nes';
 
