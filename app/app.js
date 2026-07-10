@@ -137,14 +137,14 @@ function startEmulator(game) {
     emuDiv.style.width = "100%"; emuDiv.style.height = "100%";
     container.appendChild(emuDiv);
 
-    // Системные коды: picodrive и mednafen_pce, чтобы он качал твои файлы с GitHub
+    // Системные коды геймпадов: подменяем 32X на 'genesis_plus_gx' для возврата кнопки START!
     const platformMap = {
         'NES': 'nes',                  
         'SNES': 'snes9x',              
         'SEGA': 'genesis_plus_gx',     
-        '32X': 'picodrive',            
+        '32X': 'genesis_plus_gx',    // ХИТРОСТЬ: Включит родной сеговский джойстик со START вместо кнопок 1 и 2
         'SMS': 'smsplus',              
-        'TG16': 'mednafen_pce',        
+        'TG16': 'pcEngine',          
         'GB': 'gambatte',              
         'GBC': 'gambatte',             
         'GBA': 'mgba'
@@ -154,23 +154,24 @@ function startEmulator(game) {
 
     window.EJS_player = '#game-player';
     window.EJS_biosUrl = '';
-    window.EJS_gameUrl = game.rom_url; // Твоя ссылка на игру из Google Таблицы
+    window.EJS_gameUrl = game.rom_url;
     window.EJS_core = systemCode;
     window.EJS_pathtodata = './'; 
     window.EJS_language = 'ru';
     window.EJS_gameName = game.title.replace(/ /g, '_');
 
-    // ======= ЖЕСТКИЙ АВТОЗАПУСК ИГРЫ (УБИРАЕТ СЕРВИСНОЕ МЕНЮ) =======
+    // Настройки IndexedDB ("keep in browser") и автозапуска
     window.EJS_loadOnStart = true; 
-    // ===============================================================
-
-    // Настройки IndexedDB ("keep in browser")
     window.EJS_DefaultSaveMode = 'browser'; 
     window.EJS_autosave = true;             
     window.EJS_ForceLocalSave = true;       
-
     window.EJS_startOnLoaded = true;
     window.EJS_volume = state.isSoundOn ? 1 : 0;
+
+    // ПРИНУДИТЕЛЬНО ПЕРЕНАПРАВЛЯЕМ НА ТВОЙ ФАЙЛ sega32X НА ГИТХАБЕ
+    if (game.platform.toUpperCase() === '32X') {
+        window.EJS_coreName = 'sega32X'; // Заставит эмулятор взять именно 32X ядро, а не обычную Сегу
+    }
 
     const oldLoader = document.getElementById("emu-loader-script");
     if (oldLoader) oldLoader.remove();
