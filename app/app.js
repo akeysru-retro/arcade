@@ -203,6 +203,16 @@ function startEmulator(game) {
     window.EJS_biosUrl = '';
     window.EJS_gameUrl = game.rom_url; // Твоя ссылка на игру из Google Таблицы
     window.EJS_core = systemCode;
+	
+	// ======= ЖЕСТКИЙ ФИКС ДЖОЙСТИКА ДЛЯ SEGA 32X =======
+    // Если платформа 32X или обычная SEGA, принудительно включаем раскладку 'segaMD' (Mega Drive / 6-button)
+    if (game.platform.toUpperCase() === '32X' || game.platform.toUpperCase() === 'SEGA') {
+        window.EJS_system = 'segaMD'; 
+    } else {
+        window.EJS_system = systemCode; // Для остальных оставляем родной код (nes, snes, gba и т.д.)
+    }
+    // ===================================================
+	
     window.EJS_pathtodata = './'; 
     window.EJS_language = 'ru';
     window.EJS_gameName = game.title.replace(/ /g, '_');
