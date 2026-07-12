@@ -197,41 +197,43 @@ function startEmulator(game) {
         'GBA': 'mgba'
     };
     
-    const systemCode = platformMap[game.platform.toUpperCase()] || 'nes';
+   const systemCode = platformMap[game.platform.toUpperCase()] || 'nes';
 
     window.EJS_player = '#game-player';
     window.EJS_biosUrl = '';
-    window.EJS_gameUrl = game.rom_url; // Твоя ссылка на игру из Google Таблицы
-    window.EJS_core = systemCode;
-	
-	// ======= НАДЕЖНЫЙ ПЕРЕКЛЮЧАТЕЛЬ ДЖОЙСТИКА SEGA / 32X =======
-    const currentPlatform = game.platform.toUpperCase();
-    if (currentPlatform === '32X' || currentPlatform === 'SEGA') {
-        // Прописываем официальный внутренний идентификатор Sega Mega Drive для EmulatorJS
-        window.EJS_system = 'sega'; 
-    } else {
-        window.EJS_system = systemCode; 
-    }
+    window.EJS_gameUrl = game.rom_url; 
     
-    // Выводим в лог для отладки, если тестируешь через ПК или инспектор
-    console.log(`Запуск игры: ${game.title} | Платформа: ${currentPlatform} | Core: ${window.EJS_core} | System Pad: ${window.EJS_system}`);
-    // ===========================================================
-	
+    // ======= ФИКС ДЖОЙСТИКА ЧЕРЕЗ КОРРЕКТИРОВКУ CORE =======
+    const currentPlatform = game.platform.toUpperCase();
+    if (currentPlatform === '32X') {
+        // Заставляем loader.js думать, что это обычная Sega, ради 6-кнопочного джойстика
+        window.EJS_core = 'sega'; 
+    } else {
+        window.EJS_core = systemCode;
+    }
+    // =======================================================
+
     window.EJS_pathtodata = './'; 
     window.EJS_language = 'ru';
     window.EJS_gameName = game.title.replace(/ /g, '_');
 
-    // ======= ЖЕСТКИЙ АВТОЗАПУСК ИГРЫ (УБИРАЕТ СЕРВИСНОЕ МЕНЮ) =======
     window.EJS_loadOnStart = true; 
-    // ===============================================================
-
-    // Настройки IndexedDB ("keep in browser")
     window.EJS_DefaultSaveMode = 'browser'; 
     window.EJS_autosave = true;             
     window.EJS_ForceLocalSave = true;       
-
     window.EJS_startOnLoaded = true;
     window.EJS_volume = state.isSoundOn ? 1 : 0;
+
+    // ХАНТЕР-ХАК: Перехватываем инициализацию ядра прямо перед созданием инстанса эмулятора!
+    // Мы подменяем значение обратно на 'picodrive' в момент, когда loader.js уже отработал
+    if (currentPlatform === '32X') {
+        setTimeout(() => {
+            if (window.EJS_emulator && window.EJS_emulator.config) {
+                // Возвращаем родное ядро для запуска рома 32X
+                window.EJS_emulator.config.system = 'picodrive'; 
+            }
+        }, 50); // Микрозадержка, чтобы loader.js успел подгрузить CSS и структуру джойстика 'sega'
+    }
 
     const oldLoader = document.getElementById("emu-loader-script");
     if (oldLoader) oldLoader.remove();
@@ -240,7 +242,6 @@ function startEmulator(game) {
     script.src = "loader.js";
     script.id = "emu-loader-script";
     document.body.appendChild(script);
-}
 
 function toggleEmuSound() {
     state.isSoundOn = !state.isSoundOn;
