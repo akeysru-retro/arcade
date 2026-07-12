@@ -1,24 +1,38 @@
 const API_URL = "https://script.google.com/macros/s/AKfycby95eSWi6EYQPY7sMzNIjpV0X-CXqV8E8Ouhho21TIC2J5GFuT9KxkshrXY9ZdkBUWNdQ/exec";
-
 const tg = window.Telegram.WebApp;
 tg.expand();
+
+// ЕДИНЫЙ ОБРАБОТЧИК ДЛЯ СТАРТА ПРИЛОЖЕНИЯ
 document.addEventListener("DOMContentLoaded", () => {
-    loadDataFromGoogle(); // Загрузка данных в фоне
+    loadDataFromGoogle();  // Загрузка игр в фоне
     setupEventListeners(); // Настройка поиска
-    
-    // Запускаем интро
+
     const introVideo = document.getElementById('intro-video');
+    const introLayer = document.getElementById('intro-layer');
+
     if (introVideo) {
-        // Запускаем со звуком. Если браузер/Telegram блокирует автоплей со звуком, 
-        // видео дождется первого тапа пользователя по экрану.
-        introVideo.play().catch(() => {
-            console.log("Автоплей заблокирован, ждем тапа...");
+        // Включаем muted, чтобы Telegram гарантированно разрешил автозапуск видео
+        introVideo.muted = true; 
+        
+        introVideo.play().catch((err) => {
+            console.log("Автоплей заблокирован, убираем интро:", err);
+            endIntro(); // Если совсем всё плохо с видео — сразу пускаем в меню
         });
 
-        // Когда видео полностью доиграет — автоматически убираем интро
+        // Подстраховка: если юзер тапнет по экрану интро — включаем звук!
+        if (introLayer) {
+            introLayer.onclick = () => {
+                introVideo.muted = false;
+            };
+        }
+
+        // Когда интро доиграет — автоматически переходим в меню
         introVideo.onended = () => {
             endIntro();
         };
+    } else {
+        // Если интро вообще нет в DOM — сразу открываем меню
+        endIntro();
     }
 });
 
@@ -28,19 +42,18 @@ function endIntro() {
     const introVideo = document.getElementById("intro-video");
     
     if (introVideo) {
-        introVideo.pause(); // Останавливаем интро, если нажали "Пропустить"
+        introVideo.pause(); 
     }
     
     if (introLayer) {
-        // Плавно или сразу скрываем интро
         introLayer.style.display = "none";
     }
 
-    // Включаем тихое зацикленное фоновое видео главного меню
+    // Запускаем фоновое зацикленное видео каталога игр
     const menuBgVideo = document.getElementById('bg-video');
     if (menuBgVideo) { 
-        menuBgVideo.muted = true; //
-        menuBgVideo.play().catch(() => {}); //
+        menuBgVideo.muted = true; 
+        menuBgVideo.play().catch(() => {}); 
     }
 }
 
@@ -57,13 +70,6 @@ let state = {
     selectedGame: null,
     isSoundOn: true
 };
-
-document.addEventListener("DOMContentLoaded", () => {
-    loadDataFromGoogle();
-    setupEventListeners();
-    var videoEl = document.getElementById('bg-video');
-    if(videoEl) { videoEl.muted = true; videoEl.play().catch(() => {}); }
-});
 
 function loadDataFromGoogle() {
     fetch(`${API_URL}?action=get_data`)
