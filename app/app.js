@@ -199,48 +199,70 @@ function closeEmulator() {
     document.getElementById("back-to-catalog").classList.add("hidden");
     document.getElementById("app-tab-bar").style.display = "flex";
     
-    // 2. Жестко глушим звук через Web Audio API, если эмулятор оставил аудио-контексты активными
+    // 2. ЖЕСТКИЙ СБРОС АУДИО (Глушим всё, что успел создать EmulatorJS в браузере)
     try {
-        if (window.AudioContext || window.webkitAudioContext) {
-            const AudioCtx = window.AudioContext || window.webkitAudioContext;
-            // Находим все запущенные аудио-контексты на странице и закрываем их
-            if (window.EJS_emulator && window.EJS_emulator.audioContext) {
+        // Проверяем встроенный деструктор самого эмулятора
+        if (window.EJS_emulator) {
+            if (typeof window.EJS_emulator.stop === "function") window.EJS_emulator.stop();
+            if (typeof window.EJS_emulator.destroy === "function") window.EJS_emulator.destroy();
+            
+            // Если у эмулятора есть свой аудио-контекст, закрываем его
+            if (window.EJS_emulator.audioContext && typeof window.EJS_emulator.audioContext.close === "function") {
                 window.EJS_emulator.audioContext.close().catch(() => {});
             }
         }
+
+        // Глобальный поиск и уничтожение активных AudioContext на странице
+        const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+        if (AudioContextClass) {
+            // Манипуляция: если EmulatorJS сохранил контексты глобально, мы закрываем их
+            if (window.__ejsAudioContext && typeof window.__ejsAudioContext.close === "function") {
+                window.__ejsAudioContext.close().catch(() => {});
+                window.__ejsAudioContext = null;
+            }
+        }
     } catch (e) {
-        console.error("Не удалось закрыть AudioContext:", e);
+        console.error("Ошибка при очистке аудио-контекстов:", e);
     }
 
-    // 3. Вызываем встроенное уничтожение эмулятора, если оно доступно
-    if (window.EJS_emulator && typeof window.EJS_emulator.destroy === "function") {
-        try {
-            window.EJS_emulator.destroy();
-        } catch(e) {
-            console.error("Ошибка при вызове destroy():", e);
-        }
+    // 3. УДАЛЕНИЕ И ПЕРЕСОЗДАНИЕ КОНТЕЙНЕРА (Чтобы убить зависшие canvas/iframe потоки)
+    const oldContainer = document.getElementById("emulator-container");
+    if (oldContainer) {
+        const parent = oldContainer.parentNode;
+        // Полностью удаляем старый блок из DOM структуры
+        oldContainer.remove();
+        
+        // Создаем абсолютно новый, чистый контейнер с тем же ID
+        const newContainer = document.createElement("div");
+        newContainer.id = "emulator-container";
+        newContainer.style.width = "100%";
+        newContainer.style.height = "100%";
+        newContainer.style.background = "#000";
+        
+        // Вставляем его обратно в слой эмулятора
+        document.getElementById("emulator-layer").appendChild(newContainer);
     }
     
-    // 4. Полностью очищаем контейнер, вычищая все canvas и iframe элементы игры
-    const container = document.getElementById("emulator-container");
-    if (container) {
-        container.innerHTML = "";
-    }
-    
-    // 5. Сбрасываем глобальные переменные EmulatorJS, чтобы старая игра не кэшировалась в памяти лоадера
+    // 4. ПОЛНОЕ ОБНУЛЕНИЕ ПЕРЕМЕННЫХ RETROARCH / EMULATORJS
     window.EJS_emulator = null;
     window.EJS_player = null;
     window.EJS_gameUrl = null;
     window.EJS_core = null;
     
-    // 6. Возвращаем фоновое видео (если нужно включить его звук обратно при выходе)
+    // Очищаем и скрипт загрузчика, чтобы он инициализировался заново при следующем запуске
+    const oldLoader = document.getElementById("emu-loader-script");
+    if (oldLoader) oldLoader.remove();
+
+    // 5. ВОЗВРАЩАЕМ ФОНОВОЕ ВИДЕО КАТАЛОГА
     const bgVideo = document.getElementById("bg-video");
-    if (bgVideo && state.isSoundOn) {
-        bgVideo.muted = false;
+    if (bgVideo) {
+        if (state.isSoundOn) {
+            bgVideo.muted = false;
+        }
         bgVideo.play().catch(() => {});
     }
 
-    // Переключаемся обратно на вкладку игр
+    // Переключаем вкладку на игры
     switchTab('games');
 }
 
