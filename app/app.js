@@ -204,14 +204,18 @@ function startEmulator(game) {
     window.EJS_gameUrl = game.rom_url; // Твоя ссылка на игру из Google Таблицы
     window.EJS_core = systemCode;
 	
-	// ======= ЖЕСТКИЙ ФИКС ДЖОЙСТИКА ДЛЯ SEGA 32X =======
-    // Если платформа 32X или обычная SEGA, принудительно включаем раскладку 'segaMD' (Mega Drive / 6-button)
-    if (game.platform.toUpperCase() === '32X' || game.platform.toUpperCase() === 'SEGA') {
-        window.EJS_system = 'segaMD'; 
+	// ======= НАДЕЖНЫЙ ПЕРЕКЛЮЧАТЕЛЬ ДЖОЙСТИКА SEGA / 32X =======
+    const currentPlatform = game.platform.toUpperCase();
+    if (currentPlatform === '32X' || currentPlatform === 'SEGA') {
+        // Прописываем официальный внутренний идентификатор Sega Mega Drive для EmulatorJS
+        window.EJS_system = 'sega'; 
     } else {
-        window.EJS_system = systemCode; // Для остальных оставляем родной код (nes, snes, gba и т.д.)
+        window.EJS_system = systemCode; 
     }
-    // ===================================================
+    
+    // Выводим в лог для отладки, если тестируешь через ПК или инспектор
+    console.log(`Запуск игры: ${game.title} | Платформа: ${currentPlatform} | Core: ${window.EJS_core} | System Pad: ${window.EJS_system}`);
+    // ===========================================================
 	
     window.EJS_pathtodata = './'; 
     window.EJS_language = 'ru';
