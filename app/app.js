@@ -184,7 +184,7 @@ function startEmulator(game) {
     emuDiv.style.width = "100%"; emuDiv.style.height = "100%";
     container.appendChild(emuDiv);
 
-    // Системные коды: picodrive и mednafen_pce, чтобы он качал твои файлы с GitHub
+    // Базовый маппинг систем
     const platformMap = {
         'NES': 'nes',                  
         'SNES': 'snes9x',              
@@ -198,33 +198,32 @@ function startEmulator(game) {
     };
     
     const systemCode = platformMap[game.platform.toUpperCase()] || 'nes';
+    const currentPlatform = game.platform.toUpperCase();
 
     window.EJS_player = '#game-player';
     window.EJS_biosUrl = '';
     window.EJS_gameUrl = game.rom_url; 
-    window.EJS_core = systemCode; 
     window.EJS_pathtodata = './'; 
     window.EJS_language = 'ru';
     window.EJS_gameName = game.title.replace(/ /g, '_');
 
-    // ======= ТОЧНЫЙ МАНЕВР ДЛЯ 6-КНОПОЧНОЙ СЕГИ =======
-    const currentPlatform = game.platform.toUpperCase();
-    if (currentPlatform === '32X' || currentPlatform === 'SEGA') {
-        // Передаем правильные системные имена кнопок, которые ожидает увидеть emulator.min.js
-        window.EJS_Buttons = [
-            'a', 'b', 'c', 
-            'x', 'y', 'z', 
-            'start', 'mode',
-            'up', 'down', 'left', 'right'
-        ];
-        // Подсказываем схеме разметки, что нам нужна именно sega6 (6-кнопочная)
-        window.EJS_controlScheme = 'sega6'; 
+    // ======= МАНЕВР "ОБОРОТЕНЬ" ДЛЯ 32X =======
+    if (currentPlatform === '32X') {
+        // Мы принудительно заявляем, что запускаем обычную SEGA.
+        // Благодаря этому emulator.min.js БЕЗ ВАРИАНТОВ отрисует джойстик Мегадрайва (A,B,C,X,Y,Z)!
+        window.EJS_core = 'sega'; 
+        
+        // Но чтобы игра 32X запустилась, нам нужно передать правильное ядро picodrive.
+        // Мы делаем инъекцию прямо в объект путей EJS_paths, подменяя стандартное ядро сеги на ядро 32X!
+        window.EJS_paths = {
+            'sega': './cores/picodrive.js' // Укажи здесь точный путь к твоему файлу ядра picodrive, если он отличается
+        };
     } else {
-        // Сброс для остальных платформ
-        window.EJS_Buttons = null;
-        window.EJS_controlScheme = null;
+        // Для всех остальных консолей работаем в штатном режиме
+        window.EJS_core = systemCode;
+        window.EJS_paths = undefined;
     }
-    // =====================================================
+    // ==========================================
 
     window.EJS_loadOnStart = true; 
     window.EJS_DefaultSaveMode = 'browser'; 
@@ -240,18 +239,6 @@ function startEmulator(game) {
     script.src = "loader.js";
     script.id = "emu-loader-script";
     document.body.appendChild(script);
-}
-
-function toggleEmuSound() {
-    state.isSoundOn = !state.isSoundOn;
-    const soundBtn = document.getElementById("emu-sound-btn");
-    soundBtn.innerText = state.isSoundOn ? "🔊 ЗВУК" : "🔇 ЗВУК";
-    
-    if (window.EJS_emulator && typeof window.EJS_emulator.setVolume === "function") {
-        window.EJS_emulator.setVolume(state.isSoundOn ? 1 : 0);
-    }
-    const bgVideo = document.getElementById("bg-video");
-    if (bgVideo) bgVideo.muted = !state.isSoundOn;
 }
 
 function closeEmulator() {
