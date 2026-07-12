@@ -184,7 +184,6 @@ function startEmulator(game) {
     emuDiv.style.width = "100%"; emuDiv.style.height = "100%";
     container.appendChild(emuDiv);
 
-    // Маппинг систем под версию 4.2.3
     const platformMap = {
         'NES': 'nes',                  
         'SNES': 'snes9x',              
@@ -203,23 +202,61 @@ function startEmulator(game) {
     window.EJS_player = '#game-player';
     window.EJS_biosUrl = '';
     window.EJS_gameUrl = game.rom_url; 
-    window.EJS_core = systemCode; // Загружаем родное ядро (для 32X это picodrive)
+    window.EJS_core = systemCode; 
     window.EJS_pathtodata = './'; 
     window.EJS_language = 'ru';
     window.EJS_gameName = game.title.replace(/ /g, '_');
 
-    // ======= НАСТРОЙКА ДЖОЙСТИКА ДЛЯ EMULATORJS v4.2.3 =======
+    // ======= РУЧНАЯ СБОРКА РЕТРО-ДЖОЙСТИКА СЕГИ (A, B, C, X, Y, Z, START) =======
     if (currentPlatform === '32X' || currentPlatform === 'SEGA') {
-        // В ветке 4.x внутренний код 6-кнопочного геймпада Сеги называется 'md' (Mega Drive)
-        window.EJS_system = 'md'; 
-        // Дублируем в gamepad-нейминг для подстраховки интерфейса v4
-        window.EJS_gamePadName = 'md'; 
+        window.EJS_VirtualGamepadSettings = [
+            // --- КРЕСТОВИНА (D-PAD) СЛЕВА ---
+            {
+                type: "dpad",
+                location: "left",
+                left: "25%",
+                top: "50%",
+                joystickInput: false,
+                inputValues: [4, 5, 6, 7] // Вверх, Вниз, Влево, Вправо
+            },
+            // --- НИЖНИЙ РЯД КНОПОК: A, B, C ---
+            {
+                type: "button", text: "A", id: "sega_a", location: "right",
+                left: 20, top: 90, bold: true, fontSize: 24, input_value: 0
+            },
+            {
+                type: "button", text: "B", id: "sega_b", location: "right",
+                left: 70, top: 75, bold: true, fontSize: 24, input_value: 1
+            },
+            {
+                type: "button", text: "C", id: "sega_c", location: "right",
+                left: 120, top: 60, bold: true, fontSize: 24, input_value: 8
+            },
+            // --- ВЕРХНИЙ РЯД КНОПОК: X, Y, Z ---
+            {
+                type: "button", text: "X", id: "sega_x", location: "right",
+                left: 35, top: 30, bold: true, fontSize: 20, input_value: 2
+            },
+            {
+                type: "button", text: "Y", id: "sega_y", location: "right",
+                left: 85, top: 15, bold: true, fontSize: 20, input_value: 3
+            },
+            {
+                type: "button", text: "Z", id: "sega_z", location: "right",
+                left: 135, top: 0, bold: true, fontSize: 20, input_value: 9
+            },
+            // --- КНОПКА СТАРТ ПО ЦЕНТРУ ---
+            {
+                type: "button", text: "START", id: "sega_start", location: "center",
+                left: 30, fontSize: 12, block: true, input_value: 11
+            }
+        ];
     } else {
-        // Для остальных систем сбрасываем в дефолт
-        window.EJS_system = undefined;
-        window.EJS_gamePadName = undefined;
+        // Для остальных консолей (NES, SNES, GBA) убираем кастомную раскладку,
+        // чтобы они использовали свои стандартные красивые джойстики
+        window.EJS_VirtualGamepadSettings = undefined;
     }
-    // =========================================================
+    // ===========================================================================
 
     window.EJS_loadOnStart = true; 
     window.EJS_DefaultSaveMode = 'browser'; 
