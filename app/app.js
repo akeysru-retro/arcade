@@ -184,7 +184,7 @@ function startEmulator(game) {
     emuDiv.style.width = "100%"; emuDiv.style.height = "100%";
     container.appendChild(emuDiv);
 
-    // Базовый маппинг систем
+    // Маппинг систем под версию 4.2.3
     const platformMap = {
         'NES': 'nes',                  
         'SNES': 'snes9x',              
@@ -203,27 +203,23 @@ function startEmulator(game) {
     window.EJS_player = '#game-player';
     window.EJS_biosUrl = '';
     window.EJS_gameUrl = game.rom_url; 
+    window.EJS_core = systemCode; // Загружаем родное ядро (для 32X это picodrive)
     window.EJS_pathtodata = './'; 
     window.EJS_language = 'ru';
     window.EJS_gameName = game.title.replace(/ /g, '_');
 
-    // ======= МАНЕВР "ОБОРОТЕНЬ" ДЛЯ 32X =======
-    if (currentPlatform === '32X') {
-        // Мы принудительно заявляем, что запускаем обычную SEGA.
-        // Благодаря этому emulator.min.js БЕЗ ВАРИАНТОВ отрисует джойстик Мегадрайва (A,B,C,X,Y,Z)!
-        window.EJS_core = 'sega'; 
-        
-        // Но чтобы игра 32X запустилась, нам нужно передать правильное ядро picodrive.
-        // Мы делаем инъекцию прямо в объект путей EJS_paths, подменяя стандартное ядро сеги на ядро 32X!
-        window.EJS_paths = {
-            'sega': './cores/picodrive.js' // Укажи здесь точный путь к твоему файлу ядра picodrive, если он отличается
-        };
+    // ======= НАСТРОЙКА ДЖОЙСТИКА ДЛЯ EMULATORJS v4.2.3 =======
+    if (currentPlatform === '32X' || currentPlatform === 'SEGA') {
+        // В ветке 4.x внутренний код 6-кнопочного геймпада Сеги называется 'md' (Mega Drive)
+        window.EJS_system = 'md'; 
+        // Дублируем в gamepad-нейминг для подстраховки интерфейса v4
+        window.EJS_gamePadName = 'md'; 
     } else {
-        // Для всех остальных консолей работаем в штатном режиме
-        window.EJS_core = systemCode;
-        window.EJS_paths = undefined;
+        // Для остальных систем сбрасываем в дефолт
+        window.EJS_system = undefined;
+        window.EJS_gamePadName = undefined;
     }
-    // ==========================================
+    // =========================================================
 
     window.EJS_loadOnStart = true; 
     window.EJS_DefaultSaveMode = 'browser'; 
