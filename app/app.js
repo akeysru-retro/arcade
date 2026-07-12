@@ -2,6 +2,47 @@ const API_URL = "https://script.google.com/macros/s/AKfycby95eSWi6EYQPY7sMzNIjpV
 
 const tg = window.Telegram.WebApp;
 tg.expand();
+document.addEventListener("DOMContentLoaded", () => {
+    loadDataFromGoogle(); // Загрузка данных в фоне
+    setupEventListeners(); // Настройка поиска
+    
+    // Запускаем интро
+    const introVideo = document.getElementById('intro-video');
+    if (introVideo) {
+        // Запускаем со звуком. Если браузер/Telegram блокирует автоплей со звуком, 
+        // видео дождется первого тапа пользователя по экрану.
+        introVideo.play().catch(() => {
+            console.log("Автоплей заблокирован, ждем тапа...");
+        });
+
+        // Когда видео полностью доиграет — автоматически убираем интро
+        introVideo.onended = () => {
+            endIntro();
+        };
+    }
+});
+
+// Функция закрытия интро и включения фонового видео меню
+function endIntro() {
+    const introLayer = document.getElementById("intro-layer");
+    const introVideo = document.getElementById("intro-video");
+    
+    if (introVideo) {
+        introVideo.pause(); // Останавливаем интро, если нажали "Пропустить"
+    }
+    
+    if (introLayer) {
+        // Плавно или сразу скрываем интро
+        introLayer.style.display = "none";
+    }
+
+    // Включаем тихое зацикленное фоновое видео главного меню
+    const menuBgVideo = document.getElementById('bg-video');
+    if (menuBgVideo) { 
+        menuBgVideo.muted = true; //
+        menuBgVideo.play().catch(() => {}); //
+    }
+}
 
 let state = {
     games: [],

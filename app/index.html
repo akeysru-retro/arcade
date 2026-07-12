@@ -126,9 +126,49 @@
 
         #emulator-layer { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: #000; z-index: 50000; padding-top: 44px; box-sizing: border-box; }
         #emulator-container { width: 100%; height: 100%; background: #000; }
+		#intro-layer {
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background-color: #000;
+    z-index: 9999999 !important; /* Выше всех меню и шапок */
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+        }
+
+        #intro-video {
+        width: 100%;
+        height: auto;
+        max-height: 80vh;
+        object-fit: contain;
+        }
+
+        #skip-intro-btn {
+        position: absolute;
+        bottom: 30px;
+        background: rgba(17, 17, 17, 0.8);
+        border: 2px solid #555;
+        color: #888;
+        font-family: 'Press Start 2P', monospace;
+        font-size: 8px;
+        padding: 10px 15px;
+        cursor: pointer;
+        border-radius: 4px;
+        }
+        #skip-intro-btn:active {
+        color: #ffff00;
+        border-color: #ffff00;
+        }
     </style>
 </head>
 <body>
+    <div id="intro-layer">
+    <video id="intro-video" playsinline disablePictureInPicture controlslist="nodownload">
+        <source src="https://akeysru-retro.github.io/arcade/app/intro.mp4" type="video/mp4">
+    </video>
+    <button id="skip-intro-btn" onclick="endIntro()">[ ПРОПУСТИТЬ СТАРТ ]</button>
+</div>
 
     <div class="header-panel">
         <!-- Кнопка "Сохранить" полностью удалена из разметки -->
