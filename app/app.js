@@ -207,54 +207,54 @@ function startEmulator(game) {
     window.EJS_language = 'ru';
     window.EJS_gameName = game.title.replace(/ /g, '_');
 
-    // ======= ПОЛНЫЙ ФИКС БИНДОВ И ГРАНИЦ ДЖОЙСТИКА ДЛЯ SEGA / 32X =======
+    // ======= ИДЕАЛЬНЫЙ СЕТКА-МАППИНГ ДЛЯ SEGA / 32X (БЕЗ НАЛОЖЕНИЙ) =======
     if (currentPlatform === '32X' || currentPlatform === 'SEGA') {
-        // Указываем системе v4.2.3 использовать внутреннюю карту Sega Mega Drive
         window.EJS_system = 'segaMD'; 
 
         window.EJS_VirtualGamepadSettings = [
-            // --- КРЕСТОВИНА СЛЕВА (В процентах от экрана) ---
+            // --- КРЕСТОВИНА СЛЕВА ---
             {
-                type: "dpad",
-                location: "left",
-                left: "12%",
-                top: "55%",
-                joystickInput: false,
-                inputValues: [4, 5, 6, 7] // Вверх, Вниз, Влево, Вправо
+                type: "dpad", location: "left",
+                left: "10%", top: "50%",
+                joystickInput: false, inputValues: [4, 5, 6, 7]
             },
             
-            // --- НИЖНИЙ РЯД КНОПОК: A, B, C (Перевели в % от правого края, исправили input_value) ---
-            {
-                type: "button", text: "A", id: "sega_a", location: "right",
-                right: "75%", top: "70%", bold: true, fontSize: 20, input_value: 0
-            },
-            {
-                type: "button", text: "B", id: "sega_b", location: "right",
-                right: "50%", top: "60%", bold: true, fontSize: 20, input_value: 1
-            },
-            {
-                type: "button", text: "C", id: "sega_c", location: "right",
-                right: "25%", top: "50%", bold: true, fontSize: 20, input_value: 8
-            },
-            
-            // --- ВЕРХНИЙ РЯД КНОПОК: X, Y, Z (Сдвинули левее в %, исправили input_value) ---
+            // --- ВЕРХНИЙ РЯД КНОПОК (XYZ): Разнесены по горизонтали, top одинаковый ---
             {
                 type: "button", text: "X", id: "sega_x", location: "right",
-                right: "80%", top: "35%", bold: true, fontSize: 16, input_value: 2
+                right: "70%", top: "25%", bold: true, fontSize: 16, input_value: 4
             },
             {
                 type: "button", text: "Y", id: "sega_y", location: "right",
-                right: "55%", top: "25%", bold: true, fontSize: 16, input_value: 3
+                right: "42%", top: "25%", bold: true, fontSize: 16, input_value: 5
             },
             {
                 type: "button", text: "Z", id: "sega_z", location: "right",
-                right: "30%", top: "15%", bold: true, fontSize: 16, input_value: 9
+                right: "15%", top: "25%", bold: true, fontSize: 16, input_value: 6
             },
             
-            // --- КНОПКА СТАРТ ПО ЦЕНТРУ (input_value: 3 — оригинальный Старт Мегадрайва) ---
+            // --- НИЖНИЙ РЯД КНОПОК (ABC): Четко под верхним рядом ---
+            {
+                type: "button", text: "A", id: "sega_a", location: "right",
+                right: "70%", top: "60%", bold: true, fontSize: 20, input_value: 0
+            },
+            {
+                type: "button", text: "B", id: "sega_b", location: "right",
+                right: "42%", top: "60%", bold: true, fontSize: 20, input_value: 1
+            },
+            {
+                type: "button", text: "C", id: "sega_c", location: "right",
+                right: "15%", top: "60%", bold: true, fontSize: 20, input_value: 8
+            },
+            
+            // --- СЕРВИСНЫЕ КНОПКИ ПО ЦЕНТРУ (START и MODE/SELECT) ---
             {
                 type: "button", text: "START", id: "sega_start", location: "center",
-                left: "50%", top: "85%", fontSize: 12, block: true, input_value: 3
+                left: "60%", top: "85%", fontSize: 11, block: true, input_value: 3
+            },
+            {
+                type: "button", text: "MODE", id: "sega_mode", location: "center",
+                left: "20%", top: "85%", fontSize: 11, block: true, input_value: 2
             }
         ];
     } else {
