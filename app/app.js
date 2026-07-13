@@ -181,19 +181,24 @@ function startEmulator(game) {
 
     const currentPlatform = game.platform.toUpperCase();
 
-    // ЕСЛИ ЭТО СЕГА — ИСПОЛЬЗУЕМ ВЫДЕЛЕННУЮ ИЗОЛИРОВАННУЮ СТРУКТУРУ ПЛЕЕРА
+    // ======= ИЗОЛИРОВАННЫЙ ЗАПУСК ДЛЯ СЕМЕЙСТВА SEGA ЧЕРЕЗ PLAYER.HTML =======
     if (currentPlatform === 'SEGA' || currentPlatform === '32X' || currentPlatform === 'SMS') {
         const iframe = document.createElement("iframe");
-        // Запускаем изолированный HTML-плеер, передавая ему систему и ссылку на РОМ
-        iframe.src = `./player.html?system=sega&url=${encodeURIComponent(game.rom_url)}`;
+        
+        // Передаем параметры прямо в URL фрейма
+        // Для SEGA и 32X передаем core=sega, чтобы включить тот самый рабочий джойстик
+        let coreParam = 'sega';
+        if (currentPlatform === 'SMS') coreParam = 'sms';
+        
+        iframe.src = `./player.html?core=${coreParam}&url=${encodeURIComponent(game.rom_url)}&name=${encodeURIComponent(game.title)}`;
         iframe.style.width = "100%";
         iframe.style.height = "100%";
         iframe.style.border = "none";
-        iframe.id = "isolated-sega-core";
+        iframe.id = "isolated-emulator-frame";
         
         container.appendChild(iframe);
     } else {
-        // ДЛЯ ОСТАЛЬНЫХ (NES, GBA, SNES) ОСТАВЛЯЕМ СТАНДАРТНЫЙ ЛОАДЕР
+        // ======= СТАНДАРТНЫЙ ЗАПУСК ДЛЯ ОСТАЛЬНЫХ СИСТЕМ (NES, SNES, GBA) =======
         const emuDiv = document.createElement("div");
         emuDiv.id = "game-player";
         emuDiv.style.width = "100%"; emuDiv.style.height = "100%";
@@ -207,15 +212,22 @@ function startEmulator(game) {
             'GBA': 'mgba'
         };
         
+        const systemCode = platformMap[currentPlatform] || 'nes';
+
         window.EJS_player = '#game-player';
         window.EJS_biosUrl = '';
         window.EJS_gameUrl = game.rom_url; 
-        window.EJS_core = platformMap[currentPlatform] || 'nes'; 
+        window.EJS_core = systemCode; 
         window.EJS_pathtodata = './'; 
         window.EJS_language = 'ru';
         window.EJS_gameName = game.title.replace(/ /g, '_');
+
         window.EJS_loadOnStart = true; 
+        window.EJS_DefaultSaveMode = 'browser'; 
+        window.EJS_autosave = true;             
+        window.EJS_ForceLocalSave = true;       
         window.EJS_startOnLoaded = true;
+        window.EJS_volume = state.isSoundOn ? 1 : 0;
 
         const oldLoader = document.getElementById("emu-loader-script");
         if (oldLoader) oldLoader.remove();
