@@ -181,15 +181,14 @@ function startEmulator(game) {
 
     const currentPlatform = game.platform.toUpperCase();
 
-    // ======= ИЗОЛИРОВАННЫЙ ЗАПУСК ДЛЯ СЕМЕЙСТВА SEGA ЧЕРЕЗ PLAYER.HTML =======
-    if (currentPlatform === 'SEGA' || currentPlatform === '32X' || currentPlatform === 'SMS') {
+    // ======= ИЗОЛИРОВАННЫЙ КОРЫТНЫЙ ЗАПУСК ДЛЯ СЕМЕЙСТВА SEGA ЧЕРЕЗ IFRAME =======
+    if (currentPlatform === 'SEGA' || currentPlatform === 'SMS') {
         const iframe = document.createElement("iframe");
         
-        // Передаем параметры прямо в URL фрейма
-        // Для SEGA и 32X передаем core=sega, чтобы включить тот самый рабочий джойстик
-        let coreParam = 'sega';
-        if (currentPlatform === 'SMS') coreParam = 'sms';
+        // Определяем системный код для player.html
+        const coreParam = (currentPlatform === 'SMS') ? 'sms' : 'sega';
         
+        // Формируем ссылку на плеер с параметрами
         iframe.src = `./player.html?core=${coreParam}&url=${encodeURIComponent(game.rom_url)}&name=${encodeURIComponent(game.title)}`;
         iframe.style.width = "100%";
         iframe.style.height = "100%";
@@ -198,7 +197,7 @@ function startEmulator(game) {
         
         container.appendChild(iframe);
     } else {
-        // ======= СТАНДАРТНЫЙ ЗАПУСК ДЛЯ ОСТАЛЬНЫХ СИСТЕМ (NES, SNES, GBA) =======
+        // ======= СТАНДАРТНЫЙ ВНУТРЕННИЙ ЗАПУСК ДЛЯ НИНТЕНДО И ГЕЙМБОЕВ =======
         const emuDiv = document.createElement("div");
         emuDiv.id = "game-player";
         emuDiv.style.width = "100%"; emuDiv.style.height = "100%";
