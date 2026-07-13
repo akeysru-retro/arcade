@@ -184,11 +184,11 @@ function startEmulator(game) {
     emuDiv.style.width = "100%"; emuDiv.style.height = "100%";
     container.appendChild(emuDiv);
 
+    // Очищенный маппинг систем (32X полностью удален)
     const platformMap = {
         'NES': 'nes',                  
         'SNES': 'snes9x',              
-        'SEGA': 'genesis_plus_gx',     
-        '32X': 'picodrive',            
+        'SEGA': 'genesis_plus_gx', // Родное ядро Мегадрайва (100% дает идеальный встроенный джойстик)
         'SMS': 'smsplus',              
         'TG16': 'mednafen_pce',        
         'GB': 'gambatte',              
@@ -197,8 +197,8 @@ function startEmulator(game) {
     };
     
     const systemCode = platformMap[game.platform.toUpperCase()] || 'nes';
-    const currentPlatform = game.platform.toUpperCase();
 
+    // Базовые настройки EmulatorJS v4.2.3
     window.EJS_player = '#game-player';
     window.EJS_biosUrl = '';
     window.EJS_gameUrl = game.rom_url; 
@@ -207,61 +207,14 @@ function startEmulator(game) {
     window.EJS_language = 'ru';
     window.EJS_gameName = game.title.replace(/ /g, '_');
 
-    // ======= ИДЕАЛЬНЫЙ СЕТКА-МАППИНГ ДЛЯ SEGA / 32X (БЕЗ НАЛОЖЕНИЙ) =======
-    if (currentPlatform === '32X' || currentPlatform === 'SEGA') {
-        window.EJS_system = 'segaMD'; 
-
-        window.EJS_VirtualGamepadSettings = [
-            // --- КРЕСТОВИНА СЛЕВА ---
-            {
-                type: "dpad", location: "left",
-                left: "10%", top: "50%",
-                joystickInput: false, inputValues: [4, 5, 6, 7]
-            },
-            
-            // --- ВЕРХНИЙ РЯД КНОПОК (XYZ): Разнесены по горизонтали, top одинаковый ---
-            {
-                type: "button", text: "X", id: "sega_x", location: "right",
-                right: "70%", top: "25%", bold: true, fontSize: 16, input_value: 4
-            },
-            {
-                type: "button", text: "Y", id: "sega_y", location: "right",
-                right: "42%", top: "25%", bold: true, fontSize: 16, input_value: 5
-            },
-            {
-                type: "button", text: "Z", id: "sega_z", location: "right",
-                right: "15%", top: "25%", bold: true, fontSize: 16, input_value: 6
-            },
-            
-            // --- НИЖНИЙ РЯД КНОПОК (ABC): Четко под верхним рядом ---
-            {
-                type: "button", text: "A", id: "sega_a", location: "right",
-                right: "70%", top: "60%", bold: true, fontSize: 20, input_value: 0
-            },
-            {
-                type: "button", text: "B", id: "sega_b", location: "right",
-                right: "42%", top: "60%", bold: true, fontSize: 20, input_value: 1
-            },
-            {
-                type: "button", text: "C", id: "sega_c", location: "right",
-                right: "15%", top: "60%", bold: true, fontSize: 20, input_value: 8
-            },
-            
-            // --- СЕРВИСНЫЕ КНОПКИ ПО ЦЕНТРУ (START и MODE/SELECT) ---
-            {
-                type: "button", text: "START", id: "sega_start", location: "center",
-                left: "60%", top: "85%", fontSize: 11, block: true, input_value: 3
-            },
-            {
-                type: "button", text: "MODE", id: "sega_mode", location: "center",
-                left: "20%", top: "85%", fontSize: 11, block: true, input_value: 2
-            }
-        ];
-    } else {
-        window.EJS_system = undefined;
-        window.EJS_VirtualGamepadSettings = undefined;
-    }
-    // ===========================================================================
+    // ======= ПОЛНАЯ ОЧИСТКА КАСТОМНЫХ НАСТРОЕК УПРАВЛЕНИЯ =======
+    // Возвращаем дефолтное системное управление, пускай emulator.min.js 
+    // сам выводит свои родные, красивые и оптимизированные под экран геймпады!
+    window.EJS_system = undefined;
+    window.EJS_VirtualGamepadSettings = undefined;
+    window.EJS_controlScheme = undefined;
+    window.EJS_Buttons = null;
+    // ===========================================================
 
     window.EJS_loadOnStart = true; 
     window.EJS_DefaultSaveMode = 'browser'; 
