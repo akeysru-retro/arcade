@@ -186,32 +186,39 @@ function startEmulator(game) {
 
     const currentPlatform = game.platform.toUpperCase();
 
-    // ======= ЖЕСТКИЙ И ТОЧНЫЙ МАППИНГ СИСТЕМ ПО ТВОЕЙ ДОКУМЕНТАЦИИ =======
-    let systemCode = 'nes';
-    
-    if (currentPlatform === 'NES') systemCode = 'nes';
-    else if (currentPlatform === 'SNES') systemCode = 'snes9x';
-    else if (currentPlatform === 'GB' || currentPlatform === 'GBC') systemCode = 'gambatte';
-    else if (currentPlatform === 'GBA') systemCode = 'mgba';
-    else if (currentPlatform === 'TG16') systemCode = 'mednafen_pce';
-    // --- СЕМЕЙСТВО СЕГА ---
-    else if (currentPlatform === 'SEGA') systemCode = 'sega';       // Родной код из старого проекта (даст 6 кнопок)
-    else if (currentPlatform === '32X') systemCode = 'picodrive';    // Точное имя ядра 32X из доки
-    else if (currentPlatform === 'SMS') systemCode = 'smsplus';      // Точное имя ядра SMS из доки
+    // 1. ОПРЕДЕЛЯЕМ СТРОГОЕ ЯДРО ДЛЯ СКАЧИВАНИЯ ИГРЫ (window.EJS_core)
+    let coreSetting = 'nes';
+    if (currentPlatform === 'NES') coreSetting = 'nes';
+    else if (currentPlatform === 'SNES') coreSetting = 'snes9x';
+    else if (currentPlatform === 'GB' || currentPlatform === 'GBC') coreSetting = 'gambatte';
+    else if (currentPlatform === 'GBA') coreSetting = 'mgba';
+    else if (currentPlatform === 'TG16') coreSetting = 'mednafen_pce';
+    // Настройки для семейства Сега по твоей таблице cores
+    else if (currentPlatform === 'SEGA') coreSetting = 'genesis_plus_gx'; // Родное ядро обычной Сеги
+    else if (currentPlatform === '32X') coreSetting = 'picodrive';       // Родное ядро для 32X
+    else if (currentPlatform === 'SMS') coreSetting = 'smsplus';         // Родное ядро для Master System
 
-    // Базовые настройки для основной страницы
+    // 2. ЖЕСТКОЕУКАЗАНИЕ СИСТЕМЫ ДЛЯ ИНТЕРФЕЙСА ДЖОЙСТИКА (window.EJS_system)
+    // Это заставит emulator.min.js v4.2.3 запустить встроенные пады по доке!
+    let systemSetting = undefined;
+    if (currentPlatform === 'SEGA' || currentPlatform === '32X') {
+        systemSetting = 'segaMD'; // Включает встроенный 6-кнопочный геймпад Сеги для обеих платформ
+    } else if (currentPlatform === 'SMS') {
+        systemSetting = 'segaMS'; // Включает аккуратный родной 2-кнопочный геймпад для Master System
+    }
+
+    // Базовые настройки эмулятора
     window.EJS_player = '#game-player';
     window.EJS_biosUrl = '';
     window.EJS_gameUrl = game.rom_url; 
-    window.EJS_core = systemCode; 
+    window.EJS_core = coreSetting;      // Отвечает за запуск игры
+    window.EJS_system = systemSetting;  // Отвечает за правильный джойстик в версии 4.2.3
+    
     window.EJS_pathtodata = './'; 
     window.EJS_language = 'ru';
     window.EJS_gameName = game.title.replace(/ /g, '_');
 
-    // ======= ВЫЧИЩАЕМ ВСЕ КОНФЛИКТЫ ДЖОЙСТИКОВ =======
-    // Сбрасываем все внешние кастомные настройки в null, чтобы лоадер 
-    // использовал только чистые зашитые профили систем и не выводил XY AB кашу!
-    window.EJS_system = undefined;
+    // Полностью очищаем все ручные эксперименты с кнопками, чтобы вернуть заводские пады эмулятора
     window.EJS_VirtualGamepadSettings = undefined;
     window.EJS_controlScheme = undefined;
     window.EJS_Buttons = null;
