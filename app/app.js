@@ -186,39 +186,54 @@ function startEmulator(game) {
 
     const currentPlatform = game.platform.toUpperCase();
 
-    // 1. ОПРЕДЕЛЯЕМ СТРОГОЕ ЯДРО ДЛЯ СКАЧИВАНИЯ ИГРЫ (window.EJS_core)
-    let coreSetting = 'nes';
-    if (currentPlatform === 'NES') coreSetting = 'nes';
-    else if (currentPlatform === 'SNES') coreSetting = 'snes9x';
-    else if (currentPlatform === 'GB' || currentPlatform === 'GBC') coreSetting = 'gambatte';
-    else if (currentPlatform === 'GBA') coreSetting = 'mgba';
-    else if (currentPlatform === 'TG16') coreSetting = 'mednafen_pce';
-    // Настройки для семейства Сега по твоей таблице cores
-    else if (currentPlatform === 'SEGA') coreSetting = 'genesis_plus_gx'; // Родное ядро обычной Сеги
-    else if (currentPlatform === '32X') coreSetting = 'picodrive';       // Родное ядро для 32X
-    else if (currentPlatform === 'SMS') coreSetting = 'smsplus';         // Родное ядро для Master System
+    // 1. Стандартный базовый маппинг систем
+    const platformMap = {
+        'NES': 'nes',                  
+        'SNES': 'snes9x',              
+        'GB': 'gambatte',              
+        'GBC': 'gambatte',             
+        'GBA': 'mgba',
+        'TG16': 'mednafen_pce'
+    };
 
-    // 2. ЖЕСТКОЕУКАЗАНИЕ СИСТЕМЫ ДЛЯ ИНТЕРФЕЙСА ДЖОЙСТИКА (window.EJS_system)
-    // Это заставит emulator.min.js v4.2.3 запустить встроенные пады по доке!
-    let systemSetting = undefined;
-    if (currentPlatform === 'SEGA' || currentPlatform === '32X') {
-        systemSetting = 'segaMD'; // Включает встроенный 6-кнопочный геймпад Сеги для обеих платформ
-    } else if (currentPlatform === 'SMS') {
-        systemSetting = 'segaMS'; // Включает аккуратный родной 2-кнопочный геймпад для Master System
-    }
-
-    // Базовые настройки эмулятора
     window.EJS_player = '#game-player';
     window.EJS_biosUrl = '';
     window.EJS_gameUrl = game.rom_url; 
-    window.EJS_core = coreSetting;      // Отвечает за запуск игры
-    window.EJS_system = systemSetting;  // Отвечает за правильный джойстик в версии 4.2.3
-    
     window.EJS_pathtodata = './'; 
     window.EJS_language = 'ru';
     window.EJS_gameName = game.title.replace(/ /g, '_');
 
-    // Полностью очищаем все ручные эксперименты с кнопками, чтобы вернуть заводские пады эмулятора
+    // ======= ЖЕСТКИЙ СЕГОВСКИЙ КОРРИДОР ДЛЯ ОРИГИНАЛЬНОГО 6-КНОПОЧНОГО ПАДА =======
+    if (currentPlatform === 'SEGA' || currentPlatform === '32X') {
+        // Условие №1: Обе платформы запускаем как оригинальную сегу.
+        // Для emulator.min.js это железобетонный знак включить графику геймпада Мегадрайва!
+        window.EJS_core = 'genesis_plus_gx'; 
+
+        // Условие №2: Задаем внутренний идентификатор 16-битной раскладки для версии 4.2.3
+        window.EJS_system = 'segaMD';
+
+        // Условие №3: Перехват ядра только для 32X, чтобы запустить тяжелый ROM через picodrive
+        if (currentPlatform === '32X') {
+            window.EJS_paths = {
+                'genesis_plus_gx': './cores/picodrive.js' // Маскируем picodrive под сеговское ядро
+            };
+        } else {
+            window.EJS_paths = undefined; // Обычная сега качает свое родное ядро
+        }
+    } else if (currentPlatform === 'SMS') {
+        // Master System запускаем отдельно, чтобы у неё был свой аккуратный 2-кнопочный пад
+        window.EJS_core = 'smsplus';
+        window.EJS_system = 'segaMS'; 
+        window.EJS_paths = undefined;
+    } else {
+        // Для остальных платформ (NES, SNES, GB) работаем в стандартном режиме
+        window.EJS_core = platformMap[currentPlatform] || 'nes';
+        window.EJS_system = undefined;
+        window.EJS_paths = undefined;
+    }
+    // ==============================================================================
+
+    // Полностью вычищаем все массивы ручной верстки, чтобы кнопки не слипались и не накладывались
     window.EJS_VirtualGamepadSettings = undefined;
     window.EJS_controlScheme = undefined;
     window.EJS_Buttons = null;
