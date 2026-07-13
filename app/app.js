@@ -176,65 +176,55 @@ function startEmulator(game) {
     document.getElementById("emulator-layer").style.display = "block";
     document.getElementById("app-tab-bar").style.display = "none";
     
-    // ======= ЖЕСТКИЙ ФИКС: ПРЯЧЕМ СТАРЫЙ HTML-ДЖОЙСТИК ИЗ INDEX.HTML =======
-    // У тебя в index.html есть блок #gamepad с кнопками XY AB и красным стиком.
-    // Если его не спрятать, он наложится поверх Сеги и сломает управление!
-    const oldHtmlGamepad = document.getElementById("gamepad");
-    if (oldHtmlGamepad) {
-        oldHtmlGamepad.style.display = "none";
-    }
-    // ======================================================================
-    
     const container = document.getElementById("emulator-container");
     container.innerHTML = ""; 
 
-    const emuDiv = document.createElement("div");
-    emuDiv.id = "game-player";
-    emuDiv.style.width = "100%"; emuDiv.style.height = "100%";
-    container.appendChild(emuDiv);
+    const currentPlatform = game.platform.toUpperCase();
 
-    // Чистый маппинг систем под версию 4.2.3
-    const platformMap = {
-        'NES': 'nes',                  
-        'SNES': 'snes9x',              
-        'SEGA': 'sega',             // Родной системный код Сеги для v4.2.3
-        'SMS': 'sms',               // Родной системный код SMS для v4.2.3
-        'TG16': 'mednafen_pce',        
-        'GB': 'gambatte',              
-        'GBC': 'gambatte',             
-        'GBA': 'mgba'
-    };
-    
-    const systemCode = platformMap[game.platform.toUpperCase()] || 'nes';
+    // ЕСЛИ ЭТО СЕГА — ИСПОЛЬЗУЕМ ВЫДЕЛЕННУЮ ИЗОЛИРОВАННУЮ СТРУКТУРУ ПЛЕЕРА
+    if (currentPlatform === 'SEGA' || currentPlatform === '32X' || currentPlatform === 'SMS') {
+        const iframe = document.createElement("iframe");
+        // Запускаем изолированный HTML-плеер, передавая ему систему и ссылку на РОМ
+        iframe.src = `./player.html?system=sega&url=${encodeURIComponent(game.rom_url)}`;
+        iframe.style.width = "100%";
+        iframe.style.height = "100%";
+        iframe.style.border = "none";
+        iframe.id = "isolated-sega-core";
+        
+        container.appendChild(iframe);
+    } else {
+        // ДЛЯ ОСТАЛЬНЫХ (NES, GBA, SNES) ОСТАВЛЯЕМ СТАНДАРТНЫЙ ЛОАДЕР
+        const emuDiv = document.createElement("div");
+        emuDiv.id = "game-player";
+        emuDiv.style.width = "100%"; emuDiv.style.height = "100%";
+        container.appendChild(emuDiv);
 
-    window.EJS_player = '#game-player';
-    window.EJS_biosUrl = '';
-    window.EJS_gameUrl = game.rom_url; 
-    window.EJS_core = systemCode; 
-    window.EJS_pathtodata = './'; 
-    window.EJS_language = 'ru';
-    window.EJS_gameName = game.title.replace(/ /g, '_');
+        const platformMap = {
+            'NES': 'nes',                  
+            'SNES': 'snes9x',              
+            'GB': 'gambatte',              
+            'GBC': 'gambatte',             
+            'GBA': 'mgba'
+        };
+        
+        window.EJS_player = '#game-player';
+        window.EJS_biosUrl = '';
+        window.EJS_gameUrl = game.rom_url; 
+        window.EJS_core = platformMap[currentPlatform] || 'nes'; 
+        window.EJS_pathtodata = './'; 
+        window.EJS_language = 'ru';
+        window.EJS_gameName = game.title.replace(/ /g, '_');
+        window.EJS_loadOnStart = true; 
+        window.EJS_startOnLoaded = true;
 
-    // Чистим все экспериментальные внешние массивы кнопок
-    window.EJS_system = undefined;
-    window.EJS_VirtualGamepadSettings = undefined;
-    window.EJS_controlScheme = undefined;
-    window.EJS_Buttons = null;
+        const oldLoader = document.getElementById("emu-loader-script");
+        if (oldLoader) oldLoader.remove();
 
-    window.EJS_loadOnStart = true; 
-    window.EJS_DefaultSaveMode = 'browser'; 
-    window.EJS_autosave = true;             
-    window.EJS_ForceLocalSave = true;       
-    window.EJS_startOnLoaded = true;
-    window.EJS_volume = state.isSoundOn ? 1 : 0;
-
-    const oldLoader = document.getElementById("emu-loader-script");
-    if (oldLoader) oldLoader.remove();
-
-    const script = document.createElement("script");
-    script.src = "loader.js";
-    script.id = "emu-loader-script";
-    document.body.appendChild(script);
+        const script = document.createElement("script");
+        script.src = "loader.js";
+        script.id = "emu-loader-script";
+        document.body.appendChild(script);
+    }
 }
 
 function closeEmulator() {
