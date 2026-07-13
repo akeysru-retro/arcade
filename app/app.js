@@ -184,12 +184,12 @@ function startEmulator(game) {
     emuDiv.style.width = "100%"; emuDiv.style.height = "100%";
     container.appendChild(emuDiv);
 
-    // Очищенный маппинг систем (32X полностью удален)
+    // Исправленный маппинг систем под твой запрос
     const platformMap = {
         'NES': 'nes',                  
         'SNES': 'snes9x',              
-        'SEGA': 'genesis_plus_gx', // Родное ядро Мегадрайва (100% дает идеальный встроенный джойстик)
-        'SMS': 'smsplus',              
+        'SEGA': 'picodrive',        // Перевели обычную Сегу на шустрое ядро picodrive
+        'SMS': 'smsplus',           // Для SMS оставили её родное smsplus
         'TG16': 'mednafen_pce',        
         'GB': 'gambatte',              
         'GBC': 'gambatte',             
@@ -197,8 +197,8 @@ function startEmulator(game) {
     };
     
     const systemCode = platformMap[game.platform.toUpperCase()] || 'nes';
+    const currentPlatform = game.platform.toUpperCase();
 
-    // Базовые настройки EmulatorJS v4.2.3
     window.EJS_player = '#game-player';
     window.EJS_biosUrl = '';
     window.EJS_gameUrl = game.rom_url; 
@@ -207,14 +207,20 @@ function startEmulator(game) {
     window.EJS_language = 'ru';
     window.EJS_gameName = game.title.replace(/ /g, '_');
 
-    // ======= ПОЛНАЯ ОЧИСТКА КАСТОМНЫХ НАСТРОЕК УПРАВЛЕНИЯ =======
-    // Возвращаем дефолтное системное управление, пускай emulator.min.js 
-    // сам выводит свои родные, красивые и оптимизированные под экран геймпады!
-    window.EJS_system = undefined;
+    // ======= ЖЕСТКАЯ АКТИВАЦИЯ СЕГОВСКОГО ДЖОЙСТИКА (БЕЗ КАСТОМНОЙ ВЕРСТКИ) =======
+    if (currentPlatform === 'SEGA') {
+        // Принудительно заставляем ядро picodrive включить встроенную 6-кнопочную раскладку Mega Drive
+        window.EJS_system = 'md'; 
+    } else {
+        // Для всех остальных (включая SMS) сбрасываем, чтобы включались их родные пады
+        window.EJS_system = undefined;
+    }
+    
+    // Полностью вычищаем ручные настройки кнопок, чтобы они не слипались на экране
     window.EJS_VirtualGamepadSettings = undefined;
     window.EJS_controlScheme = undefined;
     window.EJS_Buttons = null;
-    // ===========================================================
+    // =============================================================================
 
     window.EJS_loadOnStart = true; 
     window.EJS_DefaultSaveMode = 'browser'; 
