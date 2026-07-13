@@ -184,12 +184,12 @@ function startEmulator(game) {
     emuDiv.style.width = "100%"; emuDiv.style.height = "100%";
     container.appendChild(emuDiv);
 
-    // Исправленный маппинг систем под твой запрос
+    // ЧЕТКИЙ И ПРОВЕРЕННЫЙ МАППИНГ СИСТЕМ ИЗ ПРОШЛОГО ПРОЕКТА
     const platformMap = {
         'NES': 'nes',                  
         'SNES': 'snes9x',              
-        'SEGA': 'picodrive',        // Перевели обычную Сегу на шустрое ядро picodrive
-        'SMS': 'smsplus',           // Для SMS оставили её родное smsplus
+        'SEGA': 'sega',             // Возвращаем родной код системы 'sega' — джойстик оживёт!
+        'SMS': 'sms',               // Родной код системы для Master System
         'TG16': 'mednafen_pce',        
         'GB': 'gambatte',              
         'GBC': 'gambatte',             
@@ -197,8 +197,8 @@ function startEmulator(game) {
     };
     
     const systemCode = platformMap[game.platform.toUpperCase()] || 'nes';
-    const currentPlatform = game.platform.toUpperCase();
 
+    // Базовые настройки EmulatorJS из твоего рабочего emu-player.html
     window.EJS_player = '#game-player';
     window.EJS_biosUrl = '';
     window.EJS_gameUrl = game.rom_url; 
@@ -207,20 +207,12 @@ function startEmulator(game) {
     window.EJS_language = 'ru';
     window.EJS_gameName = game.title.replace(/ /g, '_');
 
-    // ======= ЖЕСТКАЯ АКТИВАЦИЯ СЕГОВСКОГО ДЖОЙСТИКА (БЕЗ КАСТОМНОЙ ВЕРСТКИ) =======
-    if (currentPlatform === 'SEGA') {
-        // Принудительно заставляем ядро picodrive включить встроенную 6-кнопочную раскладку Mega Drive
-        window.EJS_system = 'md'; 
-    } else {
-        // Для всех остальных (включая SMS) сбрасываем, чтобы включались их родные пады
-        window.EJS_system = undefined;
-    }
-    
-    // Полностью вычищаем ручные настройки кнопок, чтобы они не слипались на экране
+    // ======= ПОЛНАЯ ОЧИСТКА ОТ ВСЕХ ЭКСПЕРИМЕНТАЛЬНЫХ КОСТЫЛЕЙ =======
+    window.EJS_system = undefined;
     window.EJS_VirtualGamepadSettings = undefined;
     window.EJS_controlScheme = undefined;
     window.EJS_Buttons = null;
-    // =============================================================================
+    // =================================================================
 
     window.EJS_loadOnStart = true; 
     window.EJS_DefaultSaveMode = 'browser'; 
