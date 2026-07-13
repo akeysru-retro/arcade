@@ -186,16 +186,7 @@ function startEmulator(game) {
 
     const currentPlatform = game.platform.toUpperCase();
 
-    // 1. Стандартный базовый маппинг систем
-    const platformMap = {
-        'NES': 'nes',                  
-        'SNES': 'snes9x',              
-        'GB': 'gambatte',              
-        'GBC': 'gambatte',             
-        'GBA': 'mgba',
-        'TG16': 'mednafen_pce'
-    };
-
+    // Базовые настройки
     window.EJS_player = '#game-player';
     window.EJS_biosUrl = '';
     window.EJS_gameUrl = game.rom_url; 
@@ -203,37 +194,39 @@ function startEmulator(game) {
     window.EJS_language = 'ru';
     window.EJS_gameName = game.title.replace(/ /g, '_');
 
-    // ======= ЖЕСТКИЙ СЕГОВСКИЙ КОРРИДОР ДЛЯ ОРИГИНАЛЬНОГО 6-КНОПОЧНОГО ПАДА =======
+    // ======= ТОЧНЫЙ МАППИНГ ПО КОДУ EMULATOR.MIN.JS =======
     if (currentPlatform === 'SEGA' || currentPlatform === '32X') {
-        // Условие №1: Обе платформы запускаем как оригинальную сегу.
-        // Для emulator.min.js это железобетонный знак включить графику геймпада Мегадрайва!
+        // Жестко включаем код ядра genesis_plus_gx. 
+        // По коду файла это единственный способ заставить его вывести 6-кнопочный джойстик Сеги!
         window.EJS_core = 'genesis_plus_gx'; 
+        
+        // Для интерфейса v4 дублируем системный маркер Мегадрайва
+        window.EJS_system = 'segaMD'; 
 
-        // Условие №2: Задаем внутренний идентификатор 16-битной раскладки для версии 4.2.3
-        window.EJS_system = 'segaMD';
-
-        // Условие №3: Перехват ядра только для 32X, чтобы запустить тяжелый ROM через picodrive
         if (currentPlatform === '32X') {
+            // ХАК ДЛЯ 32X: Лоадер думает, что запускает обычную Сегу и рисует 6 кнопок,
+            // но вместо файла сеги мы подсовываем ему файл picodrive для запуска 32X!
             window.EJS_paths = {
-                'genesis_plus_gx': './cores/picodrive.js' // Маскируем picodrive под сеговское ядро
+                'genesis_plus_gx': './cores/picodrive.js' 
             };
         } else {
-            window.EJS_paths = undefined; // Обычная сега качает свое родное ядро
+            window.EJS_paths = undefined; // Обычная сега грузит свое родное сеговское ядро
         }
     } else if (currentPlatform === 'SMS') {
-        // Master System запускаем отдельно, чтобы у неё был свой аккуратный 2-кнопочный пад
+        // Для Master System используем ее родное кодовое имя из файла
         window.EJS_core = 'smsplus';
-        window.EJS_system = 'segaMS'; 
+        window.EJS_system = 'segaMS'; // Даст аккуратный 2-кнопочный джойстик SMS
         window.EJS_paths = undefined;
     } else {
-        // Для остальных платформ (NES, SNES, GB) работаем в стандартном режиме
+        // Остальные платформы (NES, SNES, GBA)
+        const platformMap = { 'NES': 'nes', 'SNES': 'snes9x', 'GB': 'gambatte', 'GBC': 'gambatte', 'GBA': 'mgba', 'TG16': 'mednafen_pce' };
         window.EJS_core = platformMap[currentPlatform] || 'nes';
         window.EJS_system = undefined;
         window.EJS_paths = undefined;
     }
-    // ==============================================================================
+    // =======================================================
 
-    // Полностью вычищаем все массивы ручной верстки, чтобы кнопки не слипались и не накладывались
+    // Полностью убираем ручную верстку, так как встроенный segaMD-пад из файла сам идеально встает на экране
     window.EJS_VirtualGamepadSettings = undefined;
     window.EJS_controlScheme = undefined;
     window.EJS_Buttons = null;
