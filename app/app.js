@@ -176,6 +176,15 @@ function startEmulator(game) {
     document.getElementById("emulator-layer").style.display = "block";
     document.getElementById("app-tab-bar").style.display = "none";
     
+    // ======= ЖЕСТКИЙ ФИКС: ПРЯЧЕМ СТАРЫЙ HTML-ДЖОЙСТИК ИЗ INDEX.HTML =======
+    // У тебя в index.html есть блок #gamepad с кнопками XY AB и красным стиком.
+    // Если его не спрятать, он наложится поверх Сеги и сломает управление!
+    const oldHtmlGamepad = document.getElementById("gamepad");
+    if (oldHtmlGamepad) {
+        oldHtmlGamepad.style.display = "none";
+    }
+    // ======================================================================
+    
     const container = document.getElementById("emulator-container");
     container.innerHTML = ""; 
 
@@ -184,12 +193,12 @@ function startEmulator(game) {
     emuDiv.style.width = "100%"; emuDiv.style.height = "100%";
     container.appendChild(emuDiv);
 
-    // ЧЕТКИЙ И ПРОВЕРЕННЫЙ МАППИНГ СИСТЕМ ИЗ ПРОШЛОГО ПРОЕКТА
+    // Чистый маппинг систем под версию 4.2.3
     const platformMap = {
         'NES': 'nes',                  
         'SNES': 'snes9x',              
-        'SEGA': 'sega',             // Возвращаем родной код системы 'sega' — джойстик оживёт!
-        'SMS': 'sms',               // Родной код системы для Master System
+        'SEGA': 'sega',             // Родной системный код Сеги для v4.2.3
+        'SMS': 'sms',               // Родной системный код SMS для v4.2.3
         'TG16': 'mednafen_pce',        
         'GB': 'gambatte',              
         'GBC': 'gambatte',             
@@ -198,7 +207,6 @@ function startEmulator(game) {
     
     const systemCode = platformMap[game.platform.toUpperCase()] || 'nes';
 
-    // Базовые настройки EmulatorJS из твоего рабочего emu-player.html
     window.EJS_player = '#game-player';
     window.EJS_biosUrl = '';
     window.EJS_gameUrl = game.rom_url; 
@@ -207,12 +215,11 @@ function startEmulator(game) {
     window.EJS_language = 'ru';
     window.EJS_gameName = game.title.replace(/ /g, '_');
 
-    // ======= ПОЛНАЯ ОЧИСТКА ОТ ВСЕХ ЭКСПЕРИМЕНТАЛЬНЫХ КОСТЫЛЕЙ =======
+    // Чистим все экспериментальные внешние массивы кнопок
     window.EJS_system = undefined;
     window.EJS_VirtualGamepadSettings = undefined;
     window.EJS_controlScheme = undefined;
     window.EJS_Buttons = null;
-    // =================================================================
 
     window.EJS_loadOnStart = true; 
     window.EJS_DefaultSaveMode = 'browser'; 
