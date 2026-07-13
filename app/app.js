@@ -179,63 +179,57 @@ function startEmulator(game) {
     const container = document.getElementById("emulator-container");
     container.innerHTML = ""; 
 
+    const emuDiv = document.createElement("div");
+    emuDiv.id = "game-player";
+    emuDiv.style.width = "100%"; emuDiv.style.height = "100%";
+    container.appendChild(emuDiv);
+
     const currentPlatform = game.platform.toUpperCase();
 
-    // ======= ИЗОЛИРОВАННЫЙ КОРЫТНЫЙ ЗАПУСК ДЛЯ СЕМЕЙСТВА SEGA ЧЕРЕЗ IFRAME =======
-    if (currentPlatform === 'SEGA' || currentPlatform === 'SMS') {
-        const iframe = document.createElement("iframe");
-        
-        // Определяем системный код для player.html
-        const coreParam = (currentPlatform === 'SMS') ? 'sms' : 'sega';
-        
-        // Формируем ссылку на плеер с параметрами
-        iframe.src = `./player.html?core=${coreParam}&url=${encodeURIComponent(game.rom_url)}&name=${encodeURIComponent(game.title)}`;
-        iframe.style.width = "100%";
-        iframe.style.height = "100%";
-        iframe.style.border = "none";
-        iframe.id = "isolated-emulator-frame";
-        
-        container.appendChild(iframe);
-    } else {
-        // ======= СТАНДАРТНЫЙ ВНУТРЕННИЙ ЗАПУСК ДЛЯ НИНТЕНДО И ГЕЙМБОЕВ =======
-        const emuDiv = document.createElement("div");
-        emuDiv.id = "game-player";
-        emuDiv.style.width = "100%"; emuDiv.style.height = "100%";
-        container.appendChild(emuDiv);
+    // ======= ЖЕСТКИЙ И ТОЧНЫЙ МАППИНГ СИСТЕМ ПО ТВОЕЙ ДОКУМЕНТАЦИИ =======
+    let systemCode = 'nes';
+    
+    if (currentPlatform === 'NES') systemCode = 'nes';
+    else if (currentPlatform === 'SNES') systemCode = 'snes9x';
+    else if (currentPlatform === 'GB' || currentPlatform === 'GBC') systemCode = 'gambatte';
+    else if (currentPlatform === 'GBA') systemCode = 'mgba';
+    else if (currentPlatform === 'TG16') systemCode = 'mednafen_pce';
+    // --- СЕМЕЙСТВО СЕГА ---
+    else if (currentPlatform === 'SEGA') systemCode = 'sega';       // Родной код из старого проекта (даст 6 кнопок)
+    else if (currentPlatform === '32X') systemCode = 'picodrive';    // Точное имя ядра 32X из доки
+    else if (currentPlatform === 'SMS') systemCode = 'smsplus';      // Точное имя ядра SMS из доки
 
-        const platformMap = {
-            'NES': 'nes',                  
-            'SNES': 'snes9x',              
-            'GB': 'gambatte',              
-            'GBC': 'gambatte',             
-            'GBA': 'mgba'
-        };
-        
-        const systemCode = platformMap[currentPlatform] || 'nes';
+    // Базовые настройки для основной страницы
+    window.EJS_player = '#game-player';
+    window.EJS_biosUrl = '';
+    window.EJS_gameUrl = game.rom_url; 
+    window.EJS_core = systemCode; 
+    window.EJS_pathtodata = './'; 
+    window.EJS_language = 'ru';
+    window.EJS_gameName = game.title.replace(/ /g, '_');
 
-        window.EJS_player = '#game-player';
-        window.EJS_biosUrl = '';
-        window.EJS_gameUrl = game.rom_url; 
-        window.EJS_core = systemCode; 
-        window.EJS_pathtodata = './'; 
-        window.EJS_language = 'ru';
-        window.EJS_gameName = game.title.replace(/ /g, '_');
+    // ======= ВЫЧИЩАЕМ ВСЕ КОНФЛИКТЫ ДЖОЙСТИКОВ =======
+    // Сбрасываем все внешние кастомные настройки в null, чтобы лоадер 
+    // использовал только чистые зашитые профили систем и не выводил XY AB кашу!
+    window.EJS_system = undefined;
+    window.EJS_VirtualGamepadSettings = undefined;
+    window.EJS_controlScheme = undefined;
+    window.EJS_Buttons = null;
 
-        window.EJS_loadOnStart = true; 
-        window.EJS_DefaultSaveMode = 'browser'; 
-        window.EJS_autosave = true;             
-        window.EJS_ForceLocalSave = true;       
-        window.EJS_startOnLoaded = true;
-        window.EJS_volume = state.isSoundOn ? 1 : 0;
+    window.EJS_loadOnStart = true; 
+    window.EJS_DefaultSaveMode = 'browser'; 
+    window.EJS_autosave = true;             
+    window.EJS_ForceLocalSave = true;       
+    window.EJS_startOnLoaded = true;
+    window.EJS_volume = state.isSoundOn ? 1 : 0;
 
-        const oldLoader = document.getElementById("emu-loader-script");
-        if (oldLoader) oldLoader.remove();
+    const oldLoader = document.getElementById("emu-loader-script");
+    if (oldLoader) oldLoader.remove();
 
-        const script = document.createElement("script");
-        script.src = "loader.js";
-        script.id = "emu-loader-script";
-        document.body.appendChild(script);
-    }
+    const script = document.createElement("script");
+    script.src = "loader.js";
+    script.id = "emu-loader-script";
+    document.body.appendChild(script);
 }
 
 function closeEmulator() {
