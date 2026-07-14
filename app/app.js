@@ -110,6 +110,7 @@ function filterGames() {
         const matchesFav = !state.showOnlyFavorites || isGameFavorite(game.id);
         return matchesSearch && matchesFav;
     });
+    state.gamesPage = 1; // Сбрасываем страницу при поиске
     renderGamesPage();
 }
 
@@ -136,8 +137,9 @@ function renderGamesPage() {
     }
     
     const start = (state.gamesPage - 1) * state.itemsPerPage;
-    const end = start + start + state.itemsPerPage;
-    const pageItems = state.filteredGames.slice(start, start + state.itemsPerPage);
+    const end = start + state.itemsPerPage;
+    // ИСПРАВЛЕНО: Честный срез элементов без дублирования на странице!
+    const pageItems = state.filteredGames.slice(start, end);
     
     pageItems.forEach((game, index) => {
         const globalIndex = start + index + 1;
@@ -169,7 +171,7 @@ function renderGamesPage() {
     });
 }
 
-// 4. ИНИЦИАЛИЗАЦИЯ ЭМУЛЯТОРА — СТАРТ С ТОЧЕЧНЫМ РАСПРЕДЕЛЕНИЕМ ЯДЕР ДЛЯ ВСЕХ ПЛАТФОРМ
+// 4. ИНИЦИАЛИЗАЦИЯ ЭМУЛЯТОРА — СТАРТ С КОРРЕКТНЫМИ НАЗВАНИЯМИ ЛОКАЛЬНЫХ ПАПОК ЯДЕР
 function startEmulator(game) {
     state.selectedGame = game;
     document.getElementById("back-to-catalog").classList.remove("hidden");
@@ -190,22 +192,22 @@ function startEmulator(game) {
 
     const currentPlatform = game.platform.toUpperCase();
 
-    // Точечный маппинг систем: Сега работает по-старому, а GBC, TG16 и остальные получают свои родные папки ядер
-    const platformMap = {
-        'NES': 'nes',
-        'SNES': 'snes',              
-        'SMS': 'sms',                
-        'TG16': 'tg16',        
-        'GB': 'gb',              
-        'GBC': 'gbc',             
-        'GBA': 'gba',
-        'SEGA': 'segaMD',    // Твоя рабочая настройка для 16-бит
-        '32X': 'sega32x'     
+    // ИСПРАВЛЕНО: Передаем точные кодовые имена, которые твой loader.js превратит в правильные пути до ядер cores/
+    const coreMap = {
+        'NES': 'fceumm',          // Ищет cores/fceumm
+        'SNES': 'snes9x',         // Ищет cores/snes9x
+        'SMS': 'smsplus',         // Ищет cores/smsplus
+        'TG16': 'mednafen_pce',   // ИСПРАВЛЕНО: Направляем строго в папку cores/mednafen_pce
+        'GB': 'gambatte',         // Ищет cores/gambatte
+        'GBC': 'gambatte',        // ИСПРАВЛЕНО: GBC в твоем лоадере тоже использует ядро gambatte!
+        'GBA': 'mgba',            // Ищет cores/mgba
+        'SEGA': 'segaMD',         // Твоя рабочая папка cores/segaMD
+        '32X': 'sega32x'          // Твоя рабочая папка cores/sega32x
     };
 
-    const systemCode = platformMap[currentPlatform] || 'segaMD';
+    const coreCode = coreMap[currentPlatform] || 'segaMD';
 
-    // Полностью очищаем все ручные настройки кнопок
+    // Полностью очищаем настройки контроллеров перед стартом
     window.EJS_system = undefined;
     window.EJS_VirtualGamepadSettings = undefined;
     window.EJS_controlScheme = undefined;
@@ -219,7 +221,7 @@ function startEmulator(game) {
     window.EJS_player = '#game-player';
     window.EJS_biosUrl = '';
     window.EJS_gameUrl = game.rom_url; 
-    window.EJS_core = systemCode; // Передаем корректное имя системы для загрузки нужного .wasm ядра
+    window.EJS_core = coreCode; // Локальный лоадер подставит это имя для загрузки .wasm ядра
     window.EJS_pathtodata = './'; 
     window.EJS_language = 'ru';
     window.EJS_gameName = game.title.replace(/ /g, '_');
