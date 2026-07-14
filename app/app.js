@@ -186,65 +186,19 @@ function startEmulator(game) {
 
     const currentPlatform = game.platform.toUpperCase();
 
-    // Маппинг ядер по твоей таблице Cores
-    const platformMap = {
-        'NES': 'nes',                  
-        'SNES': 'snes9x',              
-        'SEGA': 'picodrive', // Picodrive отлично понимает 6-кнопочные бинды, если задана система
-        '32X': 'picodrive',            
-        'SMS': 'smsplus',              
-        'TG16': 'mednafen_pce',        
-        'GB': 'gambatte',              
-        'GBC': 'gambatte',             
-        'GBA': 'mgba'
-    };
-    
-    const systemCode = platformMap[currentPlatform] || 'nes';
+    // Очищаем все кастомные костыли, которые мы пытались сделать ранее
+    window.EJS_system = undefined;
+    window.EJS_VirtualGamepadSettings = undefined;
+    window.EJS_controlScheme = undefined;
+    window.EJS_Buttons = null;
+    window.EJS_paths = undefined;
 
+    // Базовые параметры для всех систем
     window.EJS_player = '#game-player';
     window.EJS_biosUrl = '';
     window.EJS_gameUrl = game.rom_url; 
-    window.EJS_core = systemCode; 
-    window.EJS_pathtodata = './'; 
     window.EJS_language = 'ru';
     window.EJS_gameName = game.title.replace(/ /g, '_');
-
-    // ======= ВОТ ОН — ПЕРЕКЛЮЧАТЕЛЬ ДВИЖКА НА 6 КНОПОК СЕГИ =======
-    if (currentPlatform === 'SEGA' || currentPlatform === '32X') {
-        // Жестко принуждаем внутренний код emulator.min.js считать, что система — Mega Drive.
-        // Это КРИТИЧЕСКИ ВАЖНО: это переключает логику движка с SMS (2 кнопки) на Сегу (6 кнопок)!
-        window.EJS_system = 'segaMD'; 
-
-        // Теперь, когда движок готов принимать 6 кнопок, строим сетку, чтобы они не слипались на экране
-        window.EJS_VirtualGamepadSettings = [
-            // Крестовина слева
-            {
-                type: "dpad", location: "left",
-                left: "10%", top: "55%",
-                joystickInput: false, inputValues: [4, 5, 6, 7]
-            },
-            
-            // НИЖНИЙ РЯД: A, B, C (Разносим через left со знаком минус — это отступ от правого края экрана в px)
-            { type: "button", text: "A", id: "sega_a", location: "right", left: -140, top: 85, bold: true, fontSize: 24, input_value: 0 },
-            { type: "button", text: "B", id: "sega_b", location: "right", left: -85, top: 85, bold: true, fontSize: 24, input_value: 1 },
-            { type: "button", text: "C", id: "sega_c", location: "right", left: -30, top: 85, bold: true, fontSize: 24, input_value: 11 },
-            
-            // ВЕРХНИЙ РЯД: X, Y, Z (Строго над кнопками A, B, C)
-            { type: "button", text: "X", id: "sega_x", location: "right", left: -140, top: 30, bold: true, fontSize: 18, input_value: 8 },
-            { type: "button", text: "Y", id: "sega_y", location: "right", left: -85, top: 30, bold: true, fontSize: 18, input_value: 9 },
-            { type: "button", text: "Z", id: "sega_z", location: "right", left: -30, top: 30, bold: true, fontSize: 18, input_value: 10 },
-            
-            // Сервисные кнопки по центру
-            { type: "button", text: "START", id: "sega_start", location: "center", left: 40, top: 85, fontSize: 12, block: true, input_value: 3 },
-            { type: "button", text: "MODE", id: "sega_select", location: "center", left: -40, top: 85, fontSize: 12, block: true, input_value: 2 }
-        ];
-    } else {
-        // Для остальных платформ сбрасываем в дефолт
-        window.EJS_system = undefined;
-        window.EJS_VirtualGamepadSettings = undefined;
-    }
-    // =======================================================================
-
     window.EJS_loadOnStart = true; 
     window.EJS_DefaultSaveMode = 'browser'; 
     window.EJS_autosave = true;             
@@ -252,11 +206,42 @@ function startEmulator(game) {
     window.EJS_startOnLoaded = true;
     window.EJS_volume = state.isSoundOn ? 1 : 0;
 
+    // Скрипт лоадера, который мы будем подключать
+    let loaderSrc = "loader.js"; // По умолчанию локальный для NES/GBA
+
+    // ======= ТОЧНЫЕ ДАННЫЕ ИЗ ТВОЕГО ПРОШЛОГО РАБОЧЕГО ПРОЕКТА =======
+    if (currentPlatform === 'SEGA' || currentPlatform === '32X') {
+        // Как в твоем index (1).html — используем проверенное ядро genesis_plus_gx на PICODRIVE
+        window.EJS_core = 'genesis_plus_gx'; 
+        
+        // ВАЖНО: Переключаем пути на официальный CDN, где лежит новый красивый 6-кнопочный джойстик!
+        window.EJS_pathtodata = 'https://cdn.jsdelivr.net/gh/EmulatorJS/EmulatorJS@latest/data/';
+        loaderSrc = "https://cdn.jsdelivr.net/gh/EmulatorJS/EmulatorJS@latest/data/loader.js";
+        
+    } else {
+        // Для остальных платформ (NES, SNES, GBA) используем локальные файлы
+        const platformMap = {
+            'NES': 'nes',                  
+            'SNES': 'snes9x',              
+            'SMS': 'smsplus',              
+            'TG16': 'mednafen_pce',        
+            'GB': 'gambatte',              
+            'GBC': 'gambatte',             
+            'GBA': 'mgba'
+        };
+        window.EJS_core = platformMap[currentPlatform] || 'nes';
+        window.EJS_pathtodata = './'; // Ищем локально в папке app
+        loaderSrc = "loader.js";
+    }
+    // =================================================================
+
+    // Удаляем старый тег скрипта, если он остался
     const oldLoader = document.getElementById("emu-loader-script");
     if (oldLoader) oldLoader.remove();
 
+    // Подключаем правильный лоадер
     const script = document.createElement("script");
-    script.src = "loader.js";
+    script.src = loaderSrc;
     script.id = "emu-loader-script";
     document.body.appendChild(script);
 }
