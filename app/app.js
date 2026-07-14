@@ -190,7 +190,7 @@ function startEmulator(game) {
     const platformMap = {
         'NES': 'nes',                  
         'SNES': 'snes9x',              
-        'SEGA': 'picodrive',        // picodrive отлично оптимизирован для обеих платформ
+        'SEGA': 'picodrive', // Picodrive отлично понимает 6-кнопочные бинды, если задана система
         '32X': 'picodrive',            
         'SMS': 'smsplus',              
         'TG16': 'mednafen_pce',        
@@ -209,62 +209,37 @@ function startEmulator(game) {
     window.EJS_language = 'ru';
     window.EJS_gameName = game.title.replace(/ /g, '_');
 
-    // ======= РУЧНАЯ СБОРКА 6-КНОПОЧНОЙ СЕГИ ПО НАЙДЕННОЙ СПЕЦИФИКАЦИИ =======
+    // ======= ВОТ ОН — ПЕРЕКЛЮЧАТЕЛЬ ДВИЖКА НА 6 КНОПОК СЕГИ =======
     if (currentPlatform === 'SEGA' || currentPlatform === '32X') {
-        // Выключаем авто-определение системы, чтобы эмулятор не сбрасывал джойстик на SMS
-        window.EJS_system = undefined;
+        // Жестко принуждаем внутренний код emulator.min.js считать, что система — Mega Drive.
+        // Это КРИТИЧЕСКИ ВАЖНО: это переключает логику движка с SMS (2 кнопки) на Сегу (6 кнопок)!
+        window.EJS_system = 'segaMD'; 
 
+        // Теперь, когда движок готов принимать 6 кнопок, строим сетку, чтобы они не слипались на экране
         window.EJS_VirtualGamepadSettings = [
-            // --- КРЕСТОВИНА (Слева, адаптивные % от экрана) ---
+            // Крестовина слева
             {
-                type: "dpad",
-                location: "left",
-                left: "15%",
-                top: "55%",
-                joystickInput: false,
-                inputValues: [4, 5, 6, 7] // Вверх, Вниз, Влево, Вправо
+                type: "dpad", location: "left",
+                left: "10%", top: "55%",
+                joystickInput: false, inputValues: [4, 5, 6, 7]
             },
             
-            // --- НИЖНИЙ РЯД СЕГОВСКИХ КНОПОК: A, B, C (Разносим через проценты right) ---
-            {
-                type: "button", text: "A", id: "sega_a", location: "right",
-                right: "65%", top: "65%", bold: true, fontSize: 24, input_value: 0 // Маппится на B в RetroArch
-            },
-            {
-                type: "button", text: "B", id: "sega_b", location: "right",
-                right: "40%", top: "65%", bold: true, fontSize: 24, input_value: 1 // Маппится на Y в RetroArch
-            },
-            {
-                type: "button", text: "C", id: "sega_c", location: "right",
-                right: "15%", top: "65%", bold: true, fontSize: 24, input_value: 11 // Маппится на R в RetroArch
-            },
+            // НИЖНИЙ РЯД: A, B, C (Разносим через left со знаком минус — это отступ от правого края экрана в px)
+            { type: "button", text: "A", id: "sega_a", location: "right", left: -140, top: 85, bold: true, fontSize: 24, input_value: 0 },
+            { type: "button", text: "B", id: "sega_b", location: "right", left: -85, top: 85, bold: true, fontSize: 24, input_value: 1 },
+            { type: "button", text: "C", id: "sega_c", location: "right", left: -30, top: 85, bold: true, fontSize: 24, input_value: 11 },
             
-            // --- ВЕРХНИЙ РЯД СЕГОВСКИХ КНОПОК: X, Y, Z (Строго над нижним рядом) ---
-            {
-                type: "button", text: "X", id: "sega_x", location: "right",
-                right: "65%", top: "30%", bold: true, fontSize: 18, input_value: 8 // Маппится на A в RetroArch
-            },
-            {
-                type: "button", text: "Y", id: "sega_y", location: "right",
-                right: "40%", top: "30%", bold: true, fontSize: 18, input_value: 9 // Маппится на X в RetroArch
-            },
-            {
-                type: "button", text: "Z", id: "sega_z", location: "right",
-                right: "15%", top: "30%", bold: true, fontSize: 18, input_value: 10 // Маппится на L в RetroArch
-            },
+            // ВЕРХНИЙ РЯД: X, Y, Z (Строго над кнопками A, B, C)
+            { type: "button", text: "X", id: "sega_x", location: "right", left: -140, top: 30, bold: true, fontSize: 18, input_value: 8 },
+            { type: "button", text: "Y", id: "sega_y", location: "right", left: -85, top: 30, bold: true, fontSize: 18, input_value: 9 },
+            { type: "button", text: "Z", id: "sega_z", location: "right", left: -30, top: 30, bold: true, fontSize: 18, input_value: 10 },
             
-            // --- СЛУЖЕБНЫЕ КНОПКИ ПО ЦЕНТРУ (START и SELECT) ---
-            {
-                type: "button", text: "START", id: "sega_start", location: "center",
-                left: "60%", top: "85%", fontSize: 12, block: true, input_value: 3
-            },
-            {
-                type: "button", text: "MODE", id: "sega_select", location: "center",
-                left: "20%", top: "85%", fontSize: 12, block: true, input_value: 2
-            }
+            // Сервисные кнопки по центру
+            { type: "button", text: "START", id: "sega_start", location: "center", left: 40, top: 85, fontSize: 12, block: true, input_value: 3 },
+            { type: "button", text: "MODE", id: "sega_select", location: "center", left: -40, top: 85, fontSize: 12, block: true, input_value: 2 }
         ];
     } else {
-        // Для остальных систем (NES, SNES, SMS, GBA) убираем кастомную раскладку
+        // Для остальных платформ сбрасываем в дефолт
         window.EJS_system = undefined;
         window.EJS_VirtualGamepadSettings = undefined;
     }
