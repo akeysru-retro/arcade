@@ -181,7 +181,7 @@ function startEmulator(game) {
 
     const currentPlatform = game.platform.toUpperCase();
 
-    // ======= 1. ДЛЯ NES (ДЕНДИ) ОСТАВЛЯЕМ ТВОЙ ВСТРОЕННЫЙ JSNES =======
+    // ======= 1. ЕСЛИ ЭТО ДЕНДИ (NES) — ОСТАВЛЯЕМ ТВОЙ СТАБИЛЬНЫЙ ВСТРОЕННЫЙ JSNES =======
     if (currentPlatform === 'NES') {
         const emuDiv = document.createElement("div");
         emuDiv.id = "game-player";
@@ -191,90 +191,67 @@ function startEmulator(game) {
         initNES(); 
         currentSystem = "nes";
         loadNesROM(game.rom_url);
+        
         if (document.getElementById('gamepad')) {
-            document.getElementById('gamepad').style.display = 'block'; // Твой HTML-пад
+            document.getElementById('gamepad').style.display = 'block';
         }
     } 
-    // ======= 2. ДЛЯ ВСЕХ ОСТАЛЬНЫХ (SEGA, 32X, SMS, GBA, SNES) — ЧИСТЫЙ ОНЛАЙН CDN =======
+    // ======= 2. ДЛЯ ВСЕХ ОСТАЛЬНЫХ ПЛАТФОРМ — СТРОГО ТВОЙ ЛОКАЛЬНЫЙ EMULATORJS =======
     else {
-        // Скрываем твой HTML-пад, чтобы не накладывался
+        // Скрываем HTML-пад, чтобы он не накладывался поверх EmulatorJS
         if (document.getElementById('gamepad')) {
             document.getElementById('gamepad').style.display = 'none';
         }
 
-        // Определяем точный маркер ядра для CDN по спецификации старого проекта
-        let cdnCore = 'sega';
-        if (currentPlatform === 'SNES') cdnCore = 'snes9x';
-        else if (currentPlatform === 'GBA') cdnCore = 'mgba';
-        else if (currentPlatform === 'GB' || currentPlatform === 'GBC') cdnCore = 'gambatte';
-        else if (currentPlatform === 'SMS') cdnCore = 'smsplus';
-        else if (currentPlatform === 'TG16') cdnCore = 'mednafen_pce';
-        else if (currentPlatform === 'SEGA' || currentPlatform === '32X') cdnCore = 'sega'; // И Сега, и 32X шли через 'sega'
+        const emuDiv = document.createElement("div");
+        emuDiv.id = "game-player";
+        emuDiv.style.width = "100%"; emuDiv.style.height = "100%";
+        container.appendChild(emuDiv);
 
-        // Создаем изолированный фрейм "из воздуха", без использования локального player.html
-        const iframe = document.createElement("iframe");
-        iframe.style.width = "100%";
-        iframe.style.height = "100%";
-        iframe.style.border = "none";
-        iframe.id = "isolated-retro-frame";
-        
-        container.appendChild(iframe);
+        // Жёсткий маппинг ядер по твоей локальной папке cores/
+        const platformMap = {
+            'SNES': 'snes9x',              
+            'SMS': 'smsplus',              
+            'TG16': 'mednafen_pce',        
+            'GB': 'gambatte',              
+            'GBC': 'gambatte',             
+            'GBA': 'mgba',
+            'SEGA': 'sega',      // Родное имя системы из твоего старого проекта!
+            '32X': 'picodrive'   // Родное локальное ядро для 32X
+        };
 
-        // Генерируем чистый HTML-документ внутри фрейма на базе логики старого проекта
-        const startVolume = state.isSoundOn ? 1 : 0;
-        const cleanGameName = game.title.replace(/ /g, '_');
-        
-        const iframeHtml = `
-            <!DOCTYPE html>
-            <html>
-            <head>
-                <meta charset="UTF-8">
-                <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-                <style>
-                    body, html, #game { margin: 0; padding: 0; width: 100%; height: 100%; background: #000; overflow: hidden; }
-                </style>
-            </head>
-            <body>
-                <div id="game"></div>
-                <script>
-                    // Фиксы тач-скрина для Telegram
-                    if (!('ontouchstart' in window)) { window.ontouchstart = function(){}; }
-                    if (!navigator.maxTouchPoints || navigator.maxTouchPoints === 0) {
-                        Object.defineProperty(navigator, 'maxTouchPoints', {get: function(){return 5;}});
-                    }
+        const systemCode = platformMap[currentPlatform] || 'sega';
 
-                    // Настройки строго по твоему старому рабочему проекту
-                    window.EJS_player = '#game';
-                    window.EJS_biosUrl = '';
-                    window.EJS_gameUrl = "${game.rom_url}";
-                    window.EJS_core = "${cdnCore}"; 
-                    window.EJS_gameName = "${cleanGameName}";
-                    window.EJS_color = '#0064ff';
-                    window.EJS_startOnLoaded = true;
-                    window.EJS_Header = false; 
-                    window.EJS_mouse = false;
-                    window.EJS_volume = ${startVolume};
-                    
-                    // Переходим полностью на онлайн-репозиторий данных
-                    window.EJS_pathtodata = 'https://cdn.jsdelivr.net/gh/EmulatorJS/EmulatorJS@latest/data/';
-                    window.EJS_DefaultSaveMode = 'browser';
-                    window.EJS_autosave = true;
-                    window.EJS_ForceLocalSave = true;
+        // Полностью очищаем все ручные настройки кнопок (убираем кашу)
+        window.EJS_system = undefined;
+        window.EJS_VirtualGamepadSettings = undefined;
+        window.EJS_controlScheme = undefined;
+        window.EJS_Buttons = null;
 
-                    // Подключаем официальный лоадер последней версии напрямую из CDN
-                    const script = document.createElement('script');
-                    script.src = "https://cdn.jsdelivr.net/gh/EmulatorJS/EmulatorJS@latest/data/loader.js";
-                    document.head.appendChild(script);
-                <\/script>
-            </body>
-            </html>
-        `;
+        // Базовые параметры строго под твою локальную структуру папок
+        window.EJS_player = '#game-player';
+        window.EJS_biosUrl = '';
+        window.EJS_gameUrl = game.rom_url; 
+        window.EJS_core = systemCode; 
+        window.EJS_pathtodata = './'; // Ищет loader.js и папки src/ прямо в корне app
+        window.EJS_language = 'ru';
+        window.EJS_gameName = game.title.replace(/ /g, '_');
 
-        // Записываем HTML прямо внутрь iframe
-        const doc = iframe.contentDocument || iframe.contentWindow.document;
-        doc.open();
-        doc.write(iframeHtml);
-        doc.close();
+        window.EJS_loadOnStart = true; 
+        window.EJS_DefaultSaveMode = 'browser'; 
+        window.EJS_autosave = true;             
+        window.EJS_ForceLocalSave = true;       
+        window.EJS_startOnLoaded = true;
+        window.EJS_volume = state.isSoundOn ? 1 : 0;
+
+        // Перезапускаем тег скрипта лоадера
+        const oldLoader = document.getElementById("emu-loader-script");
+        if (oldLoader) oldLoader.remove();
+
+        const script = document.createElement("script");
+        script.src = "loader.js"; // Твой локальный файл из корня проекта
+        script.id = "emu-loader-script";
+        document.body.appendChild(script);
     }
 }
 
