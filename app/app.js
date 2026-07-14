@@ -186,19 +186,20 @@ function startEmulator(game) {
 
     const currentPlatform = game.platform.toUpperCase();
 
-    // Очищаем все кастомные костыли, которые мы пытались сделать ранее
+    // ЖЁСТКО ОБНУЛЯЕМ ВСЕ СТАРЫЕ КАСТОМНЫЕ НАСТРОЙКИ, ЧТОБЫ ОНИ НЕ ПЕРЕКРЫВАЛИ CDN
     window.EJS_system = undefined;
     window.EJS_VirtualGamepadSettings = undefined;
     window.EJS_controlScheme = undefined;
     window.EJS_Buttons = null;
     window.EJS_paths = undefined;
 
-    // Базовые параметры для всех систем
+    // Базовые параметры
     window.EJS_player = '#game-player';
     window.EJS_biosUrl = '';
     window.EJS_gameUrl = game.rom_url; 
     window.EJS_language = 'ru';
     window.EJS_gameName = game.title.replace(/ /g, '_');
+    
     window.EJS_loadOnStart = true; 
     window.EJS_DefaultSaveMode = 'browser'; 
     window.EJS_autosave = true;             
@@ -206,20 +207,18 @@ function startEmulator(game) {
     window.EJS_startOnLoaded = true;
     window.EJS_volume = state.isSoundOn ? 1 : 0;
 
-    // Скрипт лоадера, который мы будем подключать
-    let loaderSrc = "loader.js"; // По умолчанию локальный для NES/GBA
+    let loaderSrc = "loader.js";
 
-    // ======= ТОЧНЫЕ ДАННЫЕ ИЗ ТВОЕГО ПРОШЛОГО РАБОЧЕГО ПРОЕКТА =======
+    // ======= ЖЕСТКОЕ РАЗДЕЛЕНИЕ НА СТАБИЛЬНЫЙ CDN И ЛОКАЛ =======
     if (currentPlatform === 'SEGA' || currentPlatform === '32X') {
-        // Как в твоем index (1).html — используем проверенное ядро genesis_plus_gx на PICODRIVE
-        window.EJS_core = 'genesis_plus_gx'; 
+        // Прописываем точный код современной системы для 6 кнопок
+        window.EJS_core = 'segaMD'; 
         
-        // ВАЖНО: Переключаем пути на официальный CDN, где лежит новый красивый 6-кнопочный джойстик!
+        // Перенаправляем путеводитель данных на CDN (чтобы подгрузился круглый джойстик)
         window.EJS_pathtodata = 'https://cdn.jsdelivr.net/gh/EmulatorJS/EmulatorJS@latest/data/';
         loaderSrc = "https://cdn.jsdelivr.net/gh/EmulatorJS/EmulatorJS@latest/data/loader.js";
-        
     } else {
-        // Для остальных платформ (NES, SNES, GBA) используем локальные файлы
+        // Для NES, SNES, GBA, SMS используем твою локальную стабильную сборку
         const platformMap = {
             'NES': 'nes',                  
             'SNES': 'snes9x',              
@@ -230,16 +229,14 @@ function startEmulator(game) {
             'GBA': 'mgba'
         };
         window.EJS_core = platformMap[currentPlatform] || 'nes';
-        window.EJS_pathtodata = './'; // Ищем локально в папке app
+        window.EJS_pathtodata = './'; // Ищем локально в папке проекта
         loaderSrc = "loader.js";
     }
-    // =================================================================
+    // ===========================================================
 
-    // Удаляем старый тег скрипта, если он остался
     const oldLoader = document.getElementById("emu-loader-script");
     if (oldLoader) oldLoader.remove();
 
-    // Подключаем правильный лоадер
     const script = document.createElement("script");
     script.src = loaderSrc;
     script.id = "emu-loader-script";
