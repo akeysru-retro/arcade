@@ -208,32 +208,50 @@ function startEmulator(game) {
         emuDiv.style.width = "100%"; emuDiv.style.height = "100%";
         container.appendChild(emuDiv);
 
-        // Жёсткий маппинг ядер по твоей локальной папке cores/
+        // Жёсткий маппинг систем под стандарты EmulatorJS (чтобы отрисовывались правильные геймпады)
         const platformMap = {
+            'SNES': 'snes',              
+            'SMS': 'sms',                
+            'TG16': 'tg16',        
+            'GB': 'gb',              
+            'GBC': 'gbc',             
+            'GBA': 'gba',
+            'SEGA': 'segaMD',            // Задаем segaMD для 16-битной Сеги, чтобы загружался нужный контроллер
+            '32X': 'sega32x'             
+        };
+
+        // Жёсткий маппинг ядер libretro по твоей локальной папке cores/
+        const coreMap = {
             'SNES': 'snes9x',              
             'SMS': 'smsplus',              
             'TG16': 'mednafen_pce',        
             'GB': 'gambatte',              
             'GBC': 'gambatte',             
             'GBA': 'mgba',
-            'SEGA': 'sega',      // Родное имя системы из твоего старого проекта!
-            '32X': 'picodrive'   // Родное локальное ядро для 32X
+            'SEGA': 'picodrive',         // Используем picodrive вместо неопределенной 'sega'
+            '32X': 'picodrive'   
         };
 
-        const systemCode = platformMap[currentPlatform] || 'sega';
+        const systemCode = platformMap[currentPlatform] || 'segaMD';
+        const coreCode = coreMap[currentPlatform] || 'picodrive';
 
-        // Полностью очищаем все ручные настройки кнопок (убираем кашу)
+        // Полностью очищаем все ручные настройки кнопок и предыдущие стили (убираем кашу)
         window.EJS_system = undefined;
         window.EJS_VirtualGamepadSettings = undefined;
         window.EJS_controlScheme = undefined;
         window.EJS_Buttons = null;
+        
+        if (window.EJS_emulator && typeof window.EJS_emulator.destroy === "function") {
+            try { window.EJS_emulator.destroy(); } catch(e) {}
+        }
 
         // Базовые параметры строго под твою локальную структуру папок
         window.EJS_player = '#game-player';
         window.EJS_biosUrl = '';
         window.EJS_gameUrl = game.rom_url; 
-        window.EJS_core = systemCode; 
-        window.EJS_pathtodata = './'; // Ищет loader.js и папки src/ прямо в корне app
+        window.EJS_core = coreCode;          // Какое libretro ядро запускать (.wasm файл)
+        window.EJS_system = systemCode;      // Какой скин джойстика/системы выводить на экран
+        window.EJS_pathtodata = './';        // Ищет loader.js и папки src/ прямо в корне app
         window.EJS_language = 'ru';
         window.EJS_gameName = game.title.replace(/ /g, '_');
 
