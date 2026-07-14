@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>9999 IN 1 - Ultimate Retro Arcade</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.min.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
     <style>
         body, html {
@@ -95,6 +96,7 @@
         .order-container { padding: 0 25px; box-sizing: border-box; width: 100%; }
         .order-text { font-size: 8px; line-height: 1.6; color: #aaa; margin-bottom: 20px; text-align: center; }
         .form-group { display: flex; flex-direction: column; gap: 8px; margin-bottom: 15px; }
+        .form-group { display: flex; flex-direction: column; gap: 8px; margin-bottom: 15px; }
         .form-label { font-size: 8px; color: #ffff00; }
         .form-input { 
             background: #111; border: 2px solid #555; padding: 10px; color: #fff; 
@@ -119,59 +121,59 @@
         .tab-item {
             display: flex; flex-direction: column; align-items: center; justify-content: center;
             flex-grow: 1; height: 100%; color: #888; cursor: pointer; background: none; border: none;
-            font-family: 'Press Start 2P', monospace; font-size: 7px; gap: 6px;
+            font-family: 'Press Start 2P', monospace; font-size: 6px; gap: 6px;
         }
         .tab-item.active { color: #ffff00; background: #1a1a1a; }
         .tab-icon { font-size: 14px; }
 
         #emulator-layer { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: #000; z-index: 50000; padding-top: 44px; box-sizing: border-box; }
         #emulator-container { width: 100%; height: 100%; background: #000; }
-		#intro-layer {
-    position: fixed;
-    top: 0; left: 0; right: 0; bottom: 0;
-    background-color: #000;
-    z-index: 9999999 !important; /* Выше всех меню и шапок */
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
+        
+        #intro-layer {
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background-color: #000;
+            z-index: 9999999 !important;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
         }
 
         #intro-video {
-        width: 100%;
-        height: auto;
-        max-height: 80vh;
-        object-fit: contain;
+            width: 100%;
+            height: auto;
+            max-height: 80vh;
+            object-fit: contain;
         }
 
         #skip-intro-btn {
-        position: absolute;
-        bottom: 30px;
-        background: rgba(17, 17, 17, 0.8);
-        border: 2px solid #555;
-        color: #888;
-        font-family: 'Press Start 2P', monospace;
-        font-size: 8px;
-        padding: 10px 15px;
-        cursor: pointer;
-        border-radius: 4px;
+            position: absolute;
+            bottom: 30px;
+            background: rgba(17, 17, 17, 0.8);
+            border: 2px solid #555;
+            color: #888;
+            font-family: 'Press Start 2P', monospace;
+            font-size: 8px;
+            padding: 10px 15px;
+            cursor: pointer;
+            border-radius: 4px;
         }
         #skip-intro-btn:active {
-        color: #ffff00;
-        border-color: #ffff00;
+            color: #ffff00;
+            border-color: #ffff00;
         }
     </style>
 </head>
 <body>
     <div id="intro-layer">
-    <video id="intro-video" playsinline disablePictureInPicture controlslist="nodownload">
-        <source src="https://akeysru-retro.github.io/arcade/app/intro.mp4" type="video/mp4">
-    </video>
-    <button id="skip-intro-btn" onclick="endIntro()">[ ПРОПУСТИТЬ СТАРТ ]</button>
-</div>
+        <video id="intro-video" playsinline disablePictureInPicture controlslist="nodownload">
+            <source src="https://akeysru-retro.github.io/arcade/app/intro.mp4" type="video/mp4">
+        </video>
+        <button id="skip-intro-btn" onclick="endIntro()">[ ПРОПУСТИТЬ СТАРТ ]</button>
+    </div>
 
     <div class="header-panel">
-        <!-- Кнопка "Сохранить" полностью удалена из разметки -->
         <button id="back-to-catalog" class="head-btn hidden" onclick="closeEmulator()">↩ МЕНЮ</button>
         <div id="main-title" style="font-size: 8px; letter-spacing: 1px;">9999 IN 1</div>
         <button id="emu-sound-btn" class="head-btn" onclick="toggleEmuSound()">🔊 ЗВУК</button>
@@ -182,7 +184,6 @@
             <source src="https://akeysru-retro.github.io/arcade/app/background-video.mp4" type="video/mp4">
         </video>
 
-        <!-- ВКЛАДКА ИГР -->
         <div id="tab-games" class="tab-content active">
             <div class="menu-title">9999 IN 1</div>
             <div style="padding: 0 20px 10px 20px; width: 100%; box-sizing: border-box;">
@@ -193,7 +194,12 @@
             <div class="pagination-container" id="games-pagination"></div>
         </div>
 
-        <!-- ВКЛАДКА СЕКРЕТОВ -->
+        <div id="section-journals" class="tab-content">
+            <div class="menu-title">ПРЕССА</div>
+            <div class="game-list" id="journals-list"></div>
+            <div class="pagination-container" id="journals-pagination"></div>
+        </div>
+
         <div id="tab-secrets" class="tab-content">
             <div class="menu-title">СЕКРЕТЫ</div>
             <div style="padding: 0 20px 15px 20px;">
@@ -203,7 +209,6 @@
             <div class="pagination-container" id="secrets-pagination"></div>
         </div>
 
-        <!-- ВКЛАДКА ЗАКАЗА С РАСШИРЕННЫМ ВЫПАДАЮЩИМ СПИСКОМ -->
         <div id="tab-order" class="tab-content">
             <div class="menu-title">ЗАКАЗ ИГР</div>
             <div class="order-container">
@@ -219,22 +224,22 @@
                         <option value="SNES">Super Nintendo</option>
                         <option value="SEGA">Sega</option>
                         <option value="32X">Sega 32X</option>
-                        <option value="SMS">Sega Master System</option>
                         <option value="TG16">PC Engine / TurboGrafx-16</option>
                         <option value="GB">Game Boy</option>
                         <option value="GBC">Game Boy Color</option>
                         <option value="GBA">Game Boy ADVANCE</option>
-                        <option value="ZX">ZX Spectrum</option>
                     </select>
                 </div>
                 <button class="order-submit-btn btn-launch-new" style="background: #0064ff; border-color: #0040aa;" onclick="submitOrder()">ОТПРАВИТЬ ЗАЯВКУ</button>
             </div>
         </div>
 
-        <!-- ТАБ БАР -->
         <div class="tab-bar" id="app-tab-bar">
             <button class="tab-item active" onclick="switchTab('games')">
                 <span class="tab-icon">🎮</span><span>ИГРЫ</span>
+            </button>
+            <button class="tab-item" onclick="switchTab('journals')">
+                <span class="tab-icon">📖</span><span>ПРЕССА</span>
             </button>
             <button class="tab-item" onclick="switchTab('secrets')">
                 <span class="tab-icon">🔑</span><span>СЕКРЕТЫ</span>
@@ -247,6 +252,17 @@
 
     <div id="emulator-layer">
         <div id="emulator-container"></div>
+    </div>
+
+    <div id="journal-layer" style="display: none; position: fixed; top: 44px; left: 0; right: 0; bottom: 0; background: #111; z-index: 100000; overflow-y: auto;">
+        <div style="display: flex; justify-content: space-between; align-items: center; background: #000; padding: 10px; border-bottom: 2px solid #333; position: sticky; top: 0; z-index: 10;">
+            <button class="page-btn" id="pdf-prev-btn">◀ СТР</button>
+            <span id="pdf-page-num" style="font-size: 8px; color: #ffff00; font-family: 'Press Start 2P', monospace;">0 / 0</span>
+            <button class="page-btn" id="pdf-next-btn">СТР ▶</button>
+        </div>
+        <div style="display: flex; justify-content: center; align-items: flex-start; padding: 15px 0; background: #111; min-height: calc(100vh - 110px);">
+            <canvas id="pdf-canvas" style="width: 100%; max-width: 380px; box-shadow: 0 0 10px #000; display: block;"></canvas>
+        </div>
     </div>
 
     <script src="app.js"></script>

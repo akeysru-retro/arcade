@@ -2,41 +2,43 @@ const API_URL = "https://script.google.com/macros/s/AKfycby95eSWi6EYQPY7sMzNIjpV
 const tg = window.Telegram.WebApp;
 tg.expand();
 
+// ПЕРЕМЕННЫЕ ДЛЯ КОРРЕКТНОЙ РАБОТЫ PDF.JS ЧИТАЛКИ
+let pdfDoc = null;
+let currentPdfPage = 1;
+let totalPdfPages = 0;
+let isPageRendering = false;
+let pdfCanvas = null;
+let pdfCtx = null;
+
 // ЕДИНЫЙ ОБРАБОТЧИК ДЛЯ СТАРТА ПРИЛОЖЕНИЯ
 document.addEventListener("DOMContentLoaded", () => {
-    loadDataFromGoogle();  // Загрузка игр в фоне
-    setupEventListeners(); // Настройка поиска
+    loadDataFromGoogle();  // Загрузка игр и прессы в фоне
+    setupEventListeners(); // Настройка поиска и кнопок PDF
 
     const introVideo = document.getElementById('intro-video');
     const introLayer = document.getElementById('intro-layer');
 
     if (introVideo) {
-        // Включаем muted, чтобы Telegram гарантированно разрешил автозапуск видео
         introVideo.muted = true; 
-        
         introVideo.play().catch((err) => {
             console.log("Автоплей заблокирован, убираем интро:", err);
-            endIntro(); // Если совсем всё плохо с видео — сразу пускаем в меню
+            endIntro(); 
         });
 
-        // Подстраховка: если юзер тапнет по экрану интро — включаем звук!
         if (introLayer) {
             introLayer.onclick = () => {
                 introVideo.muted = false;
             };
         }
 
-        // Когда интро доиграет — автоматически переходим в меню
         introVideo.onended = () => {
             endIntro();
         };
     } else {
-        // Если интро вообще нет в DOM — сразу открываем меню
         endIntro();
     }
 });
 
-// Функция закрытия интро и включения фонового видео меню
 function endIntro() {
     const introLayer = document.getElementById("intro-layer");
     const introVideo = document.getElementById("intro-video");
@@ -49,7 +51,6 @@ function endIntro() {
         introLayer.style.display = "none";
     }
 
-    // Запускаем фоновое зацикленное видео каталога игр
     const menuBgVideo = document.getElementById('bg-video');
     if (menuBgVideo) { 
         menuBgVideo.muted = true; 
@@ -62,9 +63,11 @@ let state = {
     filteredGames: [],
     secrets: [],
     filteredSecrets: [],
+    journals: [],       // Сюда будут падать журналы из Таблицы
     currentTab: 'games',
     gamesPage: 1,
     secretsPage: 1,
+    journalsPage: 1,    // Страница пагинации списка журналов
     itemsPerPage: 5,
     showOnlyFavorites: false,
     selectedGame: null,
@@ -77,12 +80,14 @@ function loadDataFromGoogle() {
         .then(data => {
             state.games = data.games || [];
             state.secrets = data.secrets || [];
+            state.journals = data.journals || []; // Читаем прессу
             
             state.games.sort((a, b) => a.title.toLowerCase().localeCompare(b.title.toLowerCase(), 'ru'));
             state.filteredGames = [...state.games];
             
             filterGames();
             filterAndRenderSecrets();
+            renderJournalsPage(); // Строим список журналов
         })
         .catch(err => console.error("Ошибка сети:", err));
 }
@@ -170,7 +175,104 @@ function renderGamesPage() {
     });
 }
 
-// 4. ИНИЦИАЛИЗАЦИЯ ЭМУЛЯТОРА — КОРРЕКТНЫЙ ЛОКАЛЬНЫЙ МАППИНГ (БЕЗ SMS И ZX)
+// ОТРИСОВКА СПИСКА ЖУРНАЛОВ В МЕНЮ "ПРЕССА"
+function renderJournalsPage() {
+    const container = document.getElementById("journals-list");
+    if (!container) return;
+    container.innerHTML = "";
+    
+    if (state.journals.length === 0) {
+        container.innerHTML = '<div style="text-align:center; font-size:8px; color:#555; padding:30px 0;">НЕТ ДОСТУПНЫХ ЖУРНАЛОВ</div>';
+        renderPagination('journals-pagination', 0, 1, () => {});
+        return;
+    }
+    
+    const start = (state.journalsPage - 1) * state.itemsPerPage;
+    const end = start + state.itemsPerPage;
+    const pageJournals = state.journals.slice(start, end);
+    
+    pageJournals.forEach((journal, index) => {
+        const globalIndex = start + index + 1;
+        const num = globalIndex.toString().padStart(4, '0');
+        const item = document.createElement('div');
+        item.className = 'retro-item';
+        item.style.cursor = 'pointer';
+        
+        item.innerHTML = `
+            <div class="game-click-zone" style="justify-content: flex-start; gap: 10px;">
+                <div class="game-title-text">${num}. ${journal.title}</div>
+            </div>
+            <span class="item-system-badge" style="background:#00aa00;">PDF</span>
+        `;
+        
+        item.onclick = () => openPdfReader(journal.file_url);
+        container.appendChild(item);
+    });
+    
+    const totalPages = Math.ceil(state.journals.length / state.itemsPerPage);
+    renderPagination('journals-pagination', totalPages, state.journalsPage, (newPage) => {
+        state.journalsPage = newPage;
+        renderJournalsPage();
+    });
+}
+
+// ЛОГИКА ДВИЖКА PDF.JS ДЛЯ ЧТЕНИЯ ЖУРНАЛОВ
+function openPdfReader(pdfUrl) {
+    document.getElementById("back-to-catalog").classList.remove("hidden");
+    document.getElementById("journal-layer").style.display = "block";
+    document.getElementById("app-tab-bar").style.display = "none";
+    
+    pdfCanvas = document.getElementById('pdf-canvas');
+    pdfCtx = pdfCanvas.getContext('2d');
+    
+    currentPdfPage = 1;
+    document.getElementById('pdf-page-num').textContent = "ЗАГРУЗКА...";
+    
+    // Настраиваем воркер для PDF.js (требование библиотеки)
+    pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.worker.min.js';
+    
+    // Качаем и инициализируем PDF документ
+    pdfjsLib.getDocument(pdfUrl).promise.then(pdfDoc_ => {
+        pdfDoc = pdfDoc_;
+        totalPdfPages = pdfDoc.numPages;
+        renderPdfPage(currentPdfPage);
+    }).catch(err => {
+        alert("ОШИБКА ОТКРЫТИЯ PDF ЖУРНАЛА!");
+        closeEmulator();
+    });
+}
+
+function renderPdfPage(num) {
+    isPageRendering = true;
+    document.getElementById('pdf-page-num').textContent = `${num} / ${totalPdfPages}`;
+    
+    pdfDoc.getPage(num).then(page => {
+        // Рассчитываем масштаб под экран телефона (обычно ширина ~360-380px)
+        const viewport = page.getViewport({ scale: 1 });
+        const desiredWidth = Math.min(window.innerWidth - 30, 380);
+        const scale = desiredWidth / viewport.width;
+        const scaledViewport = page.getViewport({ scale: scale });
+        
+        pdfCanvas.height = scaledViewport.height;
+        pdfCanvas.width = scaledViewport.width;
+        
+        const renderContext = {
+            canvasContext: pdfCtx,
+            viewport: scaledViewport
+        };
+        
+        page.render(renderContext).promise.then(() => {
+            isPageRendering = false;
+        });
+    });
+}
+
+function queueRenderPage(num) {
+    if (isPageRendering) return;
+    renderPdfPage(num);
+}
+
+// 4. ИНИЦИАЛИЗАЦИЯ ЭМУЛЯТОРА
 function startEmulator(game) {
     state.selectedGame = game;
     document.getElementById("back-to-catalog").classList.remove("hidden");
@@ -191,7 +293,6 @@ function startEmulator(game) {
 
     const currentPlatform = game.platform.toUpperCase();
 
-    // Карта рабочих локальных ядер (SMS и ZX полностью удалены)
     const coreMap = {
         'NES': 'fceumm',          
         'SNES': 'snes9x',         
@@ -205,7 +306,6 @@ function startEmulator(game) {
 
     const coreCode = coreMap[currentPlatform] || 'segaMD';
 
-    // Полный сброс параметров виртуального контроллера
     window.EJS_system = undefined;
     window.EJS_VirtualGamepadSettings = undefined;
     window.EJS_controlScheme = undefined;
@@ -215,7 +315,6 @@ function startEmulator(game) {
         try { window.EJS_emulator.destroy(); } catch(e) {}
     }
 
-    // Загрузка параметров в твой loader.js
     window.EJS_player = '#game-player';
     window.EJS_biosUrl = '';
     window.EJS_gameUrl = game.rom_url; 
@@ -241,7 +340,9 @@ function startEmulator(game) {
 }
 
 function closeEmulator() {
+    // Закрываем и слой эмулятора, и слой читалки PDF, если они были активны
     document.getElementById("emulator-layer").style.display = "none";
+    document.getElementById("journal-layer").style.display = "none";
     document.getElementById("back-to-catalog").classList.add("hidden");
     document.getElementById("app-tab-bar").style.display = "flex";
     
@@ -262,40 +363,30 @@ function closeEmulator() {
                 window.__ejsAudioContext = null;
             }
         }
-    } catch (e) {
-        console.error("Ошибка при очистке аудио-контекстов:", e);
-    }
+    } catch (e) {}
 
     const oldContainer = document.getElementById("emulator-container");
     if (oldContainer) {
         oldContainer.remove();
-        
         const newContainer = document.createElement("div");
         newContainer.id = "emulator-container";
-        newContainer.style.width = "100%";
-        newContainer.style.height = "100%";
+        newContainer.style.width = "100%"; newContainer.style.height = "100%";
         newContainer.style.background = "#000";
-        
         document.getElementById("emulator-layer").appendChild(newContainer);
     }
     
-    window.EJS_emulator = null;
-    window.EJS_player = null;
-    window.EJS_gameUrl = null;
-    window.EJS_core = null;
+    window.EJS_emulator = null; pdfDoc = null;
     
     const oldLoader = document.getElementById("emu-loader-script");
     if (oldLoader) oldLoader.remove();
 
     const bgVideo = document.getElementById("bg-video");
     if (bgVideo) {
-        if (state.isSoundOn) {
-            bgVideo.muted = false;
-        }
+        if (state.isSoundOn) { bgVideo.muted = false; }
         bgVideo.play().catch(() => {});
     }
 
-    switchTab('games');
+    switchTab(state.currentTab);
 }
 
 function submitOrder() {
@@ -340,7 +431,6 @@ function submitOrder() {
             };
             
             fetch(API_URL, { method: "POST", mode: "no-cors", headers: { "Content-Type": "application/json" }, body: JSON.stringify(cancelData) });
-            
             document.getElementById("order-game-name").value = "";
         }
     });
@@ -387,6 +477,7 @@ function renderSecretsPage() {
 
 function renderPagination(containerId, totalPages, currentPage, callback) {
     const container = document.getElementById(containerId);
+    if (!container) return;
     container.innerHTML = "";
     if (totalPages <= 1) return;
 
@@ -407,14 +498,33 @@ function renderPagination(containerId, totalPages, currentPage, callback) {
 function switchTab(tabName) {
     state.currentTab = tabName;
     document.querySelectorAll(".tab-content").forEach(el => el.classList.remove("active"));
-    document.getElementById(`tab-${tabName}`).classList.add("active");
+    document.querySelectorAll(".app-section").forEach(el => el.style.display = "none");
+    
+    const targetSection = document.getElementById(`section-${tabName}`);
+    if (targetSection) targetSection.style.display = "block";
     
     document.querySelectorAll(".tab-item").forEach(el => el.classList.remove("active"));
-    const idx = tabName === 'games' ? 0 : tabName === 'secrets' ? 1 : 2;
+    const idx = tabName === 'games' ? 0 : tabName === 'journals' ? 1 : tabName === 'secrets' ? 2 : 3;
     document.querySelectorAll(".tab-item")[idx].classList.add("active");
 }
 
 function setupEventListeners() {
     document.getElementById("search-game-input").addEventListener("input", () => { state.gamesPage = 1; filterGames(); });
     document.getElementById("search-secret-input").addEventListener("input", () => { state.secretsPage = 1; filterAndRenderSecrets(); });
+
+    // Кнопки перелистывания страниц PDF внутри слоя читалки
+    document.getElementById('pdf-prev-btn').onclick = () => {
+        if (currentPdfPage <= 1) return;
+        currentPdfPage--;
+        queueRenderPage(currentPdfPage);
+    };
+    
+    document.getElementById('pdf-next-btn').onclick = () => {
+        if (currentPdfPage >= totalPdfPages) return;
+        currentPdfPage++;
+        queueRenderPage(currentPdfPage);
+    };
+
+    // Вешаем событие на кнопку Назад/Меню, чтобы она закрывала читалку тоже
+    document.getElementById('back-to-catalog').onclick = closeEmulator;
 }
