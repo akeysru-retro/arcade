@@ -169,7 +169,7 @@ function renderGamesPage() {
     });
 }
 
-// 4. ИНИЦИАЛИЗАЦИЯ ЭМУЛЯТОРА — СТАРТ С СИНХРОНИЗАЦИЕЙ СТАРЫХ НАСТРОЕК СЕГИ
+// 4. ИНИЦИАЛИЗАЦИЯ ЭМУЛЯТОРА — СТАРТ НА КЛАССИЧЕСКОЙ СХЕМЕ ДЛЯ ИСПРАВЛЕНИЯ КУРКА СЕГИ
 function startEmulator(game) {
     state.selectedGame = game;
     document.getElementById("back-to-catalog").classList.remove("hidden");
@@ -190,22 +190,22 @@ function startEmulator(game) {
 
     const currentPlatform = game.platform.toUpperCase();
 
-    // Возвращаем проверенный маппинг систем под твой локальный loader.js
+    // Возвращаем в точности тот маппинг, при котором Сега работала с нужным падом
     const platformMap = {
-        'NES': 'fceumm',
-        'SNES': 'snes9x',              
-        'SMS': 'smsplus',              
-        'TG16': 'mednafen_pce',        
-        'GB': 'gambatte',              
-        'GBC': 'gambatte',             
-        'GBA': 'mgba',
-        'SEGA': 'sega',      // Возвращаем родное рабочее имя системы!
-        '32X': 'picodrive'   // Возвращаем родное рабочее ядро для 32X
+        'NES': 'nes',
+        'SNES': 'snes',              
+        'SMS': 'sms',                
+        'TG16': 'tg16',        
+        'GB': 'gb',              
+        'GBC': 'gbc',             
+        'GBA': 'gba',
+        'SEGA': 'segaMD',    // Твой оригинальный рабочий скин из первой сборки
+        '32X': 'sega32x'     
     };
 
-    const systemCode = platformMap[currentPlatform] || 'sega';
+    const systemCode = platformMap[currentPlatform] || 'segaMD';
 
-    // Полностью очищаем все ручные настройки кнопок (убираем кашу)
+    // Сбрасываем переменные в undefined, чтобы они не мешали локальному loader.js
     window.EJS_system = undefined;
     window.EJS_VirtualGamepadSettings = undefined;
     window.EJS_controlScheme = undefined;
@@ -215,11 +215,11 @@ function startEmulator(game) {
         try { window.EJS_emulator.destroy(); } catch(e) {}
     }
 
-    // Базовые параметры строго под твою локальную структуру папок
+    // Твои проверенные базовые параметры
     window.EJS_player = '#game-player';
     window.EJS_biosUrl = '';
     window.EJS_gameUrl = game.rom_url; 
-    window.EJS_core = systemCode; 
+    window.EJS_core = systemCode; // loader.js ищет папку cores/ именно по EJS_core
     window.EJS_pathtodata = './'; 
     window.EJS_language = 'ru';
     window.EJS_gameName = game.title.replace(/ /g, '_');
@@ -299,7 +299,6 @@ function closeEmulator() {
     switchTab('games');
 }
 
-// 5. СЕКРЕТЫ И ЗАКАЗ ИГРЫ
 function submitOrder() {
     const gameName = document.getElementById("order-game-name").value.trim();
     const platform = document.getElementById("order-platform").value;
