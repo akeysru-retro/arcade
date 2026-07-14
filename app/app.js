@@ -2,7 +2,6 @@ const API_URL = "https://script.google.com/macros/s/AKfycby95eSWi6EYQPY7sMzNIjpV
 const tg = window.Telegram.WebApp;
 tg.expand();
 
-// ПЕРЕМЕННЫЕ ДЛЯ КОРРЕКТНОЙ РАБОТЫ PDF.JS ЧИТАЛКИ
 let pdfDoc = null;
 let currentPdfPage = 1;
 let totalPdfPages = 0;
@@ -10,10 +9,9 @@ let isPageRendering = false;
 let pdfCanvas = null;
 let pdfCtx = null;
 
-// ЕДИНЫЙ ОБРАБОТЧИК ДЛЯ СТАРТА ПРИЛОЖЕНИЯ
 document.addEventListener("DOMContentLoaded", () => {
-    loadDataFromGoogle();  // Загрузка игр и прессы в фоне
-    setupEventListeners(); // Настройка поиска и кнопок PDF
+    loadDataFromGoogle();  
+    setupEventListeners(); 
 
     const introVideo = document.getElementById('intro-video');
     const introLayer = document.getElementById('intro-layer');
@@ -63,11 +61,11 @@ let state = {
     filteredGames: [],
     secrets: [],
     filteredSecrets: [],
-    journals: [],       // Сюда будут падать журналы из Таблицы
+    journals: [],       
     currentTab: 'games',
     gamesPage: 1,
     secretsPage: 1,
-    journalsPage: 1,    // Страница пагинации списка журналов
+    journalsPage: 1,    
     itemsPerPage: 5,
     showOnlyFavorites: false,
     selectedGame: null,
@@ -80,14 +78,14 @@ function loadDataFromGoogle() {
         .then(data => {
             state.games = data.games || [];
             state.secrets = data.secrets || [];
-            state.journals = data.journals || []; // Читаем прессу
+            state.journals = data.journals || []; 
             
             state.games.sort((a, b) => a.title.toLowerCase().localeCompare(b.title.toLowerCase(), 'ru'));
             state.filteredGames = [...state.games];
             
             filterGames();
             filterAndRenderSecrets();
-            renderJournalsPage(); // Строим список журналов
+            renderJournalsPage(); 
         })
         .catch(err => console.error("Ошибка сети:", err));
 }
@@ -115,7 +113,6 @@ function filterGames() {
         const matchesFav = !state.showOnlyFavorites || isGameFavorite(game.id);
         return matchesSearch && matchesFav;
     });
-    state.gamesPage = 1; 
     renderGamesPage();
 }
 
@@ -175,14 +172,13 @@ function renderGamesPage() {
     });
 }
 
-// ОТРИСОВКА СПИСКА ЖУРНАЛОВ В МЕНЮ "ПРЕССА"
 function renderJournalsPage() {
     const container = document.getElementById("journals-list");
     if (!container) return;
     container.innerHTML = "";
     
     if (state.journals.length === 0) {
-        container.innerHTML = '<div style="text-align:center; font-size:8px; color:#555; padding:30px 0;">НЕТ ДОСТУПНЫХ ЖУРНАЛОВ</div>';
+        container.innerHTML = '<div style="text-align:center; font-size:8px; color:#555; padding:30px 0;">НЕТ ДОСТУПНЫХ КНИГ</div>';
         renderPagination('journals-pagination', 0, 1, () => {});
         return;
     }
@@ -216,7 +212,6 @@ function renderJournalsPage() {
     });
 }
 
-// ЛОГИКА ДВИЖКА PDF.JS ДЛЯ ЧТЕНИЯ ЖУРНАЛОВ
 function openPdfReader(pdfUrl) {
     document.getElementById("back-to-catalog").classList.remove("hidden");
     document.getElementById("journal-layer").style.display = "block";
@@ -228,16 +223,14 @@ function openPdfReader(pdfUrl) {
     currentPdfPage = 1;
     document.getElementById('pdf-page-num').textContent = "ЗАГРУЗКА...";
     
-    // Настраиваем воркер для PDF.js (требование библиотеки)
     pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.worker.min.js';
     
-    // Качаем и инициализируем PDF документ
     pdfjsLib.getDocument(pdfUrl).promise.then(pdfDoc_ => {
         pdfDoc = pdfDoc_;
         totalPdfPages = pdfDoc.numPages;
         renderPdfPage(currentPdfPage);
     }).catch(err => {
-        alert("ОШИБКА ОТКРЫТИЯ PDF ЖУРНАЛА!");
+        alert("ОШИБКА ОТКРЫТИЯ PDF КНИГИ!");
         closeEmulator();
     });
 }
@@ -247,7 +240,6 @@ function renderPdfPage(num) {
     document.getElementById('pdf-page-num').textContent = `${num} / ${totalPdfPages}`;
     
     pdfDoc.getPage(num).then(page => {
-        // Рассчитываем масштаб под экран телефона (обычно ширина ~360-380px)
         const viewport = page.getViewport({ scale: 1 });
         const desiredWidth = Math.min(window.innerWidth - 30, 380);
         const scale = desiredWidth / viewport.width;
@@ -272,7 +264,6 @@ function queueRenderPage(num) {
     renderPdfPage(num);
 }
 
-// 4. ИНИЦИАЛИЗАЦИЯ ЭМУЛЯТОРА
 function startEmulator(game) {
     state.selectedGame = game;
     document.getElementById("back-to-catalog").classList.remove("hidden");
@@ -340,7 +331,6 @@ function startEmulator(game) {
 }
 
 function closeEmulator() {
-    // Закрываем и слой эмулятора, и слой читалки PDF, если они были активны
     document.getElementById("emulator-layer").style.display = "none";
     document.getElementById("journal-layer").style.display = "none";
     document.getElementById("back-to-catalog").classList.add("hidden");
@@ -495,24 +485,37 @@ function renderPagination(containerId, totalPages, currentPage, callback) {
     container.appendChild(prevBtn); container.appendChild(infoSpan); container.appendChild(nextBtn);
 }
 
+// ТОЧНОЕ ИСПРАВЛЕНИЕ: Теперь перебираются строго классы .tab-content и корректно вешается активный класс!
 function switchTab(tabName) {
     state.currentTab = tabName;
-    document.querySelectorAll(".tab-content").forEach(el => el.classList.remove("active"));
-    document.querySelectorAll(".app-section").forEach(el => el.style.display = "none");
     
-    const targetSection = document.getElementById(`section-${tabName}`);
-    if (targetSection) targetSection.style.display = "block";
+    // Скрываем абсолютно все вкладки с экрана
+    document.querySelectorAll(".tab-content").forEach(el => {
+        el.classList.remove("active");
+    });
     
-    document.querySelectorAll(".tab-item").forEach(el => el.classList.remove("active"));
+    // Показываем нужную вкладку по её ID (tab-games, tab-journals и т.д.)
+    const targetSection = document.getElementById(`tab-${tabName}`);
+    if (targetSection) {
+        targetSection.classList.add("active");
+    }
+    
+    // Переключаем подсветку кнопок в нижнем меню
+    document.querySelectorAll(".tab-item").forEach(el => {
+        el.classList.remove("active");
+    });
+    
     const idx = tabName === 'games' ? 0 : tabName === 'journals' ? 1 : tabName === 'secrets' ? 2 : 3;
-    document.querySelectorAll(".tab-item")[idx].classList.add("active");
+    const activeBtn = document.querySelectorAll(".tab-item")[idx];
+    if (activeBtn) {
+        activeBtn.classList.add("active");
+    }
 }
 
 function setupEventListeners() {
     document.getElementById("search-game-input").addEventListener("input", () => { state.gamesPage = 1; filterGames(); });
     document.getElementById("search-secret-input").addEventListener("input", () => { state.secretsPage = 1; filterAndRenderSecrets(); });
 
-    // Кнопки перелистывания страниц PDF внутри слоя читалки
     document.getElementById('pdf-prev-btn').onclick = () => {
         if (currentPdfPage <= 1) return;
         currentPdfPage--;
@@ -525,6 +528,5 @@ function setupEventListeners() {
         queueRenderPage(currentPdfPage);
     };
 
-    // Вешаем событие на кнопку Назад/Меню, чтобы она закрывала читалку тоже
     document.getElementById('back-to-catalog').onclick = closeEmulator;
 }
