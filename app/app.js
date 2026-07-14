@@ -186,50 +186,89 @@ function startEmulator(game) {
 
     const currentPlatform = game.platform.toUpperCase();
 
-    // Базовые настройки
+    // Маппинг ядер по твоей таблице Cores
+    const platformMap = {
+        'NES': 'nes',                  
+        'SNES': 'snes9x',              
+        'SEGA': 'picodrive',        // picodrive отлично оптимизирован для обеих платформ
+        '32X': 'picodrive',            
+        'SMS': 'smsplus',              
+        'TG16': 'mednafen_pce',        
+        'GB': 'gambatte',              
+        'GBC': 'gambatte',             
+        'GBA': 'mgba'
+    };
+    
+    const systemCode = platformMap[currentPlatform] || 'nes';
+
     window.EJS_player = '#game-player';
     window.EJS_biosUrl = '';
     window.EJS_gameUrl = game.rom_url; 
+    window.EJS_core = systemCode; 
     window.EJS_pathtodata = './'; 
     window.EJS_language = 'ru';
     window.EJS_gameName = game.title.replace(/ /g, '_');
 
-    // ======= ТОЧНЫЙ МАППИНГ ПО КОДУ EMULATOR.MIN.JS =======
+    // ======= РУЧНАЯ СБОРКА 6-КНОПОЧНОЙ СЕГИ ПО НАЙДЕННОЙ СПЕЦИФИКАЦИИ =======
     if (currentPlatform === 'SEGA' || currentPlatform === '32X') {
-        // Жестко включаем код ядра genesis_plus_gx. 
-        // По коду файла это единственный способ заставить его вывести 6-кнопочный джойстик Сеги!
-        window.EJS_core = 'genesis_plus_gx'; 
-        
-        // Для интерфейса v4 дублируем системный маркер Мегадрайва
-        window.EJS_system = 'segaMD'; 
-
-        if (currentPlatform === '32X') {
-            // ХАК ДЛЯ 32X: Лоадер думает, что запускает обычную Сегу и рисует 6 кнопок,
-            // но вместо файла сеги мы подсовываем ему файл picodrive для запуска 32X!
-            window.EJS_paths = {
-                'genesis_plus_gx': './cores/picodrive.js' 
-            };
-        } else {
-            window.EJS_paths = undefined; // Обычная сега грузит свое родное сеговское ядро
-        }
-    } else if (currentPlatform === 'SMS') {
-        // Для Master System используем ее родное кодовое имя из файла
-        window.EJS_core = 'smsplus';
-        window.EJS_system = 'segaMS'; // Даст аккуратный 2-кнопочный джойстик SMS
-        window.EJS_paths = undefined;
-    } else {
-        // Остальные платформы (NES, SNES, GBA)
-        const platformMap = { 'NES': 'nes', 'SNES': 'snes9x', 'GB': 'gambatte', 'GBC': 'gambatte', 'GBA': 'mgba', 'TG16': 'mednafen_pce' };
-        window.EJS_core = platformMap[currentPlatform] || 'nes';
+        // Выключаем авто-определение системы, чтобы эмулятор не сбрасывал джойстик на SMS
         window.EJS_system = undefined;
-        window.EJS_paths = undefined;
-    }
-    // =======================================================
 
-    // Полностью убираем ручную верстку, так как встроенный segaMD-пад из файла сам идеально встает на экране
-    window.EJS_VirtualGamepadSettings = undefined;
-    window.EJS_controlScheme = undefined;
-    window.EJS_Buttons = null;
+        window.EJS_VirtualGamepadSettings = [
+            // --- КРЕСТОВИНА (Слева, адаптивные % от экрана) ---
+            {
+                type: "dpad",
+                location: "left",
+                left: "15%",
+                top: "55%",
+                joystickInput: false,
+                inputValues: [4, 5, 6, 7] // Вверх, Вниз, Влево, Вправо
+            },
+            
+            // --- НИЖНИЙ РЯД СЕГОВСКИХ КНОПОК: A, B, C (Разносим через проценты right) ---
+            {
+                type: "button", text: "A", id: "sega_a", location: "right",
+                right: "65%", top: "65%", bold: true, fontSize: 24, input_value: 0 // Маппится на B в RetroArch
+            },
+            {
+                type: "button", text: "B", id: "sega_b", location: "right",
+                right: "40%", top: "65%", bold: true, fontSize: 24, input_value: 1 // Маппится на Y в RetroArch
+            },
+            {
+                type: "button", text: "C", id: "sega_c", location: "right",
+                right: "15%", top: "65%", bold: true, fontSize: 24, input_value: 11 // Маппится на R в RetroArch
+            },
+            
+            // --- ВЕРХНИЙ РЯД СЕГОВСКИХ КНОПОК: X, Y, Z (Строго над нижним рядом) ---
+            {
+                type: "button", text: "X", id: "sega_x", location: "right",
+                right: "65%", top: "30%", bold: true, fontSize: 18, input_value: 8 // Маппится на A в RetroArch
+            },
+            {
+                type: "button", text: "Y", id: "sega_y", location: "right",
+                right: "40%", top: "30%", bold: true, fontSize: 18, input_value: 9 // Маппится на X в RetroArch
+            },
+            {
+                type: "button", text: "Z", id: "sega_z", location: "right",
+                right: "15%", top: "30%", bold: true, fontSize: 18, input_value: 10 // Маппится на L в RetroArch
+            },
+            
+            // --- СЛУЖЕБНЫЕ КНОПКИ ПО ЦЕНТРУ (START и SELECT) ---
+            {
+                type: "button", text: "START", id: "sega_start", location: "center",
+                left: "60%", top: "85%", fontSize: 12, block: true, input_value: 3
+            },
+            {
+                type: "button", text: "MODE", id: "sega_select", location: "center",
+                left: "20%", top: "85%", fontSize: 12, block: true, input_value: 2
+            }
+        ];
+    } else {
+        // Для остальных систем (NES, SNES, SMS, GBA) убираем кастомную раскладку
+        window.EJS_system = undefined;
+        window.EJS_VirtualGamepadSettings = undefined;
+    }
+    // =======================================================================
 
     window.EJS_loadOnStart = true; 
     window.EJS_DefaultSaveMode = 'browser'; 
