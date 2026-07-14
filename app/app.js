@@ -2,18 +2,6 @@ const API_URL = "https://script.google.com/macros/s/AKfycby95eSWi6EYQPY7sMzNIjpV
 const tg = window.Telegram.WebApp;
 tg.expand();
 
-// ГЛОБАЛЬНЫЕ ПЕРЕМЕННЫЕ ДЛЯ ТВОЕГО ЛОКАЛЬНОГО NES (Из твоего оригинального index.html)
-var canvas = null;
-var ctx = null;
-var audioCtx = null;
-var audioEnabled = false;
-var bufferSize = 4096;
-var audioBuffer = new Float32Array(bufferSize);
-var audioBufferIndex = 0;
-var gameLoopInterval = null;
-var currentRomName = "";
-var currentSystem = "nes";
-
 // ЕДИНЫЙ ОБРАБОТЧИК ДЛЯ СТАРТА ПРИЛОЖЕНИЯ
 document.addEventListener("DOMContentLoaded", () => {
     loadDataFromGoogle();  // Загрузка игр в фоне
@@ -181,33 +169,7 @@ function renderGamesPage() {
     });
 }
 
-// ТВОЙ ОРИГИНАЛЬНЫЙ СКРИПТ КНОПОК ДЛЯ ЛОКАЛЬНОГО NES
-function bindYourNesKey(elementId, nesKey) {
-    var el = document.getElementById(elementId);
-    if(el) {
-        el.ontouchstart = null; el.ontouchend = null; el.onmousedown = null; el.onmouseup = null;
-        
-        el.addEventListener('touchstart', function(e) { 
-            e.preventDefault(); 
-            if (tg.HapticFeedback) tg.HapticFeedback.impactOccurred('light');
-            if(currentSystem === "nes" && window.nes) window.nes.buttonDown(1, nesKey); 
-        }, { passive: false });
-        
-        el.addEventListener('touchend', function(e) { 
-            e.preventDefault(); 
-            if(currentSystem === "nes" && window.nes) window.nes.buttonUp(1, nesKey); 
-        }, { passive: false });
-        
-        el.addEventListener('mousedown', function(e) { 
-            if(currentSystem === "nes" && window.nes) window.nes.buttonDown(1, nesKey); 
-        });
-        el.addEventListener('mouseup', function(e) { 
-            if(currentSystem === "nes" && window.nes) window.nes.buttonUp(1, nesKey); 
-        });
-    }
-}
-
-// 4. ИНИЦИАЛИЗАЦИЯ ЭМУЛЯТОРА — АВТОМАТИЧЕСКИЙ СТАРТ РОМА
+// 4. ИНИЦИАЛИЗАЦИЯ ЭМУЛЯТОРА — ПОЛНОСТЬЮ НА ЕДИННОМ ДВИЖКЕ EMULATORJS С ЧЕТКИМ МАППИНГОМ ЯДЕР
 function startEmulator(game) {
     state.selectedGame = game;
     document.getElementById("back-to-catalog").classList.remove("hidden");
@@ -217,126 +179,85 @@ function startEmulator(game) {
     const container = document.getElementById("emulator-container");
     container.innerHTML = ""; 
 
+    // Скрываем внешний HTML-пад (он больше не нужен, EmulatorJS отрисует все сам изнутри)
+    if (document.getElementById('gamepad')) {
+        document.getElementById('gamepad').style.display = 'none';
+    }
+
+    const emuDiv = document.createElement("div");
+    emuDiv.id = "game-player";
+    emuDiv.style.width = "100%"; emuDiv.style.height = "100%";
+    container.appendChild(emuDiv);
+
     const currentPlatform = game.platform.toUpperCase();
 
-    // ======= 1. ТВОЙ ЗНАКОМЫЙ ЛОКАЛЬНЫЙ НЕС ИЗ INDEX.HTML =======
-    if (currentPlatform === 'NES') {
-        currentSystem = "nes";
-        currentRomName = game.rom_url;
+    // 1. Маппинг Скин-кодов систем (отвечает за правильный геймпад на экране)
+    const platformMap = {
+        'NES': 'nes',
+        'SNES': 'snes',              
+        'SMS': 'sms',                
+        'TG16': 'tg16',        
+        'GB': 'gb',              
+        'GBC': 'gbc',             
+        'GBA': 'gba',
+        'SEGA': 'segaMD',    
+        '32X': 'sega32x'     
+    };
 
-        // Показываем canvas-контейнер и джойстик, как заложено в твоем HTML
-        document.getElementById('game-container').style.display = 'flex';
-        if (document.getElementById('gamepad')) {
-            document.getElementById('gamepad').style.display = 'flex';
-        }
+    // 2. Жесткий маппинг `.wasm` ядер, которые реально лежат в твоей папке cores/
+    const coreMap = {
+        'NES': 'fceumm',          // Стандартное рабочее ядро NES для EmulatorJS
+        'SNES': 'snes9x',              
+        'SMS': 'smsplus',              
+        'TG16': 'mednafen_pce',        
+        'GB': 'gambatte',              
+        'GBC': 'gambatte',             
+        'GBA': 'mgba',
+        'SEGA': 'genesis_plus_gx', // Изменяем с "sega" на стандартное стабильное ядро 16-бит
+        '32X': 'picodrive'   
+    };
 
-        canvas = document.getElementById('nes-canvas');
-        if (canvas) ctx = canvas.getContext('2d');
+    const systemCode = platformMap[currentPlatform] || 'segaMD';
+    const coreCode = coreMap[currentPlatform] || 'genesis_plus_gx';
 
-        // Привязываем кнопки заново, чтобы не отваливались
-        bindYourNesKey('up', jsnes.Controller.BUTTON_UP); 
-        bindYourNesKey('down', jsnes.Controller.BUTTON_DOWN);
-        bindYourNesKey('left', jsnes.Controller.BUTTON_LEFT); 
-        bindYourNesKey('right', jsnes.Controller.BUTTON_RIGHT);
-        bindYourNesKey('btn-a', jsnes.Controller.BUTTON_A); 
-        bindYourNesKey('btn-b', jsnes.Controller.BUTTON_B);
-        bindYourNesKey('btn-start', jsnes.Controller.BUTTON_START); 
-        bindYourNesKey('btn-select', jsnes.Controller.BUTTON_SELECT);
+    // Полностью очищаем все ручные настройки кнопок, чтобы не копить мусор в памяти
+    window.EJS_system = undefined;
+    window.EJS_VirtualGamepadSettings = undefined;
+    window.EJS_controlScheme = undefined;
+    window.EJS_Buttons = null;
 
-        // Твоя родная загрузка ROM через XMLHttpRequest
-        var req = new XMLHttpRequest();
-        req.open("GET", game.rom_url, true);
-        req.overrideMimeType("text/plain; charset=x-user-defined");
-        req.onload = function() {
-            if (req.status === 200) {
-                if (window.nes) {
-                    window.nes.loadROM(this.responseText);
-                    if(gameLoopInterval) clearInterval(gameLoopInterval);
-                    gameLoopInterval = setInterval(function() { window.nes.frame(); }, 1000 / 60);
-                }
-            } else { 
-                alert("ОШИБКА РОМА!"); 
-                closeEmulator(); 
-            }
-        };
-        req.onerror = function() {
-            alert("ОШИБКА СЕТИ!"); 
-            closeEmulator();
-        };
-        req.send();
-    } 
-    // ======= 2. ДЛЯ ВСЕХ ОСТАЛЬНЫХ ПЛАТФОРМ — СТРОГО ТВОЙ ЛОКАЛЬНЫЙ EMULATORJS =======
-    else {
-        currentSystem = currentPlatform.toLowerCase();
-
-        // Скрываем HTML-пад, чтобы он не накладывался поверх EmulatorJS
-        if (document.getElementById('gamepad')) {
-            document.getElementById('gamepad').style.display = 'none';
-        }
-
-        const emuDiv = document.createElement("div");
-        emuDiv.id = "game-player";
-        emuDiv.style.width = "100%"; emuDiv.style.height = "100%";
-        container.appendChild(emuDiv);
-
-        // Жёсткий маппинг систем под твой локальный loader.js (чтобы запустить нужные геймпады)
-        const platformMap = {
-            'SNES': 'snes',              
-            'SMS': 'sms',                
-            'TG16': 'tg16',        
-            'GB': 'gb',              
-            'GBC': 'gbc',             
-            'GBA': 'gba',
-            'SEGA': 'segaMD',    // Заставляем локальный лоадер вызывать скин segaMD (3/6 кнопок)
-            '32X': 'sega32x'     
-        };
-
-        const systemCode = platformMap[currentPlatform] || 'segaMD';
-
-        // Полностью очищаем все ручные настройки кнопок (убираем кашу)
-        window.EJS_system = undefined;
-        window.EJS_VirtualGamepadSettings = undefined;
-        window.EJS_controlScheme = undefined;
-        window.EJS_Buttons = null;
-
-        if (window.EJS_emulator && typeof window.EJS_emulator.destroy === "function") {
-            try { window.EJS_emulator.destroy(); } catch(e) {}
-        }
-
-        // Параметры под структуру твоего локального loader.js
-        window.EJS_player = '#game-player';
-        window.EJS_biosUrl = '';
-        window.EJS_gameUrl = game.rom_url; 
-        window.EJS_core = systemCode; // Твой локальный loader.js ищет папку ядра по EJS_core
-        window.EJS_pathtodata = './'; // Ищет loader.js и папки src/ прямо в корне app
-        window.EJS_language = 'ru';
-        window.EJS_gameName = game.title.replace(/ /g, '_');
-
-        window.EJS_loadOnStart = true; 
-        window.EJS_DefaultSaveMode = 'browser'; 
-        window.EJS_autosave = true;             
-        window.EJS_ForceLocalSave = true;       
-        window.EJS_startOnLoaded = true;
-        window.EJS_volume = state.isSoundOn ? 1 : 0;
-
-        // Перезапускаем тег скрипта лоадера
-        const oldLoader = document.getElementById("emu-loader-script");
-        if (oldLoader) oldLoader.remove();
-
-        const script = document.createElement("script");
-        script.src = "loader.js"; 
-        script.id = "emu-loader-script";
-        document.body.appendChild(script);
+    if (window.EJS_emulator && typeof window.EJS_emulator.destroy === "function") {
+        try { window.EJS_emulator.destroy(); } catch(e) {}
     }
+
+    // Базовые параметры строго под твою локальную структуру папок
+    window.EJS_player = '#game-player';
+    window.EJS_biosUrl = '';
+    window.EJS_gameUrl = game.rom_url; 
+    window.EJS_core = coreCode;       // Какое libretro ядро скачивать из папки cores/
+    window.EJS_system = systemCode;   // Какой скин геймпада рисовать на экране
+    window.EJS_pathtodata = './';     // Ищет loader.js и папки src/ прямо в корне
+    window.EJS_language = 'ru';
+    window.EJS_gameName = game.title.replace(/ /g, '_');
+
+    window.EJS_loadOnStart = true; 
+    window.EJS_DefaultSaveMode = 'browser'; 
+    window.EJS_autosave = true;             
+    window.EJS_ForceLocalSave = true;       
+    window.EJS_startOnLoaded = true;
+    window.EJS_volume = state.isSoundOn ? 1 : 0;
+
+    // Перезапускаем тег скрипта лоадера
+    const oldLoader = document.getElementById("emu-loader-script");
+    if (oldLoader) oldLoader.remove();
+
+    const script = document.createElement("script");
+    script.src = "loader.js"; 
+    script.id = "emu-loader-script";
+    document.body.appendChild(script);
 }
 
 function closeEmulator() {
-    // Останавливаем игровой цикл твоего NES, если он был активен
-    if (gameLoopInterval) {
-        clearInterval(gameLoopInterval);
-        gameLoopInterval = null;
-    }
-
     // 1. Прячем слой эмулятора и возвращаем интерфейс каталога
     document.getElementById("emulator-layer").style.display = "none";
     document.getElementById("back-to-catalog").classList.add("hidden");
@@ -378,7 +299,6 @@ function closeEmulator() {
         document.getElementById("emulator-layer").appendChild(newContainer);
     }
     
-    // 4. ПОЛНОЕ ОБНУЛЕНИЕ ПЕРЕМЕННЫХ RETROARCH / EMULATORJS
     window.EJS_emulator = null;
     window.EJS_player = null;
     window.EJS_gameUrl = null;
@@ -396,7 +316,6 @@ function closeEmulator() {
         bgVideo.play().catch(() => {});
     }
 
-    // Переключаем вкладку на игры
     switchTab('games');
 }
 
