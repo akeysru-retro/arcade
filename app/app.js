@@ -384,7 +384,7 @@ function submitOrder() {
     const platform = document.getElementById("order-platform").value;
     if (!gameName) { alert("ВВЕДИТЕ НАЗВАНИЕ ИГРЫ!"); return; }
     
-    const userId = tg.initDataUnsafe?.user?.id || "Локальный тест";
+    const userId = tg.initDataUnsafe?.user?.id ? tg.initDataUnsafe.user.id.toString() : "Локальный тест";
     const username = tg.initDataUnsafe?.user?.username ? `@${tg.initDataUnsafe.user.username}` : "no_name";
 
     tg.showPopup({
@@ -405,10 +405,15 @@ function submitOrder() {
                 platform: platform 
             };
             
-            fetch(API_URL, { method: "POST", mode: "no-cors", headers: { "Content-Type": "application/json" }, body: JSON.stringify(orderData) });
-            
-            tg.showAlert(`ОТЛИЧНО!\n\nДля активации заказа переведите 100 руб. по реквизитам:\n\n📞 Тел: 89132971262\n👤 Денис Владимирович Ф.\n🏦 Альфа банк\n\nЗаявка отправлена администратору!`);
-            document.getElementById("order-game-name").value = "";
+            // Отправляем обычным POST-запросом, чтобы GAS точно прочитал contents
+            fetch(API_URL, { 
+                method: "POST", 
+                headers: { "Content-Type": "text/plain" }, // Используем text/plain для обхода CORS ограничений GAS
+                body: JSON.stringify(orderData) 
+            }).then(() => {
+                tg.showAlert(`ОТЛИЧНО!\n\nДля активации заказа переведите 100 руб. по реквизитам:\n\n📞 Тел: 89132971262\n👤 Денис Владимирович Ф.\n🏦 Альфа банк\n\nЗаявка отправлена администратору!`);
+                document.getElementById("order-game-name").value = "";
+            });
             
         } else {
             const cancelData = { 
@@ -420,8 +425,13 @@ function submitOrder() {
                 platform: platform 
             };
             
-            fetch(API_URL, { method: "POST", mode: "no-cors", headers: { "Content-Type": "application/json" }, body: JSON.stringify(cancelData) });
-            document.getElementById("order-game-name").value = "";
+            fetch(API_URL, { 
+                method: "POST", 
+                headers: { "Content-Type": "text/plain" }, 
+                body: JSON.stringify(cancelData) 
+            }).then(() => {
+                document.getElementById("order-game-name").value = "";
+            });
         }
     });
 }
