@@ -405,10 +405,9 @@ function submitOrder() {
                 platform: platform 
             };
             
-            // Отправляем обычным POST-запросом, чтобы GAS точно прочитал contents
             fetch(API_URL, { 
                 method: "POST", 
-                headers: { "Content-Type": "text/plain" }, // Используем text/plain для обхода CORS ограничений GAS
+                headers: { "Content-Type": "text/plain" }, 
                 body: JSON.stringify(orderData) 
             }).then(() => {
                 tg.showAlert(`ОТЛИЧНО!\n\nДля активации заказа переведите 100 руб. по реквизитам:\n\n📞 Тел: 89132971262\n👤 Денис Владимирович Ф.\n🏦 Альфа банк\n\nЗаявка отправлена администратору!`);
@@ -495,22 +494,17 @@ function renderPagination(containerId, totalPages, currentPage, callback) {
     container.appendChild(prevBtn); container.appendChild(infoSpan); container.appendChild(nextBtn);
 }
 
-// ТОЧНОЕ ИСПРАВЛЕНИЕ: Теперь перебираются строго классы .tab-content и корректно вешается активный класс!
 function switchTab(tabName) {
     state.currentTab = tabName;
-    
-    // Скрываем абсолютно все вкладки с экрана
     document.querySelectorAll(".tab-content").forEach(el => {
         el.classList.remove("active");
     });
     
-    // Показываем нужную вкладку по её ID (tab-games, tab-journals и т.д.)
     const targetSection = document.getElementById(`tab-${tabName}`);
     if (targetSection) {
         targetSection.classList.add("active");
     }
     
-    // Переключаем подсветку кнопок в нижнем меню
     document.querySelectorAll(".tab-item").forEach(el => {
         el.classList.remove("active");
     });
