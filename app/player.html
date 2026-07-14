@@ -3,7 +3,7 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Sega Dedicated Player</title>
+    <title>Arcade CDN Player</title>
     <style>
         html, body, #game {
             width: 100%;
@@ -18,26 +18,41 @@
 <body>
     <div id="game"></div>
     <script>
-        // Перехватываем параметры ссылки на игру из app.js
+        // Эмуляция тач-скрина для корректного вывода мобильного геймпада в Telegram
+        if (!('ontouchstart' in window)) { window.ontouchstart = function(){}; }
+        if (!navigator.maxTouchPoints || navigator.maxTouchPoints === 0) {
+            Object.defineProperty(navigator, 'maxTouchPoints', {get: function(){return 5;}});
+        }
+
+        // Перехватываем параметры, переданные из app.js
         const urlParams = new URLSearchParams(window.location.search);
         const gameUrl = urlParams.get('url');
-        const gameName = urlParams.get('name') || 'Sega_Game';
+        const gameCore = urlParams.get('core') || 'sega';
+        const gameTitle = urlParams.get('title') || 'Retro_Game';
+        const startVolume = parseInt(urlParams.get('volume') || '1');
 
-        // Чистые настройки CDN из твоего успешного старого проекта!
+        // Настройки строго по твоему старому рабочему файлу emu-player.html
         window.EJS_player = '#game';
         window.EJS_biosUrl = '';
         window.EJS_gameUrl = gameUrl ? decodeURIComponent(gameUrl) : '';
-        window.EJS_core = 'sega'; // Тот самый заветный маркер
-        window.EJS_pathtodata = 'https://cdn.jsdelivr.net/gh/EmulatorJS/EmulatorJS@latest/data/';
-        window.EJS_language = 'ru';
-        window.EJS_gameName = decodeURIComponent(gameName).replace(/ /g, '_');
-
-        window.EJS_loadOnStart = true;
+        window.EJS_core = gameCore; 
+        window.EJS_gameName = decodeURIComponent(gameTitle).replace(/ /g, '_');
+        window.EJS_color = '#0064ff';
         window.EJS_startOnLoaded = true;
+        window.EJS_Header = false; 
+        window.EJS_mouse = false;
+        window.EJS_volume = startVolume;
+        
+        // Самое главное: полностью переходим на онлайн-дата репозиторий!
+        window.EJS_pathtodata = 'https://cdn.jsdelivr.net/gh/EmulatorJS/EmulatorJS@latest/data/';
         window.EJS_DefaultSaveMode = 'browser';
         window.EJS_autosave = true;
         window.EJS_ForceLocalSave = true;
+
+        // Динамически подключаем loader.js из CDN
+        const script = document.createElement('script');
+        script.src = "https://cdn.jsdelivr.net/gh/EmulatorJS/EmulatorJS@latest/data/loader.js";
+        document.head.appendChild(script);
     </script>
-    <script src="https://cdn.jsdelivr.net/gh/EmulatorJS/EmulatorJS@latest/data/loader.js"></script>
 </body>
 </html>

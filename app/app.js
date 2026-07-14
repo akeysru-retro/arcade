@@ -181,62 +181,45 @@ function startEmulator(game) {
 
     const currentPlatform = game.platform.toUpperCase();
 
-    // ======= ИЗОЛИРОВАННЫЙ БУНКЕР ДЛЯ СЕГИ И 32X (КАК В СТАРOM ПРОЕКТЕ) =======
-    if (currentPlatform === 'SEGA' || currentPlatform === '32X') {
-        const iframe = document.createElement("iframe");
-        
-        // Запускаем через встроенный изолированный плеер, передавая РОМ и параметры
-        iframe.src = `./player.html?core=sega&url=${encodeURIComponent(game.rom_url)}&name=${encodeURIComponent(game.title)}`;
-        iframe.style.width = "100%";
-        iframe.style.height = "100%";
-        iframe.style.border = "none";
-        iframe.id = "isolated-sega-frame";
-        
-        container.appendChild(iframe);
-    } else {
-        // ======= СТАНДАРТНЫЙ ЛОКАЛЬНЫЙ ЗАПУСК ДЛЯ НИНТЕНДО (NES, SNES, GBA) =======
+    // ======= ДЛЯ NES (ДЕНДИ) ОСТАВЛЯЕМ ТВОЙ БЫСТРЫЙ ЛОКАЛЬНЫЙ JSNES =======
+    if (currentPlatform === 'NES') {
         const emuDiv = document.createElement("div");
         emuDiv.id = "game-player";
         emuDiv.style.width = "100%"; emuDiv.style.height = "100%";
         container.appendChild(emuDiv);
 
-        const platformMap = {
-            'NES': 'nes',                  
-            'SNES': 'snes9x',              
-            'SMS': 'smsplus',              
-            'TG16': 'mednafen_pce',        
-            'GB': 'gambatte',              
-            'GBC': 'gambatte',             
-            'GBA': 'mgba'
-        };
+        // Твоя стандартная инициализация JSNES из index.html
+        initNES(); 
+        currentSystem = "nes";
+        loadNesROM(game.rom_url);
+        document.getElementById('gamepad').style.display = 'block'; // Включаем твой HTML-пад
+    } 
+    // ======= ДЛЯ ВСЕХ ОСТАЛЬНЫХ (SEGA, 32X, SMS, GBA, SNES) — ОНЛАЙН CDN ЧЕРЕЗ IFRAME =======
+    else {
+        // Прячем старый HTML-геймпад, чтобы он не накладывался
+        if (document.getElementById('gamepad')) {
+            document.getElementById('gamepad').style.display = 'none';
+        }
 
-        window.EJS_system = undefined;
-        window.EJS_VirtualGamepadSettings = undefined;
-        window.EJS_controlScheme = undefined;
-        window.EJS_Buttons = null;
+        // Определяем точный маркер ядра для CDN по спецификации старого проекта
+        let cdnCore = 'sega';
+        if (currentPlatform === 'SNES') cdnCore = 'snes9x';
+        else if (currentPlatform === 'GBA') cdnCore = 'mgba';
+        else if (currentPlatform === 'GB' || currentPlatform === 'GBC') cdnCore = 'gambatte';
+        else if (currentPlatform === 'SMS') cdnCore = 'smsplus';
+        else if (currentPlatform === 'TG16') cdnCore = 'mednafen_pce';
+        // И для SEGA, и для 32X передаем 'sega' — современный CDN сам разберется с ромом и запустит 6 кнопок!
+        else if (currentPlatform === 'SEGA' || currentPlatform === '32X') cdnCore = 'sega';
 
-        window.EJS_player = '#game-player';
-        window.EJS_biosUrl = '';
-        window.EJS_gameUrl = game.rom_url; 
-        window.EJS_core = platformMap[currentPlatform] || 'nes'; 
-        window.EJS_pathtodata = './'; // Твоя локальная папка
-        window.EJS_language = 'ru';
-        window.EJS_gameName = game.title.replace(/ /g, '_');
-
-        window.EJS_loadOnStart = true; 
-        window.EJS_DefaultSaveMode = 'browser'; 
-        window.EJS_autosave = true;             
-        window.EJS_ForceLocalSave = true;       
-        window.EJS_startOnLoaded = true;
-        window.EJS_volume = state.isSoundOn ? 1 : 0;
-
-        const oldLoader = document.getElementById("emu-loader-script");
-        if (oldLoader) oldLoader.remove();
-
-        const script = document.createElement("script");
-        script.src = "loader.js";
-        script.id = "emu-loader-script";
-        document.body.appendChild(script);
+        // Создаем изолированный фрейм
+        const iframe = document.createElement("iframe");
+        iframe.src = `./player.html?core=${cdnCore}&url=${encodeURIComponent(game.rom_url)}&title=${encodeURIComponent(game.title)}&volume=${state.isSoundOn ? 1 : 0}`;
+        iframe.style.width = "100%";
+        iframe.style.height = "100%";
+        iframe.style.border = "none";
+        iframe.id = "isolated-retro-frame";
+        
+        container.appendChild(iframe);
     }
 }
 
