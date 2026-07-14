@@ -136,8 +136,8 @@ function renderGamesPage() {
     }
     
     const start = (state.gamesPage - 1) * state.itemsPerPage;
-    const end = start + state.itemsPerPage;
-    const pageItems = state.filteredGames.slice(start, end);
+    const end = start + start + state.itemsPerPage;
+    const pageItems = state.filteredGames.slice(start, start + state.itemsPerPage);
     
     pageItems.forEach((game, index) => {
         const globalIndex = start + index + 1;
@@ -169,7 +169,7 @@ function renderGamesPage() {
     });
 }
 
-// 4. ИНИЦИАЛИЗАЦИЯ ЭМУЛЯТОРА — СТАРТ НА КЛАССИЧЕСКОЙ СХЕМЕ ДЛЯ ИСПРАВЛЕНИЯ КУРКА СЕГИ
+// 4. ИНИЦИАЛИЗАЦИЯ ЭМУЛЯТОРА — СТАРТ С ТОЧЕЧНЫМ РАСПРЕДЕЛЕНИЕМ ЯДЕР ДЛЯ ВСЕХ ПЛАТФОРМ
 function startEmulator(game) {
     state.selectedGame = game;
     document.getElementById("back-to-catalog").classList.remove("hidden");
@@ -190,7 +190,7 @@ function startEmulator(game) {
 
     const currentPlatform = game.platform.toUpperCase();
 
-    // Возвращаем в точности тот маппинг, при котором Сега работала с нужным падом
+    // Точечный маппинг систем: Сега работает по-старому, а GBC, TG16 и остальные получают свои родные папки ядер
     const platformMap = {
         'NES': 'nes',
         'SNES': 'snes',              
@@ -199,13 +199,13 @@ function startEmulator(game) {
         'GB': 'gb',              
         'GBC': 'gbc',             
         'GBA': 'gba',
-        'SEGA': 'segaMD',    // Твой оригинальный рабочий скин из первой сборки
+        'SEGA': 'segaMD',    // Твоя рабочая настройка для 16-бит
         '32X': 'sega32x'     
     };
 
     const systemCode = platformMap[currentPlatform] || 'segaMD';
 
-    // Сбрасываем переменные в undefined, чтобы они не мешали локальному loader.js
+    // Полностью очищаем все ручные настройки кнопок
     window.EJS_system = undefined;
     window.EJS_VirtualGamepadSettings = undefined;
     window.EJS_controlScheme = undefined;
@@ -215,11 +215,11 @@ function startEmulator(game) {
         try { window.EJS_emulator.destroy(); } catch(e) {}
     }
 
-    // Твои проверенные базовые параметры
+    // Параметры под структуру твоего локального loader.js
     window.EJS_player = '#game-player';
     window.EJS_biosUrl = '';
     window.EJS_gameUrl = game.rom_url; 
-    window.EJS_core = systemCode; // loader.js ищет папку cores/ именно по EJS_core
+    window.EJS_core = systemCode; // Передаем корректное имя системы для загрузки нужного .wasm ядра
     window.EJS_pathtodata = './'; 
     window.EJS_language = 'ru';
     window.EJS_gameName = game.title.replace(/ /g, '_');
