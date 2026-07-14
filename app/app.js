@@ -169,7 +169,7 @@ function renderGamesPage() {
     });
 }
 
-// 4. ИНИЦИАЛИЗАЦИЯ ЭМУЛЯТОРА — ПОЛНОСТЬЮ НА ЕДИННОМ ДВИЖКЕ EMULATORJS С ЧЕТКИМ МАППИНГОМ ЯДЕР
+// 4. ИНИЦИАЛИЗАЦИЯ ЭМУЛЯТОРА — СТАРТ С СИНХРОНИЗАЦИЕЙ СТАРЫХ НАСТРОЕК СЕГИ
 function startEmulator(game) {
     state.selectedGame = game;
     document.getElementById("back-to-catalog").classList.remove("hidden");
@@ -179,7 +179,6 @@ function startEmulator(game) {
     const container = document.getElementById("emulator-container");
     container.innerHTML = ""; 
 
-    // Скрываем внешний HTML-пад (он больше не нужен, EmulatorJS отрисует все сам изнутри)
     if (document.getElementById('gamepad')) {
         document.getElementById('gamepad').style.display = 'none';
     }
@@ -191,36 +190,22 @@ function startEmulator(game) {
 
     const currentPlatform = game.platform.toUpperCase();
 
-    // 1. Маппинг Скин-кодов систем (отвечает за правильный геймпад на экране)
+    // Возвращаем проверенный маппинг систем под твой локальный loader.js
     const platformMap = {
-        'NES': 'nes',
-        'SNES': 'snes',              
-        'SMS': 'sms',                
-        'TG16': 'tg16',        
-        'GB': 'gb',              
-        'GBC': 'gbc',             
-        'GBA': 'gba',
-        'SEGA': 'segaMD',    
-        '32X': 'sega32x'     
-    };
-
-    // 2. Жесткий маппинг `.wasm` ядер, которые реально лежат в твоей папке cores/
-    const coreMap = {
-        'NES': 'fceumm',          // Стандартное рабочее ядро NES для EmulatorJS
+        'NES': 'fceumm',
         'SNES': 'snes9x',              
         'SMS': 'smsplus',              
         'TG16': 'mednafen_pce',        
         'GB': 'gambatte',              
         'GBC': 'gambatte',             
         'GBA': 'mgba',
-        'SEGA': 'genesis_plus_gx', // Изменяем с "sega" на стандартное стабильное ядро 16-бит
-        '32X': 'picodrive'   
+        'SEGA': 'sega',      // Возвращаем родное рабочее имя системы!
+        '32X': 'picodrive'   // Возвращаем родное рабочее ядро для 32X
     };
 
-    const systemCode = platformMap[currentPlatform] || 'segaMD';
-    const coreCode = coreMap[currentPlatform] || 'genesis_plus_gx';
+    const systemCode = platformMap[currentPlatform] || 'sega';
 
-    // Полностью очищаем все ручные настройки кнопок, чтобы не копить мусор в памяти
+    // Полностью очищаем все ручные настройки кнопок (убираем кашу)
     window.EJS_system = undefined;
     window.EJS_VirtualGamepadSettings = undefined;
     window.EJS_controlScheme = undefined;
@@ -234,9 +219,8 @@ function startEmulator(game) {
     window.EJS_player = '#game-player';
     window.EJS_biosUrl = '';
     window.EJS_gameUrl = game.rom_url; 
-    window.EJS_core = coreCode;       // Какое libretro ядро скачивать из папки cores/
-    window.EJS_system = systemCode;   // Какой скин геймпада рисовать на экране
-    window.EJS_pathtodata = './';     // Ищет loader.js и папки src/ прямо в корне
+    window.EJS_core = systemCode; 
+    window.EJS_pathtodata = './'; 
     window.EJS_language = 'ru';
     window.EJS_gameName = game.title.replace(/ /g, '_');
 
@@ -258,12 +242,10 @@ function startEmulator(game) {
 }
 
 function closeEmulator() {
-    // 1. Прячем слой эмулятора и возвращаем интерфейс каталога
     document.getElementById("emulator-layer").style.display = "none";
     document.getElementById("back-to-catalog").classList.add("hidden");
     document.getElementById("app-tab-bar").style.display = "flex";
     
-    // 2. ЖЕСТКИЙ СБРОС АУДИО (Глушим всё, что успел создать EmulatorJS в браузере)
     try {
         if (window.EJS_emulator) {
             if (typeof window.EJS_emulator.stop === "function") window.EJS_emulator.stop();
@@ -285,7 +267,6 @@ function closeEmulator() {
         console.error("Ошибка при очистке аудио-контекстов:", e);
     }
 
-    // 3. УДАЛЕНИЕ И ПЕРЕСОЗДАНИЕ КОНТЕЙНЕРА (Чтобы убить зависшие canvas/iframe потоки)
     const oldContainer = document.getElementById("emulator-container");
     if (oldContainer) {
         oldContainer.remove();
@@ -307,7 +288,6 @@ function closeEmulator() {
     const oldLoader = document.getElementById("emu-loader-script");
     if (oldLoader) oldLoader.remove();
 
-    // 5. ВОЗВРАЩАЕМ ФОНОВОЕ ВИДЕО КАТАЛОГА
     const bgVideo = document.getElementById("bg-video");
     if (bgVideo) {
         if (state.isSoundOn) {
