@@ -181,22 +181,23 @@ function startEmulator(game) {
 
     const currentPlatform = game.platform.toUpperCase();
 
-    // ======= ДЛЯ NES (ДЕНДИ) ОСТАВЛЯЕМ ТВОЙ БЫСТРЫЙ ЛОКАЛЬНЫЙ JSNES =======
+    // ======= 1. ДЛЯ NES (ДЕНДИ) ОСТАВЛЯЕМ ТВОЙ ВСТРОЕННЫЙ JSNES =======
     if (currentPlatform === 'NES') {
         const emuDiv = document.createElement("div");
         emuDiv.id = "game-player";
         emuDiv.style.width = "100%"; emuDiv.style.height = "100%";
         container.appendChild(emuDiv);
 
-        // Твоя стандартная инициализация JSNES из index.html
         initNES(); 
         currentSystem = "nes";
         loadNesROM(game.rom_url);
-        document.getElementById('gamepad').style.display = 'block'; // Включаем твой HTML-пад
+        if (document.getElementById('gamepad')) {
+            document.getElementById('gamepad').style.display = 'block'; // Твой HTML-пад
+        }
     } 
-    // ======= ДЛЯ ВСЕХ ОСТАЛЬНЫХ (SEGA, 32X, SMS, GBA, SNES) — ОНЛАЙН CDN ЧЕРЕЗ IFRAME =======
+    // ======= 2. ДЛЯ ВСЕХ ОСТАЛЬНЫХ (SEGA, 32X, SMS, GBA, SNES) — ЧИСТЫЙ ОНЛАЙН CDN =======
     else {
-        // Прячем старый HTML-геймпад, чтобы он не накладывался
+        // Скрываем твой HTML-пад, чтобы не накладывался
         if (document.getElementById('gamepad')) {
             document.getElementById('gamepad').style.display = 'none';
         }
@@ -208,18 +209,72 @@ function startEmulator(game) {
         else if (currentPlatform === 'GB' || currentPlatform === 'GBC') cdnCore = 'gambatte';
         else if (currentPlatform === 'SMS') cdnCore = 'smsplus';
         else if (currentPlatform === 'TG16') cdnCore = 'mednafen_pce';
-        // И для SEGA, и для 32X передаем 'sega' — современный CDN сам разберется с ромом и запустит 6 кнопок!
-        else if (currentPlatform === 'SEGA' || currentPlatform === '32X') cdnCore = 'sega';
+        else if (currentPlatform === 'SEGA' || currentPlatform === '32X') cdnCore = 'sega'; // И Сега, и 32X шли через 'sega'
 
-        // Создаем изолированный фрейм
+        // Создаем изолированный фрейм "из воздуха", без использования локального player.html
         const iframe = document.createElement("iframe");
-        iframe.src = `./player.html?core=${cdnCore}&url=${encodeURIComponent(game.rom_url)}&title=${encodeURIComponent(game.title)}&volume=${state.isSoundOn ? 1 : 0}`;
         iframe.style.width = "100%";
         iframe.style.height = "100%";
         iframe.style.border = "none";
         iframe.id = "isolated-retro-frame";
         
         container.appendChild(iframe);
+
+        // Генерируем чистый HTML-документ внутри фрейма на базе логики старого проекта
+        const startVolume = state.isSoundOn ? 1 : 0;
+        const cleanGameName = game.title.replace(/ /g, '_');
+        
+        const iframeHtml = `
+            <!DOCTYPE html>
+            <html>
+            <head>
+                <meta charset="UTF-8">
+                <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+                <style>
+                    body, html, #game { margin: 0; padding: 0; width: 100%; height: 100%; background: #000; overflow: hidden; }
+                </style>
+            </head>
+            <body>
+                <div id="game"></div>
+                <script>
+                    // Фиксы тач-скрина для Telegram
+                    if (!('ontouchstart' in window)) { window.ontouchstart = function(){}; }
+                    if (!navigator.maxTouchPoints || navigator.maxTouchPoints === 0) {
+                        Object.defineProperty(navigator, 'maxTouchPoints', {get: function(){return 5;}});
+                    }
+
+                    // Настройки строго по твоему старому рабочему проекту
+                    window.EJS_player = '#game';
+                    window.EJS_biosUrl = '';
+                    window.EJS_gameUrl = "${game.rom_url}";
+                    window.EJS_core = "${cdnCore}"; 
+                    window.EJS_gameName = "${cleanGameName}";
+                    window.EJS_color = '#0064ff';
+                    window.EJS_startOnLoaded = true;
+                    window.EJS_Header = false; 
+                    window.EJS_mouse = false;
+                    window.EJS_volume = ${startVolume};
+                    
+                    // Переходим полностью на онлайн-репозиторий данных
+                    window.EJS_pathtodata = 'https://cdn.jsdelivr.net/gh/EmulatorJS/EmulatorJS@latest/data/';
+                    window.EJS_DefaultSaveMode = 'browser';
+                    window.EJS_autosave = true;
+                    window.EJS_ForceLocalSave = true;
+
+                    // Подключаем официальный лоадер последней версии напрямую из CDN
+                    const script = document.createElement('script');
+                    script.src = "https://cdn.jsdelivr.net/gh/EmulatorJS/EmulatorJS@latest/data/loader.js";
+                    document.head.appendChild(script);
+                <\/script>
+            </body>
+            </html>
+        `;
+
+        // Записываем HTML прямо внутрь iframe
+        const doc = iframe.contentDocument || iframe.contentWindow.document;
+        doc.open();
+        doc.write(iframeHtml);
+        doc.close();
     }
 }
 
