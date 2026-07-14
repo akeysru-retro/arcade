@@ -179,46 +179,27 @@ function startEmulator(game) {
     const container = document.getElementById("emulator-container");
     container.innerHTML = ""; 
 
-    const emuDiv = document.createElement("div");
-    emuDiv.id = "game-player";
-    emuDiv.style.width = "100%"; emuDiv.style.height = "100%";
-    container.appendChild(emuDiv);
-
     const currentPlatform = game.platform.toUpperCase();
 
-    // ======= ЖЕСТКОЕ ОБНУЛЕНИЕ ВСЕХ ПЕРЕМЕННЫХ (Убиваем кэш старых джойстиков) =======
-    window.EJS_system = undefined;
-    window.EJS_VirtualGamepadSettings = undefined;
-    window.EJS_controlScheme = undefined;
-    window.EJS_Buttons = null;
-    window.EJS_paths = undefined;
-
-    // Базовые настройки для всех платформ
-    window.EJS_player = '#game-player';
-    window.EJS_biosUrl = '';
-    window.EJS_gameUrl = game.rom_url; 
-    window.EJS_language = 'ru';
-    window.EJS_gameName = game.title.replace(/ /g, '_');
-    
-    window.EJS_loadOnStart = true; 
-    window.EJS_DefaultSaveMode = 'browser'; 
-    window.EJS_autosave = true;             
-    window.EJS_ForceLocalSave = true;       
-    window.EJS_startOnLoaded = true;
-    window.EJS_volume = state.isSoundOn ? 1 : 0;
-
-    let loaderSrc = "loader.js"; // По умолчанию локальный лоадер
-
-    // ======= РАЗДЕЛЕНИЕ НА КАНАЛЫ (CDN ДЛЯ СЕГИ / ЛОКАЛ ДЛЯ НИНТЕНДО) =======
+    // ======= ИЗОЛИРОВАННЫЙ БУНКЕР ДЛЯ СЕГИ И 32X (КАК В СТАРOM ПРОЕКТЕ) =======
     if (currentPlatform === 'SEGA' || currentPlatform === '32X') {
-        // Точные настройки из твоего успешного "старого проекта"!
-        window.EJS_core = 'sega'; 
+        const iframe = document.createElement("iframe");
         
-        // Переключаем путеводитель данных на официальный CDN (Там лежит круглый джойстик без nipplejs каши!)
-        window.EJS_pathtodata = 'https://cdn.jsdelivr.net/gh/EmulatorJS/EmulatorJS@latest/data/';
-        loaderSrc = "https://cdn.jsdelivr.net/gh/EmulatorJS/EmulatorJS@latest/data/loader.js";
+        // Запускаем через встроенный изолированный плеер, передавая РОМ и параметры
+        iframe.src = `./player.html?core=sega&url=${encodeURIComponent(game.rom_url)}&name=${encodeURIComponent(game.title)}`;
+        iframe.style.width = "100%";
+        iframe.style.height = "100%";
+        iframe.style.border = "none";
+        iframe.id = "isolated-sega-frame";
+        
+        container.appendChild(iframe);
     } else {
-        // Для NES, SNES, GBA, SMS используем твою локальную рабочую сборку
+        // ======= СТАНДАРТНЫЙ ЛОКАЛЬНЫЙ ЗАПУСК ДЛЯ НИНТЕНДО (NES, SNES, GBA) =======
+        const emuDiv = document.createElement("div");
+        emuDiv.id = "game-player";
+        emuDiv.style.width = "100%"; emuDiv.style.height = "100%";
+        container.appendChild(emuDiv);
+
         const platformMap = {
             'NES': 'nes',                  
             'SNES': 'snes9x',              
@@ -228,21 +209,35 @@ function startEmulator(game) {
             'GBC': 'gambatte',             
             'GBA': 'mgba'
         };
-        window.EJS_core = platformMap[currentPlatform] || 'nes';
-        window.EJS_pathtodata = './'; // Ищем локальные файлы в корне нового проекта
-        loaderSrc = "loader.js";
+
+        window.EJS_system = undefined;
+        window.EJS_VirtualGamepadSettings = undefined;
+        window.EJS_controlScheme = undefined;
+        window.EJS_Buttons = null;
+
+        window.EJS_player = '#game-player';
+        window.EJS_biosUrl = '';
+        window.EJS_gameUrl = game.rom_url; 
+        window.EJS_core = platformMap[currentPlatform] || 'nes'; 
+        window.EJS_pathtodata = './'; // Твоя локальная папка
+        window.EJS_language = 'ru';
+        window.EJS_gameName = game.title.replace(/ /g, '_');
+
+        window.EJS_loadOnStart = true; 
+        window.EJS_DefaultSaveMode = 'browser'; 
+        window.EJS_autosave = true;             
+        window.EJS_ForceLocalSave = true;       
+        window.EJS_startOnLoaded = true;
+        window.EJS_volume = state.isSoundOn ? 1 : 0;
+
+        const oldLoader = document.getElementById("emu-loader-script");
+        if (oldLoader) oldLoader.remove();
+
+        const script = document.createElement("script");
+        script.src = "loader.js";
+        script.id = "emu-loader-script";
+        document.body.appendChild(script);
     }
-    // ========================================================================
-
-    // Удаляем старый тег скрипта лоадера, если он висит в DOM
-    const oldLoader = document.getElementById("emu-loader-script");
-    if (oldLoader) oldLoader.remove();
-
-    // Загружаем чистый, правильный лоадер под выбранную платформу
-    const script = document.createElement("script");
-    script.src = loaderSrc;
-    script.id = "emu-loader-script";
-    document.body.appendChild(script);
 }
 
 function closeEmulator() {

@@ -3,7 +3,7 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>AKEYS Arcade Player</title>
+    <title>Sega Dedicated Player</title>
     <style>
         html, body, #game {
             width: 100%;
@@ -18,29 +18,26 @@
 <body>
     <div id="game"></div>
     <script>
-        // ======= ДИНАМИЧЕСКИЙ ПЕРЕХВАТ ПАРАМЕТРОВ ИЗ URL =======
+        // Перехватываем параметры ссылки на игру из app.js
         const urlParams = new URLSearchParams(window.location.search);
         const gameUrl = urlParams.get('url');
-        const gameCore = urlParams.get('core') || 'sega'; // По дефолту ставим sega, если забыли передать
-        const gameName = urlParams.get('name') || 'Retro_Game';
+        const gameName = urlParams.get('name') || 'Sega_Game';
 
-        // Базовые настройки EmulatorJS 4.2.3
+        // Чистые настройки CDN из твоего успешного старого проекта!
         window.EJS_player = '#game';
         window.EJS_biosUrl = '';
         window.EJS_gameUrl = gameUrl ? decodeURIComponent(gameUrl) : '';
-        window.EJS_core = gameCore;
-        window.EJS_pathtodata = './'; 
-        window.EJS_language = 'ru'; 
+        window.EJS_core = 'sega'; // Тот самый заветный маркер
+        window.EJS_pathtodata = 'https://cdn.jsdelivr.net/gh/EmulatorJS/EmulatorJS@latest/data/';
+        window.EJS_language = 'ru';
         window.EJS_gameName = decodeURIComponent(gameName).replace(/ /g, '_');
 
-        // ======= АВТОЗАПУСК И НАСТРОЙКИ КЭША / СОХРАНЕНИЙ =======
-        window.EJS_loadOnStart = true; 
-        window.EJS_DefaultSaveMode = 'browser'; // Сохраняем прогресс в браузере
-        window.EJS_autosave = true;             // Автосохранение при выходе
-        window.EJS_ForceLocalSave = true;       
-        window.EJS_startOnLoaded = true;        // Запуск сразу после загрузки ядра
+        window.EJS_loadOnStart = true;
+        window.EJS_startOnLoaded = true;
+        window.EJS_DefaultSaveMode = 'browser';
+        window.EJS_autosave = true;
+        window.EJS_ForceLocalSave = true;
     </script>
-    
-    <script src="loader.js"></script>
+    <script src="https://cdn.jsdelivr.net/gh/EmulatorJS/EmulatorJS@latest/data/loader.js"></script>
 </body>
 </html>
