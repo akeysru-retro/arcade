@@ -254,13 +254,19 @@
     </div>
 
     <div id="journal-layer" style="display: none; position: fixed; top: 44px; left: 0; right: 0; bottom: 0; background: #111; z-index: 100000; overflow-y: auto;">
-        <div style="display: flex; justify-content: space-between; align-items: center; background: #000; padding: 10px; border-bottom: 2px solid #333; position: sticky; top: 0; z-index: 10;">
-            <button class="page-btn" id="pdf-prev-btn">◀ СТР</button>
-            <span id="pdf-page-num" style="font-size: 8px; color: #ffff00; font-family: 'Press Start 2P', monospace;">0 / 0</span>
-            <button class="page-btn" id="pdf-next-btn">СТР ▶</button>
+        <div style="display: flex; flex-direction: column; background: #000; border-bottom: 2px solid #333; position: sticky; top: 0; z-index: 10; padding: 5px 10px; gap: 5px;">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <button class="page-btn" id="pdf-prev-btn">◀ СТР</button>
+                <span id="pdf-page-num" style="font-size: 8px; color: #ffff00; font-family: 'Press Start 2P', monospace;">0 / 0</span>
+                <button class="page-btn" id="pdf-next-btn">СТР ▶</button>
+            </div>
+            <div style="display: flex; justify-content: center; gap: 15px; padding-bottom: 2px;">
+                <button class="page-btn" id="pdf-zoom-out-btn" style="font-size: 7px; padding: 4px 8px;">[ ЗУМ - ]</button>
+                <button class="page-btn" id="pdf-zoom-in-btn" style="font-size: 7px; padding: 4px 8px;">[ ЗУМ + ]</button>
+            </div>
         </div>
-        <div style="display: flex; justify-content: center; align-items: flex-start; padding: 15px 0; background: #111; min-height: calc(100vh - 110px);">
-            <canvas id="pdf-canvas" style="width: 100%; max-width: 380px; box-shadow: 0 0 10px #000; display: block;"></canvas>
+        <div id="pdf-scroll-container" style="display: flex; justify-content: center; align-items: flex-start; padding: 15px 0; background: #111; min-height: calc(100vh - 140px); overflow-x: auto;">
+            <canvas id="pdf-canvas" style="box-shadow: 0 0 10px #000; display: block;"></canvas>
         </div>
     </div>
 
