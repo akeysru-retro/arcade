@@ -226,6 +226,7 @@ function openPdfReader(pdfUrl) {
     pdfCtx = pdfCanvas.getContext('2d');
     
     currentPdfPage = 1;
+    pdfScale = 1.0; // Сбрасываем зум при открытии новой книги
     document.getElementById('pdf-page-num').textContent = "ЗАГРУЗКА...";
     
     pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.worker.min.js';
@@ -234,6 +235,7 @@ function openPdfReader(pdfUrl) {
         pdfDoc = pdfDoc_;
         totalPdfPages = pdfDoc.numPages;
         renderPdfPage(currentPdfPage);
+        setupPdfSwipeEvents(); // Инициализируем свайпы
     }).catch(err => {
         alert("ОШИБКА ОТКРЫТИЯ PDF КНИГИ!");
         closeEmulator();
@@ -241,14 +243,20 @@ function openPdfReader(pdfUrl) {
 }
 
 function renderPdfPage(num) {
+    if (!pdfDoc) return;
     isPageRendering = true;
     document.getElementById('pdf-page-num').textContent = `${num} / ${totalPdfPages}`;
     
     pdfDoc.getPage(num).then(page => {
         const viewport = page.getViewport({ scale: 1 });
-        const desiredWidth = Math.min(window.innerWidth - 30, 380);
-        const scale = desiredWidth / viewport.width;
-        const scaledViewport = page.getViewport({ scale: scale });
+        
+        // Базовая адаптивная ширина под экран смартфона
+        const desiredWidth = Math.min(window.innerWidth - 20, 380);
+        const baseScale = desiredWidth / viewport.width;
+        
+        // Итоговый масштаб с учетом пользовательского зума
+        const finalScale = baseScale * pdfScale;
+        const scaledViewport = page.getViewport({ scale: finalScale });
         
         pdfCanvas.height = scaledViewport.height;
         pdfCanvas.width = scaledViewport.width;
@@ -262,6 +270,49 @@ function renderPdfPage(num) {
             isPageRendering = false;
         });
     });
+}
+
+// Функция инициализации жестов свайпа
+function setupPdfSwipeEvents() {
+    const canvas = document.getElementById('pdf-canvas');
+    if (!canvas) return;
+
+    // Удаляем старые слушатели, чтобы не дублировались
+    canvas.ontouchstart = null;
+    canvas.ontouchend = null;
+
+    canvas.addEventListener('touchstart', (e) => {
+        touchStartX = e.changedTouches[0].screenX;
+    }, { passive: true });
+
+    canvas.addEventListener('touchend', (e) => {
+        touchEndX = e.changedTouches[0].screenX;
+        handleSwipeGesture();
+    }, { passive: true });
+}
+
+function handleSwipeGesture() {
+    const swipeDistance = touchEndX - touchStartX;
+    const swipeThreshold = 50; // Минимальное расстояние в пикселях для срабатывания свайпа
+
+    // Если страница сильно увеличена, отключаем свайпы, чтобы не мешать горизонтальной прокрутке страницы
+    if (pdfScale > 1.2) return;
+
+    if (swipeDistance < -swipeThreshold) {
+        // Свайп влево -> Следующая страница
+        if (currentPdfPage < totalPdfPages && !isPageRendering) {
+            if (tg.HapticFeedback) tg.HapticFeedback.impactOccurred('light');
+            currentPdfPage++;
+            renderPdfPage(currentPdfPage);
+        }
+    } else if (swipeDistance > swipeThreshold) {
+        // Свайп вправо -> Предыдущая страница
+        if (currentPdfPage > 1 && !isPageRendering) {
+            if (tg.HapticFeedback) tg.HapticFeedback.impactOccurred('light');
+            currentPdfPage--;
+            renderPdfPage(currentPdfPage);
+        }
+    }
 }
 
 function queueRenderPage(num) {
