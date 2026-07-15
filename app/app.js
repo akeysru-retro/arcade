@@ -8,6 +8,11 @@ let totalPdfPages = 0;
 let isPageRendering = false;
 let pdfCanvas = null;
 let pdfCtx = null;
+let pdfScale = 1.0; // Текущий уровень масштаба (1.0 = по умолчанию)
+
+// Переменные для отслеживания свайпов
+let touchStartX = 0;
+let touchEndX = 0;
 
 document.addEventListener("DOMContentLoaded", () => {
     loadDataFromGoogle();  
