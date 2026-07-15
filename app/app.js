@@ -573,15 +573,34 @@ function setupEventListeners() {
     document.getElementById("search-secret-input").addEventListener("input", () => { state.secretsPage = 1; filterAndRenderSecrets(); });
 
     document.getElementById('pdf-prev-btn').onclick = () => {
-        if (currentPdfPage <= 1) return;
+        if (currentPdfPage <= 1 || isPageRendering) return;
+        if (tg.HapticFeedback) tg.HapticFeedback.impactOccurred('light');
         currentPdfPage--;
         queueRenderPage(currentPdfPage);
     };
     
     document.getElementById('pdf-next-btn').onclick = () => {
-        if (currentPdfPage >= totalPdfPages) return;
+        if (currentPdfPage >= totalPdfPages || isPageRendering) return;
+        if (tg.HapticFeedback) tg.HapticFeedback.impactOccurred('light');
         currentPdfPage++;
         queueRenderPage(currentPdfPage);
+    };
+
+    // Кнопки масштабирования PDF
+    document.getElementById('pdf-zoom-in-btn').onclick = () => {
+        if (pdfScale < 3.0) { // Ограничим зум максимум в 3 раза
+            if (tg.HapticFeedback) tg.HapticFeedback.impactOccurred('light');
+            pdfScale += 0.25;
+            renderPdfPage(currentPdfPage);
+        }
+    };
+
+    document.getElementById('pdf-zoom-out-btn').onclick = () => {
+        if (pdfScale > 0.75) { // Ограничим уменьшение
+            if (tg.HapticFeedback) tg.HapticFeedback.impactOccurred('light');
+            pdfScale -= 0.25;
+            renderPdfPage(currentPdfPage);
+        }
     };
 
     document.getElementById('back-to-catalog').onclick = closeEmulator;
