@@ -129,44 +129,22 @@
         #emulator-container { width: 100%; height: 100%; background: #000; }
         
         #intro-layer {
-            position: fixed;
-            top: 0; left: 0; right: 0; bottom: 0;
-            background-color: #000;
-            z-index: 9999999 !important;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
+            position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+            background-color: #000; z-index: 9999999 !important;
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
         }
-
-        #intro-video {
-            width: 100%;
-            height: auto;
-            max-height: 80vh;
-            object-fit: contain;
-        }
-
+        #intro-video { width: 100%; height: auto; max-height: 80vh; object-fit: contain; }
         #skip-intro-btn {
-            position: absolute;
-            bottom: 30px;
-            background: rgba(17, 17, 17, 0.8);
-            border: 2px solid #555;
-            color: #888;
-            font-family: 'Press Start 2P', monospace;
-            font-size: 8px;
-            padding: 10px 15px;
-            cursor: pointer;
-            border-radius: 4px;
+            position: absolute; bottom: 30px; background: rgba(17, 17, 17, 0.8);
+            border: 2px solid #555; color: #888; font-family: 'Press Start 2P', monospace;
+            font-size: 8px; padding: 10px 15px; cursor: pointer; border-radius: 4px;
         }
-        #skip-intro-btn:active {
-            color: #ffff00;
-            border-color: #ffff00;
-        }
+        #skip-intro-btn:active { color: #ffff00; border-color: #ffff00; }
 		
-		/* Стили для ретро-лоадера */
+        /* Стили для ретро-лоадера */
         #retro-loader {
             position: fixed; top: 0; left: 0; right: 0; bottom: 0;
-            background-color: #000; z-index: 999999 !important;
+            background-color: #000; z-index: 99999999 !important;
             display: flex; flex-direction: column; align-items: center; justify-content: center;
             gap: 20px;
         }
@@ -181,13 +159,14 @@
     </style>
 </head>
 <body>
+    <div id="retro-loader" class="hidden">
+        <div class="blink-text">LOADING...</div>
+    </div>
+
     <div id="intro-layer">
         <video id="intro-video" playsinline disablePictureInPicture controlslist="nodownload">
             <source src="https://akeysru-retro.github.io/arcade/app/intro.mp4" type="video/mp4">
         </video>
-		<div id="retro-loader" class="hidden">
-        <div class="blink-text">LOADING...</div>
-    </div>
         <button id="skip-intro-btn" onclick="endIntro()">[ ПРОПУСТИТЬ СТАРТ ]</button>
     </div>
 

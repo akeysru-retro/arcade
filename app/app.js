@@ -8,9 +8,8 @@ let totalPdfPages = 0;
 let isPageRendering = false;
 let pdfCanvas = null;
 let pdfCtx = null;
-let pdfScale = 1.0; // Текущий уровень масштаба (1.0 = по умолчанию)
+let pdfScale = 1.0; 
 
-// Переменные для отслеживания свайпов
 let touchStartX = 0;
 let touchEndX = 0;
 
@@ -56,7 +55,7 @@ function endIntro() {
 
     const menuBgVideo = document.getElementById('bg-video');
     if (menuBgVideo) { 
-        menuBgVideo.muted = true; 
+        menuBgVideo.muted = !state.isSoundOn; 
         menuBgVideo.play().catch(() => {}); 
     }
 }
@@ -122,6 +121,7 @@ function filterGames() {
 }
 
 function toggleFavFilter() {
+    if (tg.HapticFeedback) tg.HapticFeedback.impactOccurred('light');
     state.showOnlyFavorites = !state.showOnlyFavorites;
     const btn = document.getElementById('fav-filter-btn');
     if (state.showOnlyFavorites) {
@@ -131,6 +131,21 @@ function toggleFavFilter() {
     }
     state.gamesPage = 1;
     filterGames();
+}
+
+function toggleEmuSound() {
+    state.isSoundOn = !state.isSoundOn;
+    const btn = document.getElementById("emu-sound-btn");
+    const bgVideo = document.getElementById("bg-video");
+    
+    if (state.isSoundOn) {
+        btn.textContent = "🔊 ЗВУК";
+        if (bgVideo) bgVideo.muted = false;
+    } else {
+        btn.textContent = "🔇 ЗВУК";
+        if (bgVideo) bgVideo.muted = true;
+    }
+    if (tg.HapticFeedback) tg.HapticFeedback.impactOccurred('light');
 }
 
 function renderGamesPage() {
@@ -218,10 +233,8 @@ function renderJournalsPage() {
 }
 
 function openPdfReader(pdfUrl) {
-    // [ХАПТИК] Отчетливый клик на запуск
     if (tg.HapticFeedback) tg.HapticFeedback.impactOccurred('medium');
     
-    // Показываем лоадер
     const loader = document.getElementById('retro-loader');
     if (loader) loader.classList.remove('hidden');
 
@@ -257,12 +270,9 @@ function renderPdfPage(num) {
     
     pdfDoc.getPage(num).then(page => {
         const viewport = page.getViewport({ scale: 1 });
-        
-        // Базовая адаптивная ширина под экран смартфона
         const desiredWidth = Math.min(window.innerWidth - 20, 380);
         const baseScale = desiredWidth / viewport.width;
         
-        // Итоговый масштаб с учетом пользовательского зума
         const finalScale = baseScale * pdfScale;
         const scaledViewport = page.getViewport({ scale: finalScale });
         
@@ -274,22 +284,18 @@ function renderPdfPage(num) {
             viewport: scaledViewport
         };
         
-        // Внутри функции renderPdfPage, найди блок page.render(renderContext).promise.then(...) и приведи к такому виду:
         page.render(renderContext).promise.then(() => {
-        isPageRendering = false;
-        // Скрываем лоадер, когда первая страница отрисовалась
-        const loader = document.getElementById('retro-loader');
-        if (loader) loader.classList.add('hidden');
+            isPageRendering = false;
+            const loader = document.getElementById('retro-loader');
+            if (loader) loader.classList.add('hidden');
         });
     });
 }
 
-// Функция инициализации жестов свайпа
 function setupPdfSwipeEvents() {
     const canvas = document.getElementById('pdf-canvas');
     if (!canvas) return;
 
-    // Удаляем старые слушатели, чтобы не дублировались
     canvas.ontouchstart = null;
     canvas.ontouchend = null;
 
@@ -305,20 +311,17 @@ function setupPdfSwipeEvents() {
 
 function handleSwipeGesture() {
     const swipeDistance = touchEndX - touchStartX;
-    const swipeThreshold = 50; // Минимальное расстояние в пикселях для срабатывания свайпа
+    const swipeThreshold = 50; 
 
-    // Если страница сильно увеличена, отключаем свайпы, чтобы не мешать горизонтальной прокрутке страницы
     if (pdfScale > 1.2) return;
 
     if (swipeDistance < -swipeThreshold) {
-        // Свайп влево -> Следующая страница
         if (currentPdfPage < totalPdfPages && !isPageRendering) {
             if (tg.HapticFeedback) tg.HapticFeedback.impactOccurred('light');
             currentPdfPage++;
             renderPdfPage(currentPdfPage);
         }
     } else if (swipeDistance > swipeThreshold) {
-        // Свайп вправо -> Предыдущая страница
         if (currentPdfPage > 1 && !isPageRendering) {
             if (tg.HapticFeedback) tg.HapticFeedback.impactOccurred('light');
             currentPdfPage--;
@@ -332,7 +335,6 @@ function queueRenderPage(num) {
     renderPdfPage(num);
 }
 
-// Генерация ретро-звука запуска (8-bit beep)
 function playRetroBeep() {
     if (!state.isSoundOn) return;
     try {
@@ -342,11 +344,11 @@ function playRetroBeep() {
         const osc = ctx.createOscillator();
         const gain = ctx.createGain();
         
-        osc.type = 'square'; // Квадратная волна даёт тот самый денди-звук
-        osc.frequency.setValueAtTime(880, ctx.currentTime); // Нота Ля 5-й октавы
+        osc.type = 'square'; 
+        osc.frequency.setValueAtTime(880, ctx.currentTime); 
         
         gain.gain.setValueAtTime(0.1, ctx.currentTime);
-        gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.15); // Быстрое затухание
+        gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.15); 
         
         osc.connect(gain);
         gain.connect(ctx.destination);
@@ -359,10 +361,8 @@ function playRetroBeep() {
 }
 
 function startEmulator(game) {
-    // [ХАПТИК] Отчетливый клик (medium) при нажатии на запуск игры
     if (tg.HapticFeedback) tg.HapticFeedback.impactOccurred('medium');
     
-    // Показываем наш ретро-лоадер
     const loader = document.getElementById('retro-loader');
     if (loader) loader.classList.remove('hidden');
 
@@ -414,7 +414,6 @@ function startEmulator(game) {
     window.EJS_startOnLoaded = true;
     window.EJS_volume = state.isSoundOn ? 1 : 0;
 
-    // Важно: скрываем лоадер и играем "пик", когда эмулятор полностью загрузился
     window.EJS_onGameStart = () => {
         if (loader) loader.classList.add('hidden');
         playRetroBeep();
@@ -434,6 +433,9 @@ function closeEmulator() {
     document.getElementById("journal-layer").style.display = "none";
     document.getElementById("back-to-catalog").classList.add("hidden");
     document.getElementById("app-tab-bar").style.display = "flex";
+    
+    const loader = document.getElementById('retro-loader');
+    if (loader) loader.classList.add('hidden');
     
     try {
         if (window.EJS_emulator) {
@@ -471,7 +473,7 @@ function closeEmulator() {
 
     const bgVideo = document.getElementById("bg-video");
     if (bgVideo) {
-        if (state.isSoundOn) { bgVideo.muted = false; }
+        bgVideo.muted = !state.isSoundOn;
         bgVideo.play().catch(() => {});
     }
 
@@ -479,6 +481,7 @@ function closeEmulator() {
 }
 
 function submitOrder() {
+    if (tg.HapticFeedback) tg.HapticFeedback.impactOccurred('medium');
     const gameName = document.getElementById("order-game-name").value.trim();
     const platform = document.getElementById("order-platform").value;
     if (!gameName) { alert("ВВЕДИТЕ НАЗВАНИЕ ИГРЫ!"); return; }
@@ -488,13 +491,14 @@ function submitOrder() {
 
     tg.showPopup({
         title: "ВНИМАНИЕ!",
-        message: "Добавление новой игры платное и стоит 100 рублей за заказ. Вас это устраивает?",
+        message: "Добавление новой игры является совместной покупкой и стоит 100 рублей за заказ. Вас это устраивает?",
         buttons: [
             { id: "yes", type: "default", text: "ДА" },
             { id: "no", type: "destructive", text: "ОТМЕНА" }
         ]
     }, (buttonId) => {
         if (buttonId === "yes") {
+            if (tg.HapticFeedback) tg.HapticFeedback.notificationOccurred('success');
             const orderData = { 
                 action: "create_order", 
                 status: "paid_intent",
@@ -510,7 +514,6 @@ function submitOrder() {
             document.getElementById("order-game-name").value = "";
             
         } else {
-			// [ХАПТИК] Предупреждающий/отменяющий отклик (warning)
             if (tg.HapticFeedback) tg.HapticFeedback.notificationOccurred('warning');
 			
             const cancelData = { 
@@ -587,25 +590,20 @@ function renderPagination(containerId, totalPages, currentPage, callback) {
     container.appendChild(prevBtn); container.appendChild(infoSpan); container.appendChild(nextBtn);
 }
 
-// ТОЧНОЕ ИСПРАВЛЕНИЕ: Теперь перебираются строго классы .tab-content и корректно вешается активный класс!
 function switchTab(tabName) {
-    // [ХАПТИК] Легкая вибрация (light) при переключении вкладок меню
     if (tg.HapticFeedback) tg.HapticFeedback.impactOccurred('light');
 
     state.currentTab = tabName;
     
-    // Скрываем абсолютно все вкладки с экрана
     document.querySelectorAll(".tab-content").forEach(el => {
         el.classList.remove("active");
     });
     
-    // Показываем нужную вкладку по её ID (tab-games, tab-journals и т.д.)
     const targetSection = document.getElementById(`tab-${tabName}`);
     if (targetSection) {
         targetSection.classList.add("active");
     }
     
-    // Переключаем подсветку кнопок в нижнем меню
     document.querySelectorAll(".tab-item").forEach(el => {
         el.classList.remove("active");
     });
@@ -635,9 +633,8 @@ function setupEventListeners() {
         queueRenderPage(currentPdfPage);
     };
 
-    // Кнопки масштабирования PDF
     document.getElementById('pdf-zoom-in-btn').onclick = () => {
-        if (pdfScale < 3.0) { // Ограничим зум максимум в 3 раза
+        if (pdfScale < 3.0) { 
             if (tg.HapticFeedback) tg.HapticFeedback.impactOccurred('light');
             pdfScale += 0.25;
             renderPdfPage(currentPdfPage);
@@ -645,7 +642,7 @@ function setupEventListeners() {
     };
 
     document.getElementById('pdf-zoom-out-btn').onclick = () => {
-        if (pdfScale > 0.75) { // Ограничим уменьшение
+        if (pdfScale > 0.75) { 
             if (tg.HapticFeedback) tg.HapticFeedback.impactOccurred('light');
             pdfScale -= 0.25;
             renderPdfPage(currentPdfPage);
