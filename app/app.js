@@ -218,6 +218,13 @@ function renderJournalsPage() {
 }
 
 function openPdfReader(pdfUrl) {
+    // [ХАПТИК] Отчетливый клик на запуск
+    if (tg.HapticFeedback) tg.HapticFeedback.impactOccurred('medium');
+    
+    // Показываем лоадер
+    const loader = document.getElementById('retro-loader');
+    if (loader) loader.classList.remove('hidden');
+
     document.getElementById("back-to-catalog").classList.remove("hidden");
     document.getElementById("journal-layer").style.display = "block";
     document.getElementById("app-tab-bar").style.display = "none";
@@ -226,7 +233,7 @@ function openPdfReader(pdfUrl) {
     pdfCtx = pdfCanvas.getContext('2d');
     
     currentPdfPage = 1;
-    pdfScale = 1.0; // Сбрасываем зум при открытии новой книги
+    pdfScale = 1.0;
     document.getElementById('pdf-page-num').textContent = "ЗАГРУЗКА...";
     
     pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.worker.min.js';
@@ -235,9 +242,10 @@ function openPdfReader(pdfUrl) {
         pdfDoc = pdfDoc_;
         totalPdfPages = pdfDoc.numPages;
         renderPdfPage(currentPdfPage);
-        setupPdfSwipeEvents(); // Инициализируем свайпы
+        setupPdfSwipeEvents();
     }).catch(err => {
         alert("ОШИБКА ОТКРЫТИЯ PDF КНИГИ!");
+        if (loader) loader.classList.add('hidden');
         closeEmulator();
     });
 }
@@ -266,8 +274,12 @@ function renderPdfPage(num) {
             viewport: scaledViewport
         };
         
+        // Внутри функции renderPdfPage, найди блок page.render(renderContext).promise.then(...) и приведи к такому виду:
         page.render(renderContext).promise.then(() => {
-            isPageRendering = false;
+        isPageRendering = false;
+        // Скрываем лоадер, когда первая страница отрисовалась
+        const loader = document.getElementById('retro-loader');
+        if (loader) loader.classList.add('hidden');
         });
     });
 }
@@ -320,7 +332,40 @@ function queueRenderPage(num) {
     renderPdfPage(num);
 }
 
+// Генерация ретро-звука запуска (8-bit beep)
+function playRetroBeep() {
+    if (!state.isSoundOn) return;
+    try {
+        const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+        if (!AudioContextClass) return;
+        const ctx = new AudioContextClass();
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        
+        osc.type = 'square'; // Квадратная волна даёт тот самый денди-звук
+        osc.frequency.setValueAtTime(880, ctx.currentTime); // Нота Ля 5-й октавы
+        
+        gain.gain.setValueAtTime(0.1, ctx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.15); // Быстрое затухание
+        
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+        
+        osc.start();
+        osc.stop(ctx.currentTime + 0.15);
+    } catch (e) {
+        console.log("Не удалось воспроизвести звук:", e);
+    }
+}
+
 function startEmulator(game) {
+    // [ХАПТИК] Отчетливый клик (medium) при нажатии на запуск игры
+    if (tg.HapticFeedback) tg.HapticFeedback.impactOccurred('medium');
+    
+    // Показываем наш ретро-лоадер
+    const loader = document.getElementById('retro-loader');
+    if (loader) loader.classList.remove('hidden');
+
     state.selectedGame = game;
     document.getElementById("back-to-catalog").classList.remove("hidden");
     document.getElementById("emulator-layer").style.display = "block";
@@ -339,18 +384,11 @@ function startEmulator(game) {
     container.appendChild(emuDiv);
 
     const currentPlatform = game.platform.toUpperCase();
-
     const coreMap = {
-        'NES': 'fceumm',          
-        'SNES': 'snes9x',         
-        'TG16': 'mednafen_pce',   
-        'GB': 'gambatte',         
-        'GBC': 'gambatte',        
-        'GBA': 'mgba',            
-        'SEGA': 'segaMD',         
-        '32X': 'sega32x'          
+        'NES': 'fceumm', 'SNES': 'snes9x', 'TG16': 'mednafen_pce',   
+        'GB': 'gambatte', 'GBC': 'gambatte', 'GBA': 'mgba',            
+        'SEGA': 'segaMD', '32X': 'sega32x'          
     };
-
     const coreCode = coreMap[currentPlatform] || 'segaMD';
 
     window.EJS_system = undefined;
@@ -369,13 +407,18 @@ function startEmulator(game) {
     window.EJS_pathtodata = './'; 
     window.EJS_language = 'ru';
     window.EJS_gameName = game.title.replace(/ /g, '_');
-
     window.EJS_loadOnStart = true; 
     window.EJS_DefaultSaveMode = 'browser'; 
     window.EJS_autosave = true;             
     window.EJS_ForceLocalSave = true;       
     window.EJS_startOnLoaded = true;
     window.EJS_volume = state.isSoundOn ? 1 : 0;
+
+    // Важно: скрываем лоадер и играем "пик", когда эмулятор полностью загрузился
+    window.EJS_onGameStart = () => {
+        if (loader) loader.classList.add('hidden');
+        playRetroBeep();
+    };
 
     const oldLoader = document.getElementById("emu-loader-script");
     if (oldLoader) oldLoader.remove();
@@ -467,6 +510,9 @@ function submitOrder() {
             document.getElementById("order-game-name").value = "";
             
         } else {
+			// [ХАПТИК] Предупреждающий/отменяющий отклик (warning)
+            if (tg.HapticFeedback) tg.HapticFeedback.notificationOccurred('warning');
+			
             const cancelData = { 
                 action: "create_order", 
                 status: "cancelled_by_user",
@@ -543,6 +589,9 @@ function renderPagination(containerId, totalPages, currentPage, callback) {
 
 // ТОЧНОЕ ИСПРАВЛЕНИЕ: Теперь перебираются строго классы .tab-content и корректно вешается активный класс!
 function switchTab(tabName) {
+    // [ХАПТИК] Легкая вибрация (light) при переключении вкладок меню
+    if (tg.HapticFeedback) tg.HapticFeedback.impactOccurred('light');
+
     state.currentTab = tabName;
     
     // Скрываем абсолютно все вкладки с экрана
