@@ -407,13 +407,25 @@ function startEmulator(game) {
     window.EJS_pathtodata = './'; 
     window.EJS_language = 'ru';
     window.EJS_gameName = game.title.replace(/ /g, '_');
-    window.EJS_loadOnStart = true; 
-    window.EJS_DefaultSaveMode = 'browser'; 
-    window.EJS_autosave = true;             
-    window.EJS_ForceLocalSave = true;       
+
+    // ТОЧНАЯ НАСТРОЙКА СОХРАНЕНИЙ ПО УМОЛЧАНИЮ ДЛЯ НОВЫХ ВЕРСИЙ EMULATORJS
+    window.EJS_DefaultSaveMode = 'browser'; // Запасной вариант для старых ядер
+    window.EJS_autosave = true;             // Включаем автосохранение при выходе[cite: 4]
+    window.EJS_ForceLocalSave = true;       // Блокируем скачивание файлов, пишем только локально[cite: 4]
     window.EJS_startOnLoaded = true;
     window.EJS_volume = state.isSoundOn ? 1 : 0;
 
+    // Глубокие настройки системы EmulatorJS (переопределяем дефолты интерфейса)
+    window.EJS_Settings = {
+        saveStateMode: 'browser',  // Жестко выставляем "Сохранять в браузере" по умолчанию
+        loadStateMode: 'browser',  // Жестко выставляем "Загружать из браузера" по умолчанию
+        autosave: 1                // Активируем автосохранение (1 = true)
+    };
+
+    // Опционально: если эмулятор использует систему виртуального хранилища
+    window.EJS_gameID = game.id || game.title.replace(/ /g, '_'); 
+
+    // Важно: скрываем лоадер и играем "пик", когда эмулятор полностью загрузился
     window.EJS_onGameStart = () => {
         if (loader) loader.classList.add('hidden');
         playRetroBeep();
