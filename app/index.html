@@ -214,23 +214,13 @@
                     <label class="form-label">НАЗВАНИЕ ИГРЫ:</label>
                     <input type="text" id="order-game-name" class="form-input" placeholder="НАПРИМЕР: CONTRA">
                 </div>
-		<!-- ВКЛАДКА ИНФО И ИНСТРУКЦИИ -->
+        <!-- ВКЛАДКА ИНФО И ИНСТРУКЦИИ (ДИНАМИЧЕСКАЯ ИЗ ТАБЛИЦЫ) -->
         <div id="tab-info" class="tab-content">
             <div class="menu-title">ИНСТРУКЦИИ</div>
-            <div class="order-container">
-                <div class="secret-card" style="margin: 0 0 20px 0; padding: 12px; border-color: #ffff00;">
-                    <div class="secret-game">💾 НАСТРОЙКА СОХРАНЕНИЙ (SAVE STATES)</div>
-                    <div class="order-text" style="text-align: left; margin-bottom: 10px; font-size: 7px; line-height: 1.8;">
-                        ЕСЛИ ПРИ НАЖАТИИ НА СОХРАНЕНИЕ ИГРА ПРЕДЛАГАЕТ СКАЧАТЬ ФАЙЛ, А НЕ ИСПРАВНО ИХ ЗАПИСЫВАЕТ — ВКЛЮЧИ РЕЖИМ БРАУЗЕРА ВРУЧНУЮ:
-                    </div>
-                    <div class="secret-code" style="font-size: 7px; line-height: 1.6;">
-                        1. ЗАПУСТИ ЛЮБУЮ ИГРУ ИЗ КАТАЛОГА.<br><br>
-                        2. НАЖМИ КНОПКУ МЕНЮ ЭМУЛЯТОРА (ИКОНКА ⚙️ В НИЖНЕЙ ПАНЕЛИ).<br><br>
-                        3. НАЙДИ СТРОКУ <span style="color: #ffff00;">"SAVE STATE MODE"</span> (ИЛИ <span style="color: #ffff00;">"SAVEMODE"</span>).<br><br>
-                        4. НАЖМИ НА НЕЁ, ЧТОБЫ ЗНАЧЕНИЕ СМЕНИЛОСЬ С <span style="color: #ff0000;">"DOWNLOAD"</span> НА <span style="color: #00ff00;">"BROWSER"</span>.<br><br>
-                        5. ГОТОВО! ТЕПЕРЬ ВСЕ СЛДУЮЩИЕ СОХРАНЕНИЯ БУДУТ НАДЕЖНО ЖИТЬ В ПАМЯТИ ПРИЛОЖЕНИЯ.
-                    </div>
-                </div>
+            <div class="order-container" id="info-list">
+                <!-- Сюда скрипт вставит инструкции из Google Таблицы -->
+            </div>
+        </div>
 
                 <div class="secret-card" style="margin: 0; padding: 12px;">
                     <div class="secret-game" style="color: #00ff00;">💡 СОВЕТ ПО АВТОСОХРАНЕНИЮ</div>

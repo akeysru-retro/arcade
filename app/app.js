@@ -66,6 +66,7 @@ let state = {
     secrets: [],
     filteredSecrets: [],
     journals: [],       
+    info: [], // ДОБАВЛЕНО для хранения инструкций
     currentTab: 'games',
     gamesPage: 1,
     secretsPage: 1,
@@ -83,6 +84,7 @@ function loadDataFromGoogle() {
             state.games = data.games || [];
             state.secrets = data.secrets || [];
             state.journals = data.journals || []; 
+            state.info = data.info || []; // ДОБАВЛЕНО: забираем данные из JSON
             
             state.games.sort((a, b) => a.title.toLowerCase().localeCompare(b.title.toLowerCase(), 'ru'));
             state.filteredGames = [...state.games];
@@ -90,9 +92,9 @@ function loadDataFromGoogle() {
             filterGames();
             filterAndRenderSecrets();
             renderJournalsPage(); 
+            renderInfoPage(); // ДОБАВЛЕНО: запускаем отрисовку страницы инфо
         })
         .catch(err => console.error("Ошибка сети:", err));
-}
 
 function isGameFavorite(gameId) {
     const favs = JSON.parse(localStorage.getItem('retro_favs') || "[]");
@@ -692,4 +694,31 @@ function setupEventListeners() {
     };
 
     document.getElementById('back-to-catalog').onclick = closeEmulator;
+}
+
+function renderInfoPage() {
+    const container = document.getElementById("info-list");
+    if (!container) return;
+    container.innerHTML = "";
+    
+    if (state.info.length === 0) {
+        container.innerHTML = '<div style="text-align:center; font-size:8px; color:#555; padding:30px 0;">НЕТ ДОСТУПНЫХ ИНСТРУКЦИЙ</div>';
+        return;
+    }
+    
+    state.info.forEach(item => {
+        const card = document.createElement('div');
+        card.className = 'secret-card';
+        card.style.margin = "0 0 20px 0";
+        card.style.padding = "12px";
+        
+        // Используем структуру, идентичную секретам, для сохранения ретро-стиля
+        card.innerHTML = `
+            <div class="secret-game" style="color: #ffff00; margin-bottom: 10px;">${item.title}</div>
+            <div class="secret-code" style="font-size: 7px; line-height: 1.6; text-transform: uppercase;">
+                ${item.content}
+            </div>
+        `;
+        container.appendChild(card);
+    });
 }
