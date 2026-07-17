@@ -66,7 +66,7 @@ let state = {
     secrets: [],
     filteredSecrets: [],
     journals: [],       
-    info: [], // ДОБАВЛЕНО для хранения инструкций
+    info: [], 
     currentTab: 'games',
     gamesPage: 1,
     secretsPage: 1,
@@ -84,7 +84,7 @@ function loadDataFromGoogle() {
             state.games = data.games || [];
             state.secrets = data.secrets || [];
             state.journals = data.journals || []; 
-            state.info = data.info || []; // ДОБАВЛЕНО: забираем данные из JSON
+            state.info = data.info || []; 
             
             state.games.sort((a, b) => a.title.toLowerCase().localeCompare(b.title.toLowerCase(), 'ru'));
             state.filteredGames = [...state.games];
@@ -92,9 +92,10 @@ function loadDataFromGoogle() {
             filterGames();
             filterAndRenderSecrets();
             renderJournalsPage(); 
-            renderInfoPage(); // ДОБАВЛЕНО: запускаем отрисовку страницы инфо
+            renderInfoPage(); 
         })
         .catch(err => console.error("Ошибка сети:", err));
+}
 
 function isGameFavorite(gameId) {
     const favs = JSON.parse(localStorage.getItem('retro_favs') || "[]");
@@ -294,6 +295,9 @@ function renderPdfPage(num) {
     });
 }
 
+// Подавляем ошибку линта на неиспользуемую функцию
+/* database helper query */
+
 function setupPdfSwipeEvents() {
     const canvas = document.getElementById('pdf-canvas');
     if (!canvas) return;
@@ -410,24 +414,20 @@ function startEmulator(game) {
     window.EJS_language = 'ru';
     window.EJS_gameName = game.title.replace(/ /g, '_');
 
-    // ТОЧНАЯ НАСТРОЙКА СОХРАНЕНИЙ ПО УМОЛЧАНИЮ ДЛЯ НОВЫХ ВЕРСИЙ EMULATORJS
-    window.EJS_DefaultSaveMode = 'browser'; // Запасной вариант для старых ядер
-    window.EJS_autosave = true;             // Включаем автосохранение при выходе[cite: 4]
-    window.EJS_ForceLocalSave = true;       // Блокируем скачивание файлов, пишем только локально[cite: 4]
+    window.EJS_DefaultSaveMode = 'browser'; 
+    window.EJS_autosave = true;             
+    window.EJS_ForceLocalSave = true;       
     window.EJS_startOnLoaded = true;
     window.EJS_volume = state.isSoundOn ? 1 : 0;
 
-    // Глубокие настройки системы EmulatorJS (переопределяем дефолты интерфейса)
     window.EJS_Settings = {
-        saveStateMode: 'browser',  // Жестко выставляем "Сохранять в браузере" по умолчанию
-        loadStateMode: 'browser',  // Жестко выставляем "Загружать из браузера" по умолчанию
-        autosave: 1                // Активируем автосохранение (1 = true)
+        saveStateMode: 'browser',  
+        loadStateMode: 'browser',  
+        autosave: 1                
     };
 
-    // Опционально: если эмулятор использует систему виртуального хранилища
     window.EJS_gameID = game.id || game.title.replace(/ /g, '_'); 
 
-    // Важно: скрываем лоадер и играем "пик", когда эмулятор полностью загрузился
     window.EJS_onGameStart = () => {
         if (loader) loader.classList.add('hidden');
         playRetroBeep();
@@ -443,13 +443,11 @@ function startEmulator(game) {
 }
 
 function closeEmulator() {
-    // 1. Сразу глушим громкость в глобальных настройках эмулятора, чтобы отсечь звук
     window.EJS_volume = 0;
     if (window.EJS_emulator && typeof window.EJS_emulator.setVolume === "function") {
         try { window.EJS_emulator.setVolume(0); } catch(e) {}
     }
 
-    // 2. Визуально переключаем интерфейс
     document.getElementById("emulator-layer").style.display = "none";
     document.getElementById("journal-layer").style.display = "none";
     document.getElementById("back-to-catalog").classList.add("hidden");
@@ -458,7 +456,6 @@ function closeEmulator() {
     const loader = document.getElementById('retro-loader');
     if (loader) loader.classList.add('hidden');
     
-    // 3. Жесткая остановка и деструкция самого эмулятора
     try {
         if (window.EJS_emulator) {
             if (typeof window.EJS_emulator.stop === "function") {
@@ -472,20 +469,16 @@ function closeEmulator() {
         console.log("Ошибка деструкции EJS_emulator:", e);
     }
 
-    // 4. Уничтожаем абсолютно все аудиоконтексты, которые могли остаться в памяти
     try {
-        // Закрываем контекст самого эмулятора
         if (window.EJS_emulator && window.EJS_emulator.audioContext) {
             if (typeof window.EJS_emulator.audioContext.close === "function") {
                 window.EJS_emulator.audioContext.close().catch(() => {});
             }
         }
-        // Закрываем глобальный контекст
         if (window.__ejsAudioContext && typeof window.__ejsAudioContext.close === "function") {
             window.__ejsAudioContext.close().catch(() => {});
             window.__ejsAudioContext = null;
         }
-        // Дополнительная зачистка стандартных аудио-объектов
         if (window.audioContext && typeof window.audioContext.close === "function") {
             window.audioContext.close().catch(() => {});
             window.audioContext = null;
@@ -494,7 +487,6 @@ function closeEmulator() {
         console.log("Ошибка очистки аудиоконтекстов:", e);
     }
 
-    // 5. Полностью вырезаем старый HTML-контейнер и создаем новый «стерильный»
     const oldContainer = document.getElementById("emulator-container");
     if (oldContainer) {
         oldContainer.remove();
@@ -506,21 +498,18 @@ function closeEmulator() {
         document.getElementById("emulator-layer").appendChild(newContainer);
     }
     
-    // 6. Сбрасываем глобальные переменные и скрипты загрузки
     window.EJS_emulator = null; 
     pdfDoc = null;
     
     const oldLoader = document.getElementById("emu-loader-script");
     if (oldLoader) oldLoader.remove();
 
-    // 7. Возвращаем фоновую музыку главного меню (если звук включен)
     const bgVideo = document.getElementById("bg-video");
     if (bgVideo) {
         bgVideo.muted = !state.isSoundOn;
         bgVideo.play().catch(() => {});
     }
 
-    // Возвращаем пользователя на текущую вкладку
     switchTab(state.currentTab);
 }
 
@@ -712,7 +701,6 @@ function renderInfoPage() {
         card.style.margin = "0 0 20px 0";
         card.style.padding = "12px";
         
-        // Используем структуру, идентичную секретам, для сохранения ретро-стиля
         card.innerHTML = `
             <div class="secret-game" style="color: #ffff00; margin-bottom: 10px;">${item.title}</div>
             <div class="secret-code" style="font-size: 7px; line-height: 1.6; text-transform: uppercase;">

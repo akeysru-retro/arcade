@@ -214,22 +214,6 @@
                     <label class="form-label">НАЗВАНИЕ ИГРЫ:</label>
                     <input type="text" id="order-game-name" class="form-input" placeholder="НАПРИМЕР: CONTRA">
                 </div>
-        <!-- ВКЛАДКА ИНФО И ИНСТРУКЦИИ (ДИНАМИЧЕСКАЯ ИЗ ТАБЛИЦЫ) -->
-        <div id="tab-info" class="tab-content">
-            <div class="menu-title">ИНСТРУКЦИИ</div>
-            <div class="order-container" id="info-list">
-                <!-- Сюда скрипт вставит инструкции из Google Таблицы -->
-            </div>
-        </div>
-
-                <div class="secret-card" style="margin: 0; padding: 12px;">
-                    <div class="secret-game" style="color: #00ff00;">💡 СОВЕТ ПО АВТОСОХРАНЕНИЮ</div>
-                    <div class="order-text" style="text-align: left; margin: 0; font-size: 7px; line-height: 1.8;">
-                        ФУНКЦИЯ АВТОСОХРАНЕНИЯ ТАКЖЕ ТРЕБУЕТ АККУРАТНОСТИ. ПЕРЕД ВЫХОДОМ ИЗ ИГРЫ РЕКОМЕНДУЕТСЯ СДЕЛАТЬ ОДИН РУЧНОЙ СЕЙВ (SAVE STATE), ЧТОБЫ БРАУЗЕР ТОЧНО ЗАФИКСИРОВАЛ ДАННЫЕ В ЛОКАЛЬНОЙ ПАМЯТИ.
-                    </div>
-                </div>
-            </div>
-        </div>		
                 <div class="form-group">
                     <label class="form-label">ПЛАТФОРМА (КОНСОЛЬ):</label>
                     <select id="order-platform" class="form-input">
@@ -244,6 +228,14 @@
                     </select>
                 </div>
                 <button class="order-submit-btn btn-launch-new" style="background: #0064ff; border-color: #0040aa;" onclick="submitOrder()">ОТПРАВИТЬ ЗАЯВКУ</button>
+            </div>
+        </div>
+
+        <!-- ВКЛАДКА ИНФО И ИНСТРУКЦИИ (ДИНАМИЧЕСКАЯ ИЗ ТАБЛИЦЫ) -->
+        <div id="tab-info" class="tab-content">
+            <div class="menu-title">ИНСТРУКЦИИ</div>
+            <div class="order-container" id="info-list">
+                <!-- Сюда скрипт вставит инструкции из Google Таблицы -->
             </div>
         </div>
 
@@ -264,6 +256,7 @@
                 <span class="tab-icon">ℹ️</span><span>ИНФО</span>
             </button>
         </div>
+    </div>
 
     <div id="emulator-layer">
         <div id="emulator-container"></div>
