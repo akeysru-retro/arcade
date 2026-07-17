@@ -650,7 +650,7 @@ function switchTab(tabName) {
         el.classList.remove("active");
     });
     
-    const idx = tabName === 'games' ? 0 : tabName === 'journals' ? 1 : tabName === 'secrets' ? 2 : 3;
+    const idx = tabName === 'games' ? 0 : tabName === 'journals' ? 1 : tabName === 'secrets' ? 2 : tabName === 'order' ? 3 : 4;
     const activeBtn = document.querySelectorAll(".tab-item")[idx];
     if (activeBtn) {
         activeBtn.classList.add("active");
